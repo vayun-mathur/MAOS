@@ -162,10 +162,13 @@ phase_sync() {
     git config --global user.name  >/dev/null 2>&1 || git config --global user.name "Vayun Mathur"
     git config --global user.email >/dev/null 2>&1 || \
         git config --global user.email "69178052+vayun-mathur@users.noreply.github.com"
+    # Pre-set color so `repo init` doesn't stop for the interactive color prompt.
+    git config --global color.ui >/dev/null 2>&1 || git config --global color.ui auto
     mkdir -p "$TREE"; cd "$TREE"
     repo init -u "$MANIFEST_URL" -b "refs/tags/$TAG"
 
     # Verify the manifest signature.
+    mkdir -p ~/.ssh && chmod 700 ~/.ssh
     curl -fsS https://grapheneos.org/allowed_signers > ~/.ssh/grapheneos_allowed_signers
     ( cd .repo/manifests
       git config gpg.ssh.allowedSignersFile ~/.ssh/grapheneos_allowed_signers
