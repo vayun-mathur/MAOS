@@ -67,9 +67,10 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
   build only**:
   - `config_documentsUiPackage` is overlaid to `com.vayunmathur.files`.
   - Files ships as a **priv-app** holding `MANAGE_DOCUMENTS` (see the privapp allowlist).
-  - The SAF picker UI itself is a **system build variant** of the Files app, implemented in
-    the Modern-Apps repo (tracked separately). The plain F-Droid/userspace Files build stays
-    an ordinary file manager and must not request `MANAGE_DOCUMENTS`.
+  - The SAF picker is implemented in the Files app (Modern-Apps repo) as a
+    `DocumentPickerActivity`. It is the **same APK** as the F-Droid build — no separate flavor. The
+    picker component ships disabled and a small `Application` enables it only when `MANAGE_DOCUMENTS`
+    is granted (i.e. only in MAOS), so the userspace Files app is unchanged.
 - **APKs are `presigned`** so each keeps its `com.vayunmathur` certificate, preserving the
   app-store update chain. The *OS* is signed with your own platform keys.
 - **Silent-breakage guard:** `modern_apps.mk` fails the build if any stock module we meant
