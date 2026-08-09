@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sysconfig for Modern Apps headless system services.
+  Copied to /product/etc/sysconfig/ by modern_apps.mk.
+
+  NetworkLocation (com.vayunmathur.networklocation) replaces GrapheneOS's NetworkLocation
+  module and must keep running in the background to service location/geocoder requests. These
+  entries mirror GrapheneOS's own networklocation sysconfig so the app is:
+    - allow-in-power-save        exempt from Doze app-standby (runs during idle windows)
+    - allow-in-data-usage-save   exempt from Data Saver background-data restrictions
+    - allow-unthrottled-location exempt from the background location throttle
+-->
+<config>
+    <allow-in-power-save package="com.vayunmathur.networklocation" />
+    <allow-in-data-usage-save package="com.vayunmathur.networklocation" />
+    <allow-unthrottled-location package="com.vayunmathur.networklocation" />
+</config>
