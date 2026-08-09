@@ -19,8 +19,8 @@
 #   phases: deps sync vendor overlay keys build release publish all
 #
 # ── Signing keys ────────────────────────────────────────────────────────────────────────
-# Keys live in ONE encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you pass in
-# the environment ($MAOS_KEYS_PASSPHRASE). On first run (file absent) the `keys` phase
+# Keys live in ONE scrypt-encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you
+# pass in the environment ($MAOS_KEYS_PASSPHRASE). On first run (file absent) the `keys` phase
 # generates the full key set and encrypts it into that file. On every build/release the
 # script decrypts it into RAM (/dev/shm), uses it, and shreds the plaintext on exit — the
 # keys are never written to disk in the clear.
@@ -67,7 +67,7 @@ MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
 APPS=(web camera pdf contacts calculator clock files photos appstore)
 
 # ---- Derived / optional-env config ----
-MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/$DEVICE.keys.tar.gz.enc}"
+MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/$DEVICE.keys.tar.gz.scrypt}"
 MODERN_APPS_SRC="${MODERN_APPS_SRC:-}"
 
 # Plaintext keys are only ever materialized here (RAM-backed), and shredded on exit.
@@ -77,22 +77,31 @@ log()  { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33mWARN: %s\033[0m\n' "$*" >&2; }
 die()  { printf '\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
-# ---- Key handling (encrypted blob <-> RAM) ----
+# ---- Key handling (scrypt-encrypted blob <-> RAM) ----
+
+# Plaintext tarball lives only in RAM (/dev/shm) alongside KEYS_PLAIN, and is shredded.
+KEYS_TAR="$KEYS_PLAIN.tar.gz"
 
 wipe_plain_keys() {
-    [[ -d "$KEYS_PLAIN" ]] || return 0
-    find "$KEYS_PLAIN" -type f -exec shred -u {} + 2>/dev/null || true
-    rm -rf "$KEYS_PLAIN"
+    for f in "$KEYS_TAR"; do [[ -f "$f" ]] && shred -u "$f" 2>/dev/null || true; done
+    if [[ -d "$KEYS_PLAIN" ]]; then
+        find "$KEYS_PLAIN" -type f -exec shred -u {} + 2>/dev/null || true
+        rm -rf "$KEYS_PLAIN"
+    fi
     # Drop the in-tree symlink to the RAM keys, if we made one.
     [[ -L "$TREE/keys/$DEVICE" ]] && rm -f "$TREE/keys/$DEVICE" || true
 }
 trap wipe_plain_keys EXIT
 
-enc() { openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:MAOS_KEYS_PASSPHRASE; }
-dec() { openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:MAOS_KEYS_PASSPHRASE; }
+# Keys are encrypted with scrypt (KDF) + AES-256 via the `scrypt` utility — more
+# brute-force-resistant than PBKDF2 for an offline attacker with the blob. The passphrase is
+# read from the environment, never the command line. `--passphrase env:` requires scrypt 1.3+.
+scrypt_enc() { scrypt enc --passphrase env:MAOS_KEYS_PASSPHRASE "$1" "$2"; }
+scrypt_dec() { scrypt dec --passphrase env:MAOS_KEYS_PASSPHRASE "$1" "$2"; }
 
 require_passphrase() {
     [[ -n "${MAOS_KEYS_PASSPHRASE:-}" ]] || die "MAOS_KEYS_PASSPHRASE must be set."
+    command -v scrypt >/dev/null || die "the 'scrypt' utility is missing — run the 'deps' phase."
 }
 
 # Decrypt the key blob into RAM and symlink it in as $TREE/keys/$DEVICE for the GrapheneOS
@@ -102,8 +111,10 @@ unlock_keys() {
     [[ -f "$MAOS_KEYS_FILE" ]] || die "Key file $MAOS_KEYS_FILE not found — run the 'keys' phase first."
     log "Unlocking signing keys into RAM"
     rm -rf "$KEYS_PLAIN"; mkdir -p "$KEYS_PLAIN"; chmod 700 "$KEYS_PLAIN"
-    dec < "$MAOS_KEYS_FILE" | tar xz -C "$KEYS_PLAIN" \
-        || die "Failed to decrypt keys (wrong passphrase?)."
+    rm -f "$KEYS_TAR"
+    scrypt_dec "$MAOS_KEYS_FILE" "$KEYS_TAR" || die "Failed to decrypt keys (wrong passphrase?)."
+    tar xzf "$KEYS_TAR" -C "$KEYS_PLAIN"
+    shred -u "$KEYS_TAR" 2>/dev/null || rm -f "$KEYS_TAR"
     mkdir -p "$TREE/keys"
     rm -rf "$TREE/keys/$DEVICE"
     ln -s "$KEYS_PLAIN" "$TREE/keys/$DEVICE"
@@ -117,7 +128,7 @@ phase_deps() {
     echo 'Acquire::ForceIPv4 "true";' | sudo tee /etc/apt/apt.conf.d/99force-ipv4 >/dev/null
     sudo apt update
     sudo apt install -y \
-        repo yarnpkg zip unzip rsync git gnupg openssh-client \
+        repo yarnpkg zip unzip rsync git gnupg openssh-client scrypt \
         python3 python-is-python3 diffutils hostname openssl \
         libfreetype6 fontconfig fonts-dejavu-core \
         build-essential curl awscli
@@ -225,9 +236,12 @@ phase_keys() {
     ssh-keygen -t ed25519 -N "" -f "$KEYS_PLAIN/id_ed25519" >/dev/null
 
     mkdir -p "$(dirname "$MAOS_KEYS_FILE")"
-    ( cd "$KEYS_PLAIN" && tar cz . ) | enc > "$MAOS_KEYS_FILE"
+    rm -f "$KEYS_TAR"
+    tar czf "$KEYS_TAR" -C "$KEYS_PLAIN" .
+    scrypt_enc "$KEYS_TAR" "$MAOS_KEYS_FILE"
+    shred -u "$KEYS_TAR" 2>/dev/null || rm -f "$KEYS_TAR"
     chmod 600 "$MAOS_KEYS_FILE"
-    log "Encrypted key set written to $MAOS_KEYS_FILE — back it up; losing it bricks OTA."
+    log "Encrypted key set (scrypt) written to $MAOS_KEYS_FILE — back it up; losing it bricks OTA."
 }
 
 phase_build() {

@@ -105,9 +105,9 @@ Device, tag, and OTA channel are **command-line flags** on the script (not env v
 defaulting to `cheetah` / `2026080500` / `stable`. The AOSP checkout (`~/maos`), the R2
 bucket (`maos`), and the release build number (always the GrapheneOS tag) are fixed.
 
-The keystore is written to `~/maos-keys/<device>.keys.tar.gz.enc` (encrypted with your
-passphrase). **Back that file up and keep the passphrase safe** — losing either permanently
-breaks OTA/verified boot for every installed device.
+The keystore is written to `~/maos-keys/<device>.keys.tar.gz.scrypt` (scrypt + AES-256,
+encrypted with your passphrase). **Back that file up and keep the passphrase safe** — losing
+either permanently breaks OTA/verified boot for every installed device.
 
 ---
 
