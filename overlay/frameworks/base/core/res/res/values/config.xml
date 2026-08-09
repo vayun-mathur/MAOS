@@ -31,4 +31,12 @@
          (bound via the com.android.location.service.v3.NetworkLocationProvider action) becomes
          THE system network location provider, replacing GrapheneOS's NetworkLocation module. -->
     <string name="config_networkLocationProviderPackageName" translatable="false">com.vayunmathur.networklocation</string>
+
+    <!-- The two config_*ProviderPackageName pins above are ONLY honored when these overlay
+         bools are false. They default to TRUE in AOSP, in which case the framework ignores the
+         explicit package name and instead signature-matches candidate providers against the
+         platform key (picking the highest version). Our app is presigned with the com.vayunmathur
+         key, not the platform key, so it would never be selected. Force the explicit-pin path. -->
+    <bool name="config_enableNetworkLocationOverlay">false</bool>
+    <bool name="config_enableGeocoderOverlay">false</bool>
 </resources>
