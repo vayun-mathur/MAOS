@@ -73,6 +73,10 @@ MODERN_APPS_SRC="${MODERN_APPS_SRC:-}"
 # Plaintext keys are only ever materialized here (RAM-backed), and shredded on exit.
 KEYS_PLAIN="/dev/shm/maos-keys-$DEVICE"
 
+# Prefer user-writable tool installs (a writable `repo` launcher so it can self-update instead
+# of warning, plus anything else we drop in ~/.local/bin) over system copies.
+export PATH="$HOME/.local/bin:$PATH"
+
 log()  { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33mWARN: %s\033[0m\n' "$*" >&2; }
 die()  { printf '\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -128,10 +132,19 @@ phase_deps() {
     echo 'Acquire::ForceIPv4 "true";' | sudo tee /etc/apt/apt.conf.d/99force-ipv4 >/dev/null
     sudo apt update
     sudo apt install -y \
-        repo yarnpkg zip unzip rsync git gnupg openssh-client scrypt \
+        yarnpkg zip unzip rsync git gnupg openssh-client scrypt \
         python3 python-is-python3 diffutils hostname openssl \
         libfreetype6 fontconfig fonts-dejavu-core \
         build-essential curl
+    # `repo`: install the official launcher to a WRITABLE location (~/.local/bin) rather than
+    # apt's /usr/bin/repo, which is read-only and makes repo warn it "can't self-update".
+    mkdir -p "$HOME/.local/bin"
+    if [[ ! -x "$HOME/.local/bin/repo" ]]; then
+        curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/.local/bin/repo"
+        chmod a+x "$HOME/.local/bin/repo"
+    fi
+    grep -q '.local/bin' ~/.bashrc 2>/dev/null || \
+        echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
     # AWS CLI v2 (used for R2 uploads). The `awscli` apt package was removed in newer
     # Ubuntu, so install the official v2 bundle if `aws` isn't already present.
     if ! command -v aws >/dev/null; then
@@ -191,15 +204,16 @@ phase_vendor() {
     log "Extracting Pixel vendor files for $DEVICE (adevtool)"
     cd "$TREE"; source build/envsetup.sh
     yarn --cwd vendor/adevtool/ install
-    # adevtool isn't a global command — envsetup only exposes it in some setups. Prefer the
-    # package's own launcher, falling back to the PATH command if present.
-    if [[ -x vendor/adevtool/bin/adevtool ]]; then
-        vendor/adevtool/bin/adevtool generate-all -d "$DEVICE"
-    elif command -v adevtool >/dev/null; then
-        adevtool generate-all -d "$DEVICE"
-    else
-        yarn --cwd vendor/adevtool/ run adevtool generate-all -d "$DEVICE"
+    # adevtool is an oclif CLI — its launcher is vendor/adevtool/bin/run (there is no global
+    # `adevtool` command, and `yarn run adevtool` has no such script). Prefer bin/run, with
+    # fallbacks for older layouts / a PATH install.
+    local ADEV
+    if   [[ -x vendor/adevtool/bin/run ]];      then ADEV=(vendor/adevtool/bin/run)
+    elif [[ -x vendor/adevtool/bin/adevtool ]]; then ADEV=(vendor/adevtool/bin/adevtool)
+    elif command -v adevtool >/dev/null;        then ADEV=(adevtool)
+    else die "adevtool launcher not found under vendor/adevtool/bin (did 'yarn install' succeed?)"
     fi
+    "${ADEV[@]}" generate-all -d "$DEVICE"
 }
 
 phase_overlay() {
