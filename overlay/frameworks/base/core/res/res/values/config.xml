@@ -26,4 +26,9 @@
          com.android.location.service.GeocodeProvider action) becomes THE system geocoder.
          Replaces GrapheneOS's NetworkLocation module (removed in modern_apps.mk). -->
     <string name="config_geocoderProviderPackageName" translatable="false">com.vayunmathur.networklocation</string>
+
+    <!-- Network location provider -> Modern Apps NetworkLocation. Its NetworkLocationService
+         (bound via the com.android.location.service.v3.NetworkLocationProvider action) becomes
+         THE system network location provider, replacing GrapheneOS's NetworkLocation module. -->
+    <string name="config_networkLocationProviderPackageName" translatable="false">com.vayunmathur.networklocation</string>
 </resources>
