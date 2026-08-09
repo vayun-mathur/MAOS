@@ -37,6 +37,7 @@ prebuilts/                            # release APKs (git-ignored; populated by 
 scripts/collect-apks.sh              # copies Modern-Apps release APKs into prebuilts/
 keys/generate-keys.sh                # generates the OS key set (offline; never committed)
 ota/                                 # build-ota.sh + publish-ota.sh (+ README)
+installer/                           # prepare-factory.sh + sparse_split.py for the web installer
 updater/                             # how to point the Updater at ota.ma.vayunmathur.com
 docs/BUILD_RUNBOOK.md                # end-to-end Linux build/sign/OTA/publish
 local_manifest.xml                    # adds this repo to the GrapheneOS tree
@@ -95,3 +96,12 @@ server proxy, since the payloads are multi-GB. Build/publish scripts are in
 [`ota/`](ota/README.md); pointing the Updater at the server is covered in
 [`updater/`](updater/README.md). Full design rationale is in `GRAPHENEOS_FORK_PLAN.md`
 (Modern-Apps repo).
+
+## Web installer
+
+`https://ma.vayunmathur.com/os/install` is a browser-based WebUSB flasher (like
+GrapheneOS's `/install/web`) — flash MAOS to a Pixel with no command-line tools. The static
+front-end lives in the `location_share_server` repo (`os_installer/`); the build-host side
+(turning a factory image into the manifest + images it flashes, and uploading to R2) is in
+[`installer/`](installer/README.md). Requires a Chromium desktop browser and an R2 CORS
+policy allowing `https://ma.vayunmathur.com`.
