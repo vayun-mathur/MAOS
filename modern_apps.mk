@@ -47,6 +47,7 @@ _maos_remove := \
     Gallery2 \
     DocumentsUI \
     LatinIME \
+    SpeechServices \
     Auditor
 
 # Safety: refuse to remove any content-provider backend. This makes the Contacts/Calendar
@@ -66,9 +67,9 @@ PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
 # tree and add it to the filter-out list above — do NOT remove the WebView/Trichrome
 # modules.
 
-# NOTE on speech: Modern Apps Speech is ADDITIVE (AOSP ships no default TTS/STT engine).
-# It becomes the default on-device recognizer via config_default*SpeechRecognitionService
-# (overlay) and, being the only installed TTS engine, the default TTS engine. Its
+# NOTE on speech: Modern Apps Speech REPLACES GrapheneOS's SpeechServices (which we remove
+# above). It becomes the default on-device recognizer via config_default*SpeechRecognitionService
+# (overlay) and, being the only remaining installed TTS engine, the default TTS engine. Its
 # RECORD_AUDIO runtime permission must be granted by default for the recognizer to work
 # headless — see the default-permissions grant referenced below.
 

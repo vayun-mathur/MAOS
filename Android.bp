@@ -118,8 +118,8 @@ android_app_import {
 }
 
 // Speech is the default on-device STT (RecognitionService) and TTS (TextToSpeech) engine.
-// Additive — AOSP ships neither. Wired up via config_default*SpeechRecognitionService and,
-// for TTS, by being the only installed engine (see modern_apps.mk / overlay).
+// Replaces GrapheneOS's SpeechServices (removed in modern_apps.mk). Wired up via
+// config_default*SpeechRecognitionService and, for TTS, by being the only installed engine.
 android_app_import {
     name: "ModernAppsSpeech",
     apk: "prebuilts/speech-release.apk",
