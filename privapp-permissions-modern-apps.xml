@@ -14,4 +14,14 @@
     <!-- NOTE: MANAGE_EXTERNAL_STORAGE (all-files access), if Files needs it, is a special
          app-op permission granted via role/appops, NOT a privapp-permission — do not add
          it here. -->
+
+    <!-- NetworkLocation is a priv-app providing the system network location provider and
+         geocoder (pinned via config_networkLocationProviderPackageName /
+         config_geocoderProviderPackageName). It requires these signature|privileged perms. -->
+    <privapp-permissions package="com.vayunmathur.networklocation">
+        <permission name="android.permission.INSTALL_LOCATION_PROVIDER" />
+        <permission name="android.permission.LOCATION_HARDWARE" />
+        <permission name="android.permission.MODIFY_PHONE_STATE" />
+        <permission name="android.permission.UPDATE_DEVICE_STATS" />
+    </privapp-permissions>
 </permissions>
