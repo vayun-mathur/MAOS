@@ -28,6 +28,25 @@ The installer reads `factory/<device>/latest/manifest.json`, then for each step 
 `flash` / `erase` / `reboot-bootloader` / `reboot` over WebUSB, streaming each referenced
 image straight from R2.
 
+## Before you have any builds
+
+You don't need to upload anything: if `factory/<device>/latest/manifest.json` is missing
+(404), the installer detects the device, lets it connect/unlock, and shows **"No MAOS build
+is available for &lt;device&gt; yet"** when the user clicks Download.
+
+If you'd rather show an explicit message (e.g. a bucket-wide default), upload a stub
+`manifest.json` with `available: false`:
+
+```json
+{
+  "available": false,
+  "message": "MAOS builds aren't available yet — check back soon."
+}
+```
+
+Put it at `factory/<device>/latest/manifest.json` for a specific model. The installer treats
+either a 404 or `available: false` as "no build yet" (a friendly notice, not an error).
+
 ## Publishing a build for the installer
 
 ```bash
