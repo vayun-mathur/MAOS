@@ -1,9 +1,9 @@
 # Updater configuration (MAOS)
 
 MAOS reuses the GrapheneOS Updater app but points it at our own OTA server,
-`https://ota.ma.vayunmathur.com` (served by `location_share_server`, which proxies the
-metadata + signed OTA zips from the latest GitHub Release — see that repo's
-`handlers/ota.rs`).
+`https://ota.ma.vayunmathur.com` — a **Cloudflare R2 bucket** exposed via a custom domain,
+which serves the signed OTA zips + channel metadata directly (uploaded by
+`ota/publish-ota.sh`; see `../ota/README.md`).
 
 ## What the Updater fetches
 
@@ -33,8 +33,9 @@ your Updater version parses (GrapheneOS uses a short space-separated line —
    fork plan's "fallback: when a real fork is unavoidable").
 
 2. **Certificate pinning.** GrapheneOS pins its server's certificate. `ota.ma.vayunmathur.com`
-   uses a normal (Let's Encrypt) certificate, so either remove the pin or repin to your
-   cert. Check the Updater's `network_security_config` / any `CertificatePinner`:
+   uses a Cloudflare-managed certificate (and Cloudflare may rotate it), so either remove the
+   pin or pin to the Cloudflare/issuer cert. Check the Updater's `network_security_config` /
+   any `CertificatePinner`:
 
    ```bash
    grep -rn "pin-set\|CertificatePinner\|network_security_config" packages/apps/Updater/

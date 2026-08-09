@@ -109,17 +109,28 @@ vendor/modern-apps/ota/build-ota.sh \
   -t signed-$DEVICE-$BUILD.zip \
   [-p signed-$DEVICE-$OLD_BUILD.zip -o "$OLD_BUILD"]
 
-# Publish to the PUBLIC OTA repo (server proxies its latest release):
-vendor/modern-apps/ota/publish-ota.sh -r vayun-mathur/MAOS-releases -t "$BUILD"
+# Upload the zips + channel metadata to Cloudflare R2 (served at ota.ma.vayunmathur.com):
+export R2_ACCESS_KEY_ID=...  R2_SECRET_ACCESS_KEY=...  R2_ACCOUNT_ID=...
+vendor/modern-apps/ota/publish-ota.sh -b maos-ota
 ```
 
-Make sure the server's `MAOS_OTA_GH` matches the repo you publish to.
+`publish-ota.sh` uploads the immutable zips first and the `$DEVICE-$CHANNEL` metadata
+pointer last. Requires the `aws` CLI and the R2 env vars (see `ota/README.md`).
 
-## 10. Wire the OTA server
+## 10. OTA hosting (Cloudflare R2)
 
-On the box running `location_share_server`, point DNS `ota.ma.vayunmathur.com` at it and
-ensure its TLS cert covers that host. The server already routes that host to the OTA
-proxy (`handlers/ota.rs`). No code change needed beyond deploying the updated binary.
+`ota.ma.vayunmathur.com` is an **R2 bucket served via a Cloudflare custom domain** —
+devices download directly from R2. There is no server component for OTA (R2 handles the
+multi-GB payloads that GitHub Releases / the server's disk cannot). One-time setup:
+
+1. Create the R2 bucket (e.g. `maos-ota`) and an API token with Object Read & Write.
+2. Attach the custom domain `ota.ma.vayunmathur.com` (R2 → Settings → Custom Domains);
+   Cloudflare provisions TLS.
+3. Ensure any Cache Rule does **not** cache the `*-<channel>` metadata objects (the
+   uploader already sets `Cache-Control: no-store` on them).
+
+> The `handlers/ota.rs` proxy in `location_share_server` is now unused for this design
+> (DNS points at R2, not the server) and can be removed; it is harmless dead code if left.
 
 ## 11. Test before trusting it
 

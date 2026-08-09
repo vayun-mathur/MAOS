@@ -88,8 +88,10 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
 ## OTA
 
 MAOS uses the standard A/B OTA flow (`update_engine`) with updates served from
-**`https://ota.ma.vayunmathur.com`**, hosted by `location_share_server` (which proxies the
-signed OTA zips + channel metadata from a public GitHub Release — the same pattern as the
-F-Droid repo). Build/publish scripts are in [`ota/`](ota/README.md); pointing the Updater
-at the server is covered in [`updater/`](updater/README.md). Full design rationale is in
-`GRAPHENEOS_FORK_PLAN.md` (Modern-Apps repo).
+**`https://ota.ma.vayunmathur.com`**, a **Cloudflare R2 bucket** exposed via a custom
+domain. The build host uploads signed OTA zips + channel metadata straight to R2
+(`ota/publish-ota.sh`), and devices download directly from R2 — no GitHub Release and no
+server proxy, since the payloads are multi-GB. Build/publish scripts are in
+[`ota/`](ota/README.md); pointing the Updater at the server is covered in
+[`updater/`](updater/README.md). Full design rationale is in `GRAPHENEOS_FORK_PLAN.md`
+(Modern-Apps repo).
