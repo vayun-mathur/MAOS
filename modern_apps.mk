@@ -26,29 +26,24 @@ PRODUCT_PACKAGES += \
 # 2. Remove the stock userspace apps we're replacing.
 #    IMPORTANT: only ever remove *UI apps*, never content-provider backends. Contacts and
 #    Calendar are each split in AOSP/GrapheneOS:
-#      - UI:       Contacts (com.android.contacts); GrapheneOS bundles Etar as its calendar.
+#      - UI:       Contacts (com.android.contacts), Calendar (com.android.calendar)
 #      - backend:  ContactsProvider (com.android.providers.contacts),
 #                  CalendarProvider (com.android.providers.calendar)
 #    The *Provider modules implement ContactsContract/CalendarContract that our apps (and
 #    everything else) depend on — removing them breaks the whole system. So we remove only
-#    the UI apps (Contacts, Etar), leaving ContactsProvider/CalendarProvider intact.
+#    the UI apps, leaving ContactsProvider/CalendarProvider intact.
 #
-#    NOTE: `Etar` is safe to list even if this GrapheneOS release doesn't ship it —
-#    $(filter-out) on an absent module is a no-op. Confirm module names on your synced tree
-#    (runbook step 7b); bare AOSP has no calendar UI, so on a plain-AOSP base Etar is simply
-#    absent and MA Calendar is purely additive.
-#
-#    There is no PRODUCT_PACKAGES -= operator, so we filter them out. This only works if this
-#    file is evaluated LAST (see header). Confirm the exact module names in your synced tree —
-#    they occasionally change between GrapheneOS releases.
+#    Module names below are VERIFIED against a real GrapheneOS device (Pixel 9 Pro XL, from
+#    the /product/app/<Module>/<Module>.apk install paths). They should match cheetah (same
+#    OS build across Pixels), but re-confirm on your synced tree if a build surprises you.
 _maos_remove := \
     Camera \
-    PdfViewer \
-    Apps \
+    PdfViewerGOS \
+    AppStore \
     Contacts \
-    Etar \
+    Calendar \
     DeskClock \
-    Calculator \
+    ExactCalculator \
     Gallery2 \
     DocumentsUI \
     LatinIME \
