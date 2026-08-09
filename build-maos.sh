@@ -64,7 +64,7 @@ BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
 MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
-APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech)
+APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar)
 
 # ---- Derived / optional-env config ----
 MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/$DEVICE.keys.tar.gz.scrypt}"

@@ -129,3 +129,15 @@ android_app_import {
         enabled: false,
     },
 }
+
+// Calendar replaces GrapheneOS's Etar (or is additive on a plain-AOSP base, which has no
+// calendar UI). Uses the system CalendarProvider via CalendarContract — no backend of its own.
+android_app_import {
+    name: "ModernAppsCalendar",
+    apk: "prebuilts/calendar-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}

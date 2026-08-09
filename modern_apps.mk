@@ -20,17 +20,23 @@ PRODUCT_PACKAGES += \
     ModernAppsPhotos \
     ModernAppsStore \
     ModernAppsKeyboard \
-    ModernAppsSpeech
+    ModernAppsSpeech \
+    ModernAppsCalendar
 
 # 2. Remove the stock userspace apps we're replacing.
 #    IMPORTANT: only ever remove *UI apps*, never content-provider backends. Contacts and
-#    Calendar are each split in AOSP:
-#      - UI:       Contacts (com.android.contacts)   [no AOSP calendar UI app exists]
+#    Calendar are each split in AOSP/GrapheneOS:
+#      - UI:       Contacts (com.android.contacts); GrapheneOS bundles Etar as its calendar.
 #      - backend:  ContactsProvider (com.android.providers.contacts),
 #                  CalendarProvider (com.android.providers.calendar)
 #    The *Provider modules implement ContactsContract/CalendarContract that our apps (and
 #    everything else) depend on — removing them breaks the whole system. So we remove only
-#    "Contacts" (the UI), leaving ContactsProvider/CalendarProvider intact.
+#    the UI apps (Contacts, Etar), leaving ContactsProvider/CalendarProvider intact.
+#
+#    NOTE: `Etar` is safe to list even if this GrapheneOS release doesn't ship it —
+#    $(filter-out) on an absent module is a no-op. Confirm module names on your synced tree
+#    (runbook step 7b); bare AOSP has no calendar UI, so on a plain-AOSP base Etar is simply
+#    absent and MA Calendar is purely additive.
 #
 #    There is no PRODUCT_PACKAGES -= operator, so we filter them out. This only works if this
 #    file is evaluated LAST (see header). Confirm the exact module names in your synced tree —
@@ -40,6 +46,7 @@ _maos_remove := \
     PdfViewer \
     Apps \
     Contacts \
+    Etar \
     DeskClock \
     Calculator \
     Gallery2 \

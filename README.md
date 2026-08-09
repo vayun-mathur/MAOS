@@ -24,6 +24,7 @@ repo.)
 | App Store | `com.vayunmathur.appstore` | GrapheneOS Apps |
 | Keyboard | `com.vayunmathur.keyboard` | AOSP LatinIME (Direct Boot-aware for lock-screen input) |
 | Speech | `com.vayunmathur.speech` | *(additive)* default on-device STT + TTS |
+| Calendar | `com.vayunmathur.calendar` | GrapheneOS Etar (uses system CalendarProvider) |
 
 ## Layout
 
