@@ -191,7 +191,15 @@ phase_vendor() {
     log "Extracting Pixel vendor files for $DEVICE (adevtool)"
     cd "$TREE"; source build/envsetup.sh
     yarn --cwd vendor/adevtool/ install
-    adevtool generate-all -d "$DEVICE"
+    # adevtool isn't a global command — envsetup only exposes it in some setups. Prefer the
+    # package's own launcher, falling back to the PATH command if present.
+    if [[ -x vendor/adevtool/bin/adevtool ]]; then
+        vendor/adevtool/bin/adevtool generate-all -d "$DEVICE"
+    elif command -v adevtool >/dev/null; then
+        adevtool generate-all -d "$DEVICE"
+    else
+        yarn --cwd vendor/adevtool/ run adevtool generate-all -d "$DEVICE"
+    fi
 }
 
 phase_overlay() {
