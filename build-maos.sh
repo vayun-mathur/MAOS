@@ -158,6 +158,10 @@ phase_deps() {
 phase_sync() {
     log "Syncing GrapheneOS $TAG into $TREE"
     case "$TREE" in /mnt/*) die "TREE is under /mnt (Windows FS). Use ext4, e.g. \$HOME/maos.";; esac
+    # repo requires a git identity for its internal manifest project.
+    git config --global user.name  >/dev/null 2>&1 || git config --global user.name "Vayun Mathur"
+    git config --global user.email >/dev/null 2>&1 || \
+        git config --global user.email "69178052+vayun-mathur@users.noreply.github.com"
     mkdir -p "$TREE"; cd "$TREE"
     repo init -u "$MANIFEST_URL" -b "refs/tags/$TAG"
 
