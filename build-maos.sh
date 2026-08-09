@@ -8,9 +8,15 @@
 #
 # It is phase-based and resumable — rerun a phase or the whole thing safely.
 #
-#   ./build-maos.sh all              # deps → sync → vendor → overlay → keys → build → release → publish
-#   ./build-maos.sh sync             # just one phase
-#   ./build-maos.sh build release    # a few phases in order
+#   ./build-maos.sh all                         # full pipeline
+#   ./build-maos.sh sync                         # just one phase
+#   ./build-maos.sh -d panther -t 2026080500 all # override device/tag via flags
+#
+# Usage: ./build-maos.sh [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>
+#   -d DEVICE    Pixel codename / build target   (default: cheetah)
+#   -t TAG       GrapheneOS base tag             (default: 2026080500)
+#   -c CHANNEL   OTA channel to publish          (default: stable; stable|beta|testing)
+#   phases: deps sync vendor overlay keys build release publish all
 #
 # ── Signing keys ────────────────────────────────────────────────────────────────────────
 # Keys live in ONE encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you pass in
@@ -24,33 +30,45 @@
 # For publishing:
 #   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY   Cloudflare R2 creds
 #
-# ── Optional environment (with defaults) ────────────────────────────────────────────────
-#   DEVICE=cheetah                 Pixel codename / build target
-#   TAG=2026080500                 GrapheneOS base tag
-#   BUILD=<YYYYMMDD00>             build number for this release
-#   TREE=$HOME/maos                AOSP checkout dir (must be ext4, NOT /mnt/c)
+# ── Optional environment ────────────────────────────────────────────────────────────────
 #   MAOS_KEYS_FILE=$HOME/maos-keys/$DEVICE.keys.tar.gz.enc   encrypted key blob (outside the tree)
 #   MODERN_APPS_SRC=<path>         Modern-Apps checkout/dir with release APKs; if unset, the 9
 #                                  APKs are downloaded from the Modern-Apps GitHub release
-#   R2_BUCKET=maos-ota             R2 bucket name
-#   OTA_CHANNEL=stable             channel metadata to publish (stable|beta|testing)
-#   MANIFEST_URL=https://github.com/GrapheneOS/platform_manifest.git
+#
+# ── Hardcoded ─────────────────────────────────────────────────────────────────────────────
+#   TREE=$HOME/maos (ext4 checkout)   R2_BUCKET=maos   BUILD=<tag> (matches the GrapheneOS tag)
 #
 set -euo pipefail
 
-# ---- Config ----
-DEVICE="${DEVICE:-cheetah}"
-TAG="${TAG:-2026080500}"
-BUILD="${BUILD:-$(date +%Y%m%d)00}"
-TREE="${TREE:-$HOME/maos}"
-MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/$DEVICE.keys.tar.gz.enc}"
-MODERN_APPS_SRC="${MODERN_APPS_SRC:-}"
-R2_BUCKET="${R2_BUCKET:-maos-ota}"
-OTA_CHANNEL="${OTA_CHANNEL:-stable}"
-MANIFEST_URL="${MANIFEST_URL:-https://github.com/GrapheneOS/platform_manifest.git}"
+# ---- Parameters (flags) ----
+DEVICE="cheetah"
+TAG="2026080500"
+OTA_CHANNEL="stable"
+while getopts "d:t:c:h" _opt; do
+    case "$_opt" in
+        d) DEVICE="$OPTARG" ;;
+        t) TAG="$OPTARG" ;;
+        c) OTA_CHANNEL="$OPTARG" ;;
+        h) sed -n '2,15p' "$0"; exit 0 ;;
+        *) echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>" >&2; exit 2 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+# ---- Hardcoded config ----
+TREE="$HOME/maos"                              # AOSP checkout (ext4; never /mnt/c)
+R2_BUCKET="maos"                               # R2 bucket / ota.ma.vayunmathur.com
+# The release build number always matches the GrapheneOS base tag (their tags are the build
+# numbers), so OTA/version identity lines up with the upstream release.
+BUILD="$TAG"
+MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
 MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
 APPS=(web camera pdf contacts calculator clock files photos appstore)
+
+# ---- Derived / optional-env config ----
+MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/$DEVICE.keys.tar.gz.enc}"
+MODERN_APPS_SRC="${MODERN_APPS_SRC:-}"
 
 # Plaintext keys are only ever materialized here (RAM-backed), and shredded on exit.
 KEYS_PLAIN="/dev/shm/maos-keys-$DEVICE"
@@ -279,7 +297,7 @@ run_phase() {
     esac
 }
 
-[[ $# -gt 0 ]] || { echo "usage: $0 <phase...>   (phases: deps sync vendor overlay keys build release publish all)"; exit 2; }
-log "MAOS build — device=$DEVICE tag=$TAG build=$BUILD tree=$TREE"
+[[ $# -gt 0 ]] || { echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>   (phases: deps sync vendor overlay keys build release publish all)"; exit 2; }
+log "MAOS build — device=$DEVICE tag=$TAG build=$BUILD channel=$OTA_CHANNEL tree=$TREE bucket=$R2_BUCKET"
 for p in "$@"; do run_phase "$p"; done
 log "All requested phases complete."

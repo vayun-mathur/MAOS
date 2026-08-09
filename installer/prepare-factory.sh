@@ -27,7 +27,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEVICE="" ; BUILD="" ; FACTORY="" ; PLAN="" ; MAXB=$((100 * 1024 * 1024))
-OUTDIR="out/maos-factory" ; BUCKET="${R2_BUCKET:-maos-ota}" ; UPLOAD=1
+OUTDIR="out/maos-factory" ; BUCKET="${R2_BUCKET:-maos}" ; UPLOAD=1
 
 usage() { sed -n '2,30p' "$0" >&2; exit 2; }
 

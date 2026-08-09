@@ -18,19 +18,19 @@
 #   R2_SECRET_ACCESS_KEY   R2 API token secret
 #   R2_ACCOUNT_ID          Cloudflare account id (used to build the endpoint), OR
 #   R2_ENDPOINT            full endpoint URL (overrides R2_ACCOUNT_ID)
-#   R2_BUCKET              bucket name (default: maos-ota, or pass -b)
+#   R2_BUCKET              bucket name (default: maos, or pass -b)
 #
 # Requires: awscli v2.
 #
 set -euo pipefail
 
-BUCKET="${R2_BUCKET:-maos-ota}"
+BUCKET="${R2_BUCKET:-maos}"
 OUTDIR="out/maos-ota"
 
 usage() {
     cat >&2 <<EOF
 usage: publish-ota.sh [-b BUCKET] [-O OUTDIR]
-  -b BUCKET   R2 bucket name (default: \$R2_BUCKET or maos-ota)
+  -b BUCKET   R2 bucket name (default: $R2_BUCKET or maos)
   -O OUTDIR   dir containing the artifacts from build-ota.sh (default: out/maos-ota)
 
 Required env: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and either R2_ACCOUNT_ID or

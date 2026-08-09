@@ -95,21 +95,19 @@ export R2_ACCESS_KEY_ID='<r2 token key id>'
 export R2_SECRET_ACCESS_KEY='<r2 token secret>'
 ```
 
-Optional overrides (sensible defaults shown):
+Optional:
 
 ```bash
-export DEVICE=cheetah                 # build target
-export TAG=2026080500                 # GrapheneOS base tag
-export BUILD=$(date +%Y%m%d)00        # this release's build number
-export TREE=$HOME/maos                # AOSP checkout (ext4)
-export R2_BUCKET=maos-ota
-export OTA_CHANNEL=stable
 # export MODERN_APPS_SRC=/path/to/Modern-Apps   # else the 9 APKs are downloaded from GitHub
 ```
 
-The keystore itself is written to `~/maos-keys/cheetah.keys.tar.gz.enc` (encrypted with
-your passphrase). **Back that file up and keep the passphrase safe** — losing either
-permanently breaks OTA/verified boot for every installed device.
+Device, tag, and OTA channel are **command-line flags** on the script (not env vars),
+defaulting to `cheetah` / `2026080500` / `stable`. The AOSP checkout (`~/maos`), the R2
+bucket (`maos`), and the release build number (always the GrapheneOS tag) are fixed.
+
+The keystore is written to `~/maos-keys/<device>.keys.tar.gz.enc` (encrypted with your
+passphrase). **Back that file up and keep the passphrase safe** — losing either permanently
+breaks OTA/verified boot for every installed device.
 
 ---
 
@@ -119,7 +117,9 @@ Run the pipeline. The first run generates the signing keys and encrypts them int
 keystore automatically (the `keys` phase), then builds, signs, and publishes:
 
 ```bash
-~/MAOS/build-maos.sh all
+~/MAOS/build-maos.sh all                       # Pixel 7 Pro (cheetah), tag 2026080500
+# other devices/tags/channels via flags:
+# ~/MAOS/build-maos.sh -d panther -t 2026080500 -c beta all
 ```
 
 Phases run in order: `deps → sync → vendor → overlay → keys → build → release → publish`.
