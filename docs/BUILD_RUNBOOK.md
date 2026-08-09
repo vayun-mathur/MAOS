@@ -1,25 +1,56 @@
 # MAOS build runbook (Linux)
 
 End-to-end steps to build, sign, and ship MAOS. **This must run on Linux** (Debian/Ubuntu
-recommended), with ~400 GB free disk, 32 GB+ RAM, and a fast connection. It cannot run on
-Windows/macOS. Commands assume `bash`.
+recommended), with ~400 GB free disk, 32 GB+ RAM, and a fast connection. On Windows, use
+WSL2 (see the section below). Commands assume `bash`.
 
-> Terminology: `$DEVICE` = Pixel codename (e.g. `shusky`), `$BUILD` = build number you
-> choose (e.g. `2026080900`), `$KEYSDIR` = your keys dir (e.g. `~/.android-certs`).
+> Terminology: `$DEVICE` = Pixel codename, `$BUILD` = build number you choose, `$KEYSDIR` =
+> your keys dir (e.g. `~/.android-certs`).
+>
+> **Current target:** `$DEVICE = cheetah` (Pixel 7 Pro), base GrapheneOS tag
+> **`2026080500`** (https://grapheneos.org/releases#2026080500).
+
+---
+
+## Building on WSL2 (Windows)
+
+A GrapheneOS build runs well under WSL2 given enough disk/RAM. Do NOT build under `/mnt/c`
+— AOSP needs a case-sensitive filesystem and heavy small-file I/O; use WSL2's native ext4
+(your Linux home).
+
+1. Install WSL2 (admin PowerShell, then reboot):
+   ```powershell
+   wsl --install -d Ubuntu
+   wsl --update
+   ```
+2. Give it resources — create `C:\Users\<you>\.wslconfig`:
+   ```ini
+   [wsl2]
+   memory=96GB
+   processors=32
+   swap=32GB
+   ```
+   Then `wsl --shutdown` and reopen Ubuntu.
+3. Ensure the WSL virtual disk (`ext4.vhdx`) is on a drive with ~500 GB free. If your free
+   space isn't on `C:`, move the distro with `wsl --export` / `wsl --import` to that drive.
+4. Work inside `~/` (ext4), e.g. `~/maos` — never `/mnt/c/...`.
+
+Everything below then runs unchanged inside the Ubuntu shell.
 
 ---
 
 ## 0. One-time host setup
 
-Follow GrapheneOS's official build-environment setup (packages, `repo`, adevtool, etc.).
-Do not skip their prerequisites — MAOS is a thin overlay on top of a stock GrapheneOS
-build, so if a plain GrapheneOS build works, MAOS will.
+Follow GrapheneOS's official build-environment setup for tag **2026080500** (packages,
+`repo`, and **adevtool**, which extracts the Pixel vendor files). Do not skip their
+prerequisites — MAOS is a thin overlay on a stock GrapheneOS build, so if a plain
+GrapheneOS `cheetah` build works, MAOS will.
 
 ## 1. Sync the source + inject the MAOS overlay
 
 ```bash
-mkdir grapheneos && cd grapheneos
-repo init -u https://github.com/GrapheneOS/platform_manifest -b <RELEASE_BRANCH>
+mkdir -p ~/maos && cd ~/maos           # ext4, NOT /mnt/c
+repo init -u https://github.com/GrapheneOS/platform_manifest -b refs/tags/2026080500
 
 # Add the MAOS overlay via a local manifest (no fork of platform_manifest):
 mkdir -p .repo/local_manifests
@@ -28,7 +59,7 @@ ln -s /path/to/MAOS/local_manifest.xml .repo/local_manifests/modern-apps.xml
 repo sync -c -j"$(nproc)"
 ```
 
-This lands the overlay at `vendor/modern-apps/`.
+This lands the overlay at `vendor/modern-apps/`. (~150 GB download; takes a while.)
 
 ## 2. Confirm the stock module/project names
 
@@ -78,6 +109,7 @@ breaks OTA for installed devices.
 ## 6. Build
 
 ```bash
+export DEVICE=cheetah          # Pixel 7 Pro
 source build/envsetup.sh
 lunch aosp_${DEVICE}-user      # or the GrapheneOS target for your device
 m target-files-package
