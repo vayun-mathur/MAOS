@@ -130,11 +130,23 @@ android_app_import {
     },
 }
 
-// Calendar replaces GrapheneOS's Etar (or is additive on a plain-AOSP base, which has no
-// calendar UI). Uses the system CalendarProvider via CalendarContract — no backend of its own.
+// Calendar replaces the stock AOSP Calendar (com.android.calendar, module Calendar). Uses the
+// system CalendarProvider via CalendarContract — no backend of its own.
 android_app_import {
     name: "ModernAppsCalendar",
     apk: "prebuilts/calendar-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Music replaces AOSP Music (com.android.music, module Music). Includes a popup single-file
+// player (.AudioPreview equivalent) for audio VIEW intents.
+android_app_import {
+    name: "ModernAppsMusic",
+    apk: "prebuilts/music-release.apk",
     presigned: true,
     product_specific: true,
     dex_preopt: {

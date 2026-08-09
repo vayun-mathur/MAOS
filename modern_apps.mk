@@ -21,7 +21,8 @@ PRODUCT_PACKAGES += \
     ModernAppsStore \
     ModernAppsKeyboard \
     ModernAppsSpeech \
-    ModernAppsCalendar
+    ModernAppsCalendar \
+    ModernAppsMusic
 
 # 2. Remove the stock userspace apps we're replacing.
 #    IMPORTANT: only ever remove *UI apps*, never content-provider backends. Contacts and
@@ -48,6 +49,8 @@ _maos_remove := \
     DocumentsUI \
     LatinIME \
     SpeechServices \
+    Music \
+    InfoApp \
     Auditor
 
 # Safety: refuse to remove any content-provider backend. This makes the Contacts/Calendar

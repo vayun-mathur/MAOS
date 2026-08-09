@@ -21,7 +21,7 @@ SRC="${1:?usage: collect-apks.sh <path to Modern-Apps repo, its distribution_apk
 DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/prebuilts"
 mkdir -p "$DEST"
 
-APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar)
+APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music)
 
 find_apk() {
   local app="$1"
