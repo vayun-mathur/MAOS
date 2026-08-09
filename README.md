@@ -22,6 +22,8 @@ repo.)
 | Files | `com.vayunmathur.files` | **DocumentsUI** (Files also takes over the SAF role — see below) |
 | Photos | `com.vayunmathur.photos` | AOSP Gallery |
 | App Store | `com.vayunmathur.appstore` | GrapheneOS Apps |
+| Keyboard | `com.vayunmathur.keyboard` | AOSP LatinIME (Direct Boot-aware for lock-screen input) |
+| Speech | `com.vayunmathur.speech` | *(additive)* default on-device STT + TTS |
 
 ## Layout
 

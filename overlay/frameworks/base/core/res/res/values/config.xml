@@ -14,4 +14,11 @@
          that registers the SAF picker intents and holds MANAGE_DOCUMENTS (allowlisted in
          privapp-permissions-modern-apps.xml). -->
     <string name="config_documentsUiPackage" translatable="false">com.vayunmathur.files</string>
+
+    <!-- Default speech recognition (STT) -> Modern Apps Speech (Whisper, on-device).
+         AOSP ships no default recognizer; this makes SpeechRecognizer work offline. -->
+    <string name="config_defaultSpeechRecognitionService" translatable="false">com.vayunmathur.speech/.service.WhisperRecognitionService</string>
+    <string name="config_defaultOnDeviceSpeechRecognitionService" translatable="false">com.vayunmathur.speech/.service.WhisperRecognitionService</string>
+    <!-- TTS: Modern Apps Speech (Piper) is the only installed engine, so the framework
+         selects it as the default TTS engine automatically; no dedicated config exists. -->
 </resources>

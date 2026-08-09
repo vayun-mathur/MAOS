@@ -104,3 +104,28 @@ android_app_import {
         enabled: false,
     },
 }
+
+// Keyboard replaces AOSP LatinIME as the system IME. Direct Boot support (for lock-screen
+// input after a reboot) is declared in the keyboard app's own manifest, not here.
+android_app_import {
+    name: "ModernAppsKeyboard",
+    apk: "prebuilts/keyboard-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Speech is the default on-device STT (RecognitionService) and TTS (TextToSpeech) engine.
+// Additive — AOSP ships neither. Wired up via config_default*SpeechRecognitionService and,
+// for TTS, by being the only installed engine (see modern_apps.mk / overlay).
+android_app_import {
+    name: "ModernAppsSpeech",
+    apk: "prebuilts/speech-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}

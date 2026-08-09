@@ -18,7 +18,9 @@ PRODUCT_PACKAGES += \
     ModernAppsClock \
     ModernAppsFiles \
     ModernAppsPhotos \
-    ModernAppsStore
+    ModernAppsStore \
+    ModernAppsKeyboard \
+    ModernAppsSpeech
 
 # 2. Remove the stock userspace apps we're replacing.
 #    There is no PRODUCT_PACKAGES -= operator, so we filter them out. This only works
@@ -33,7 +35,9 @@ PRODUCT_PACKAGES := $(filter-out \
     DeskClock \
     Calculator \
     Gallery2 \
-    DocumentsUI, \
+    DocumentsUI \
+    LatinIME \
+    Auditor, \
     $(PRODUCT_PACKAGES))
 
 # NOTE on the browser (Vanadium): Vanadium provides BOTH the default browser AND the
@@ -44,9 +48,24 @@ PRODUCT_PACKAGES := $(filter-out \
 # tree and add it to the filter-out list above — do NOT remove the WebView/Trichrome
 # modules.
 
+# NOTE on speech: Modern Apps Speech is ADDITIVE (AOSP ships no default TTS/STT engine).
+# It becomes the default on-device recognizer via config_default*SpeechRecognitionService
+# (overlay) and, being the only installed TTS engine, the default TTS engine. Its
+# RECORD_AUDIO runtime permission must be granted by default for the recognizer to work
+# headless — see the default-permissions grant referenced below.
+
+# NOTE on the keyboard: Modern Apps Keyboard replaces AOSP LatinIME as the IME. For it to
+# work on the lock screen after a reboot it must be Direct Boot aware; that attribute is set
+# in the keyboard app's own manifest (Modern-Apps repo). With LatinIME removed it is the sole
+# preinstalled IME, so the system enables/selects it by default.
+
 # 3. Static resource overlays: config_defaultBrowser, config_documentsUiPackage,
-#    WebView allowlist, branding.
+#    speech recognition service, WebView allowlist, branding.
 PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
+
+# 3b. Default-permission grant so the Speech recognizer/TTS gets RECORD_AUDIO headlessly.
+PRODUCT_COPY_FILES += \
+    vendor/modern-apps/default-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/default-permissions/default-permissions-modern-apps.xml
 
 # 4. Privileged-permission allowlist so Files (priv-app) may hold MANAGE_DOCUMENTS.
 PRODUCT_COPY_FILES += \
@@ -57,7 +76,7 @@ $(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
 
 # 6. Build-time guard: fail the build if any stock app we meant to drop is still in
 #    PRODUCT_PACKAGES (catches upstream module renames that would silently re-add it).
-_maos_leaked := $(filter Camera PdfViewer Apps Contacts DeskClock Calculator Gallery2 DocumentsUI,$(PRODUCT_PACKAGES))
+_maos_leaked := $(filter Camera PdfViewer Apps Contacts DeskClock Calculator Gallery2 DocumentsUI LatinIME Auditor,$(PRODUCT_PACKAGES))
 ifneq ($(_maos_leaked),)
 $(error MAOS: stock apps still present in PRODUCT_PACKAGES: $(_maos_leaked). Update the filter-out list in vendor/modern-apps/modern_apps.mk)
 endif

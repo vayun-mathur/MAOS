@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default runtime-permission grants for Modern Apps that act as headless system services.
+  Copied to /product/etc/default-permissions/ by modern_apps.mk. Without this, the Speech
+  app (default on-device recognizer + TTS engine) would have no RECORD_AUDIO until a user
+  manually granted it, so voice input would fail out of the box.
+-->
+<exceptions>
+    <exception package="com.vayunmathur.speech">
+        <permission name="android.permission.RECORD_AUDIO" fixed="false" />
+    </exception>
+</exceptions>
