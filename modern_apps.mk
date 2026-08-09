@@ -23,11 +23,19 @@ PRODUCT_PACKAGES += \
     ModernAppsSpeech
 
 # 2. Remove the stock userspace apps we're replacing.
-#    There is no PRODUCT_PACKAGES -= operator, so we filter them out. This only works
-#    if this file is evaluated LAST (see header). Confirm the exact module names in your
-#    synced tree — they occasionally change between GrapheneOS releases:
-#      grep -rn --include=*.mk -e 'Camera' -e 'PdfViewer' -e 'DocumentsUI' ...
-PRODUCT_PACKAGES := $(filter-out \
+#    IMPORTANT: only ever remove *UI apps*, never content-provider backends. Contacts and
+#    Calendar are each split in AOSP:
+#      - UI:       Contacts (com.android.contacts)   [no AOSP calendar UI app exists]
+#      - backend:  ContactsProvider (com.android.providers.contacts),
+#                  CalendarProvider (com.android.providers.calendar)
+#    The *Provider modules implement ContactsContract/CalendarContract that our apps (and
+#    everything else) depend on — removing them breaks the whole system. So we remove only
+#    "Contacts" (the UI), leaving ContactsProvider/CalendarProvider intact.
+#
+#    There is no PRODUCT_PACKAGES -= operator, so we filter them out. This only works if this
+#    file is evaluated LAST (see header). Confirm the exact module names in your synced tree —
+#    they occasionally change between GrapheneOS releases.
+_maos_remove := \
     Camera \
     PdfViewer \
     Apps \
@@ -37,8 +45,16 @@ PRODUCT_PACKAGES := $(filter-out \
     Gallery2 \
     DocumentsUI \
     LatinIME \
-    Auditor, \
-    $(PRODUCT_PACKAGES))
+    Auditor
+
+# Safety: refuse to remove any content-provider backend. This makes the Contacts/Calendar
+# footgun structurally impossible — if a *Provider ever ends up in the list, fail loudly.
+_maos_providers := $(filter %Provider,$(_maos_remove))
+ifneq ($(_maos_providers),)
+$(error MAOS: refusing to remove content providers: $(_maos_providers). Remove only UI apps, never *Provider backends.)
+endif
+
+PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
 
 # NOTE on the browser (Vanadium): Vanadium provides BOTH the default browser AND the
 # system WebView provider. We make Modern Apps Web the default browser via the
@@ -76,7 +92,7 @@ $(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
 
 # 6. Build-time guard: fail the build if any stock app we meant to drop is still in
 #    PRODUCT_PACKAGES (catches upstream module renames that would silently re-add it).
-_maos_leaked := $(filter Camera PdfViewer Apps Contacts DeskClock Calculator Gallery2 DocumentsUI LatinIME Auditor,$(PRODUCT_PACKAGES))
+_maos_leaked := $(filter $(_maos_remove),$(PRODUCT_PACKAGES))
 ifneq ($(_maos_leaked),)
-$(error MAOS: stock apps still present in PRODUCT_PACKAGES: $(_maos_leaked). Update the filter-out list in vendor/modern-apps/modern_apps.mk)
+$(error MAOS: stock apps still present in PRODUCT_PACKAGES: $(_maos_leaked). Update the _maos_remove list in vendor/modern-apps/modern_apps.mk)
 endif
