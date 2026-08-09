@@ -131,7 +131,17 @@ phase_deps() {
         repo yarnpkg zip unzip rsync git gnupg openssh-client scrypt \
         python3 python-is-python3 diffutils hostname openssl \
         libfreetype6 fontconfig fonts-dejavu-core \
-        build-essential curl awscli
+        build-essential curl
+    # AWS CLI v2 (used for R2 uploads). The `awscli` apt package was removed in newer
+    # Ubuntu, so install the official v2 bundle if `aws` isn't already present.
+    if ! command -v aws >/dev/null; then
+        log "Installing AWS CLI v2 from the official bundle"
+        local t; t="$(mktemp -d)"
+        curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "$t/awscliv2.zip"
+        unzip -q "$t/awscliv2.zip" -d "$t"
+        sudo "$t/aws/install" --update
+        rm -rf "$t"
+    fi
     grep -q '/usr/local/sbin' ~/.bashrc 2>/dev/null || \
         echo 'export PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin' >> ~/.bashrc
     export PATH="$PATH:/sbin:/usr/sbin:/usr/local/sbin"
