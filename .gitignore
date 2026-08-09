@@ -10,3 +10,7 @@ keys/*.x509.pem
 keys/*.bin
 *.keystore
 *.jks
+
+# Python bytecode
+__pycache__/
+*.pyc
