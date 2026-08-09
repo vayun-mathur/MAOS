@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Privileged-permission allowlist for Modern Apps priv-apps.
+  Copied to /product/etc/permissions/ by modern_apps.mk. Without this entry the build
+  (and boot) rejects a priv-app that requests a signature|privileged permission.
+-->
+<permissions>
+    <!-- Files takes over DocumentsUI's Storage Access Framework role in the system build,
+         which requires the signature|privileged MANAGE_DOCUMENTS permission. -->
+    <privapp-permissions package="com.vayunmathur.files">
+        <permission name="android.permission.MANAGE_DOCUMENTS" />
+    </privapp-permissions>
+
+    <!-- NOTE: MANAGE_EXTERNAL_STORAGE (all-files access), if Files needs it, is a special
+         app-op permission granted via role/appops, NOT a privapp-permission — do not add
+         it here. -->
+</permissions>

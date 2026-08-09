@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Static resource overlay for frameworks/base/core/res.
+  Pulled in via PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay (see modern_apps.mk).
+-->
+<resources>
+    <!-- Default browser role -> Modern Apps Web.
+         Vanadium remains installed as the system WebView provider; this only changes
+         which app holds the browser role. -->
+    <string name="config_defaultBrowser" translatable="false">com.vayunmathur.web</string>
+
+    <!-- Storage Access Framework / documents UI host -> Modern Apps Files.
+         Replaces com.android.documentsui. The Files app must ship a system build variant
+         that registers the SAF picker intents and holds MANAGE_DOCUMENTS (allowlisted in
+         privapp-permissions-modern-apps.xml). -->
+    <string name="config_documentsUiPackage" translatable="false">com.vayunmathur.files</string>
+</resources>

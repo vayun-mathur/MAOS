@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MAOS local manifest.
+
+  Symlink this into your GrapheneOS checkout BEFORE `repo sync`:
+
+      mkdir -p .repo/local_manifests
+      ln -s /path/to/MAOS/local_manifest.xml .repo/local_manifests/modern-apps.xml
+      repo sync
+
+  This adds the overlay at vendor/modern-apps and (optionally) drops the source of the
+  stock apps we replace.
+-->
+<manifest>
+  <remote name="maos-github" fetch="https://github.com/vayun-mathur/" />
+
+  <!-- The overlay repo (this repo) lands at vendor/modern-apps. -->
+  <project path="vendor/modern-apps" name="MAOS" remote="maos-github" revision="main" />
+
+  <!--
+    OPTIONAL: remove the SOURCE of the stock apps we replace. Not required — modern_apps.mk
+    already strips them from PRODUCT_PACKAGES via $(filter-out ...), and leaving the source
+    in the tree is harmless. Enable these only if you also want the source gone, and CONFIRM
+    each project name against the GrapheneOS manifest for your release tag first (names differ
+    across tags). Removing DocumentsUI source is safe because Files takes over its SAF role.
+
+  <remove-project name="platform_packages_apps_Contacts" />
+  <remove-project name="platform_packages_apps_DeskClock" />
+  <remove-project name="platform_packages_apps_ExactCalculator" />
+  <remove-project name="platform_packages_apps_Gallery2" />
+  <remove-project name="platform_packages_apps_DocumentsUI" />
+  <remove-project name="GrapheneOS/Camera" />
+  <remove-project name="GrapheneOS/PdfViewer" />
+  <remove-project name="GrapheneOS/Apps" />
+  -->
+</manifest>

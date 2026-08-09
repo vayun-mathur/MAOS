@@ -1,0 +1,3 @@
+# Prebuilt APKs are large binaries populated at build time by scripts/collect-apks.sh.
+# They are reproducible from the Modern-Apps repo, so we don't commit them.
+prebuilts/*.apk

@@ -1,0 +1,106 @@
+soong_namespace {
+}
+
+// Modern Apps prebuilt userspace apps for MAOS (Modern Apps OS).
+//
+// Each app ships as an android_app_import so its existing com.vayunmathur signing
+// certificate (the README SHA-256 cert) is preserved via `presigned: true`. Do NOT
+// port these Gradle/Compose apps to Soong.
+//
+// APKs live in prebuilts/ and are populated by scripts/collect-apks.sh before a build.
+
+android_app_import {
+    name: "ModernAppsWeb",
+    apk: "prebuilts/web-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsCamera",
+    apk: "prebuilts/camera-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsPdf",
+    apk: "prebuilts/pdf-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsContacts",
+    apk: "prebuilts/contacts-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsCalculator",
+    apk: "prebuilts/calculator-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsClock",
+    apk: "prebuilts/clock-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Files is PRIVILEGED: in the system build it absorbs DocumentsUI's Storage Access
+// Framework role and therefore needs the signature|privileged MANAGE_DOCUMENTS
+// permission, allowlisted in privapp-permissions-modern-apps.xml. It installs to
+// /product/priv-app. The SAF picker UI itself is implemented in the Files app's
+// system build variant (Modern-Apps repo), not here.
+android_app_import {
+    name: "ModernAppsFiles",
+    apk: "prebuilts/files-release.apk",
+    presigned: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsPhotos",
+    apk: "prebuilts/photos-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsStore",
+    apk: "prebuilts/appstore-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}

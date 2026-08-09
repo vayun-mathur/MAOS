@@ -1,0 +1,8 @@
+# MAOS ships Android/AOSP build files consumed on a Linux build host.
+# Force LF so shell shebangs and Soong/Make parsing don't break on CRLF.
+* text=auto eol=lf
+*.sh text eol=lf
+*.bp text eol=lf
+*.mk text eol=lf
+*.xml text eol=lf
+*.md text eol=lf
