@@ -22,7 +22,8 @@ PRODUCT_PACKAGES += \
     ModernAppsKeyboard \
     ModernAppsSpeech \
     ModernAppsCalendar \
-    ModernAppsMusic
+    ModernAppsMusic \
+    ModernAppsNetworkLocation
 
 # 2. Remove the stock userspace apps we're replacing.
 #    IMPORTANT: only ever remove *UI apps*, never content-provider backends. Contacts and
@@ -51,7 +52,8 @@ _maos_remove := \
     SpeechServices \
     Music \
     InfoApp \
-    Auditor
+    Auditor \
+    NetworkLocation
 
 # Safety: refuse to remove any content-provider backend. This makes the Contacts/Calendar
 # footgun structurally impossible — if a *Provider ever ends up in the list, fail loudly.
@@ -81,6 +83,17 @@ PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
 # in the keyboard app's own manifest (Modern-Apps repo). With LatinIME removed it is the sole
 # preinstalled IME, so the system enables/selects it by default.
 
+# NOTE on network location + geocoder: Modern Apps NetworkLocation (com.vayunmathur.networklocation)
+# is a priv-app that provides BOTH the network location provider and the offline geocoder. It
+# replaces GrapheneOS's NetworkLocation module (app.grapheneos.networklocation), which we remove
+# above. Removing that module also drops its bundled privapp-permissions/sysconfig etc files (they
+# are `required:` deps of the module). Our app is pinned via config_networkLocationProviderPackageName,
+# config_geocoderProviderPackageName and config_locationProviderPackageNames in the frameworks/base
+# overlay, gets its privileged perms from privapp-permissions-modern-apps.xml, and gets Doze /
+# Data-Saver exemptions (for always-on background operation) from sysconfig-modern-apps.xml below.
+# `NetworkLocation` is a provider *implementation* app, NOT a content-provider backend — it does not
+# end in `Provider`, so the safety guard above correctly permits removing it.
+
 # 3. Static resource overlays: config_defaultBrowser, config_documentsUiPackage,
 #    speech recognition service, WebView allowlist, branding.
 PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
@@ -89,9 +102,16 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/default-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/default-permissions/default-permissions-modern-apps.xml
 
-# 4. Privileged-permission allowlist so Files (priv-app) may hold MANAGE_DOCUMENTS.
+# 4. Privileged-permission allowlist so Files (priv-app) may hold MANAGE_DOCUMENTS, and
+#    NetworkLocation (priv-app) may hold INSTALL_LOCATION_PROVIDER / LOCATION_HARDWARE /
+#    MODIFY_PHONE_STATE / UPDATE_DEVICE_STATS.
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/privapp-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/privapp-permissions-modern-apps.xml
+
+# 4b. Sysconfig so NetworkLocation is exempt from Doze / Data Saver and keeps running in the
+#     background (always-on), mirroring GrapheneOS's own networklocation sysconfig.
+PRODUCT_COPY_FILES += \
+    vendor/modern-apps/sysconfig-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/sysconfig-modern-apps.xml
 
 # 5. MAOS branding (PRODUCT_* + ro.maos.* props). Kept separate for readability.
 $(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
