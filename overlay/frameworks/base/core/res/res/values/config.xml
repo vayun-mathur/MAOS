@@ -21,4 +21,9 @@
     <string name="config_defaultOnDeviceSpeechRecognitionService" translatable="false">com.vayunmathur.speech/.service.WhisperRecognitionService</string>
     <!-- TTS: Modern Apps Speech (Piper) is the only installed engine, so the framework
          selects it as the default TTS engine automatically; no dedicated config exists. -->
+
+    <!-- Offline geocoder -> Modern Apps NetworkLocation. Its GeocodeService (bound via the
+         com.android.location.service.GeocodeProvider action) becomes THE system geocoder.
+         Replaces GrapheneOS's NetworkLocation module (removed in modern_apps.mk). -->
+    <string name="config_geocoderProviderPackageName" translatable="false">com.vayunmathur.networklocation</string>
 </resources>
