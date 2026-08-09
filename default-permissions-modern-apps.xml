@@ -9,4 +9,11 @@
     <exception package="com.vayunmathur.speech">
         <permission name="android.permission.RECORD_AUDIO" fixed="false" />
     </exception>
+
+    <!-- NetworkLocation is the always-on system network location provider. Default-grant
+         location (incl. background) so it works headless out of the box with no user toggle. -->
+    <exception package="com.vayunmathur.networklocation">
+        <permission name="android.permission.ACCESS_FINE_LOCATION" fixed="false" />
+        <permission name="android.permission.ACCESS_BACKGROUND_LOCATION" fixed="false" />
+    </exception>
 </exceptions>
