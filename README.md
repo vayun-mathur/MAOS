@@ -27,12 +27,18 @@ repo.)
 
 ```
 Android.bp                            # android_app_import per app (Files: privileged)
-modern_apps.mk                        # PRODUCT_PACKAGES += ours; filter-out stock; overlays; privapp
+modern_apps.mk                        # PRODUCT_PACKAGES += ours; filter-out stock; overlays; privapp; branding
+maos_branding.mk                      # PRODUCT_* + ro.maos.* identity (inherited by modern_apps.mk)
 privapp-permissions-modern-apps.xml   # MANAGE_DOCUMENTS for Files
-overlay/                              # static frameworks/base overlay
-  frameworks/base/core/res/res/values/config.xml   # config_defaultBrowser, config_documentsUiPackage
+overlay/                              # static overlays
+  frameworks/base/.../config.xml       #   config_defaultBrowser, config_documentsUiPackage
+  packages/apps/Updater/.../config.xml #   OTA server URL (verify resource name)
 prebuilts/                            # release APKs (git-ignored; populated by script)
 scripts/collect-apks.sh              # copies Modern-Apps release APKs into prebuilts/
+keys/generate-keys.sh                # generates the OS key set (offline; never committed)
+ota/                                 # build-ota.sh + publish-ota.sh (+ README)
+updater/                             # how to point the Updater at ota.ma.vayunmathur.com
+docs/BUILD_RUNBOOK.md                # end-to-end Linux build/sign/OTA/publish
 local_manifest.xml                    # adds this repo to the GrapheneOS tree
 ```
 
@@ -55,7 +61,8 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
    ```bash
    vendor/modern-apps/scripts/collect-apks.sh /path/to/Modern-Apps
    ```
-5. Build, sign with your own keys, and rebrand (you cannot ship as "GrapheneOS").
+5. Generate OS signing keys (offline), build, sign, and rebrand — full sequence in
+   **[`docs/BUILD_RUNBOOK.md`](docs/BUILD_RUNBOOK.md)**. You cannot ship as "GrapheneOS".
 
 ## Notes
 
@@ -80,6 +87,9 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
 
 ## OTA
 
-MAOS uses the standard GrapheneOS/AOSP A/B OTA flow (`update_engine` + a forked/overlaid
-Updater pointed at your own signed release server). See the OTA section of
-`GRAPHENEOS_FORK_PLAN.md`.
+MAOS uses the standard A/B OTA flow (`update_engine`) with updates served from
+**`https://ota.ma.vayunmathur.com`**, hosted by `location_share_server` (which proxies the
+signed OTA zips + channel metadata from a public GitHub Release — the same pattern as the
+F-Droid repo). Build/publish scripts are in [`ota/`](ota/README.md); pointing the Updater
+at the server is covered in [`updater/`](updater/README.md). Full design rationale is in
+`GRAPHENEOS_FORK_PLAN.md` (Modern-Apps repo).

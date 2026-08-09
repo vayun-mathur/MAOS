@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Overlay for the GrapheneOS Updater's OTA server URL.
+
+  !!! VERIFY THE RESOURCE NAME against your pinned Updater source before relying on this.
+  Overlays only replace a resource that already exists with the SAME name; if the name is
+  wrong this file does nothing (and does not fail the build). Find the real name with:
+
+      grep -rn "releases.grapheneos.org" packages/apps/Updater/
+
+  If the URL lives in code / BuildConfig instead of resources, overlaying can't help —
+  fork the Updater and change it there (see updater/README.md).
+
+  This overlay is wired in via PRODUCT_PACKAGE_OVERLAYS (vendor/modern-apps/overlay).
+-->
+<resources>
+    <!-- Common GrapheneOS name is "url"; adjust to match your source if different. -->
+    <string name="url" translatable="false">https://ota.ma.vayunmathur.com</string>
+</resources>

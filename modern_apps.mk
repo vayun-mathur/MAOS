@@ -52,7 +52,10 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/privapp-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/privapp-permissions-modern-apps.xml
 
-# 5. Build-time guard: fail the build if any stock app we meant to drop is still in
+# 5. MAOS branding (PRODUCT_* + ro.maos.* props). Kept separate for readability.
+$(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
+
+# 6. Build-time guard: fail the build if any stock app we meant to drop is still in
 #    PRODUCT_PACKAGES (catches upstream module renames that would silently re-add it).
 _maos_leaked := $(filter Camera PdfViewer Apps Contacts DeskClock Calculator Gallery2 DocumentsUI,$(PRODUCT_PACKAGES))
 ifneq ($(_maos_leaked),)
