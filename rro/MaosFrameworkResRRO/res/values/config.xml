@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Static resource overlay for frameworks/base/core/res.
-  Pulled in via PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay (see modern_apps.mk).
--->
+<!-- MAOS framework-res overrides, shipped as an explicit static, platform-signed RRO
+     (module MaosFrameworkResRRO). Moved here from the former
+     overlay/frameworks/base/core/res/res/values/config.xml so PRODUCT_PACKAGE_OVERLAYS no
+     longer generates an auto-generated framework-res RRO that collides with adevtool's prebuilt.
+     framework-res.apk itself stays unmodified. -->
 <resources>
     <!-- Default browser role -> Modern Apps Web.
          Vanadium remains installed as the system WebView provider; this only changes

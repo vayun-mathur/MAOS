@@ -94,8 +94,19 @@ PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
 # `NetworkLocation` is a provider *implementation* app, NOT a content-provider backend — it does not
 # end in `Provider`, so the safety guard above correctly permits removing it.
 
-# 3. Static resource overlays: config_defaultBrowser, config_documentsUiPackage,
-#    speech recognition service, WebView allowlist, branding.
+# 3. framework-res config (default browser, documents UI, speech recognition service, and the
+#    geocoder / network-location provider pins + their override bools) ships as an explicit
+#    static, platform-signed RRO. With PRODUCT_ENFORCE_RRO_TARGETS := * (from generic_system.mk)
+#    a plain PRODUCT_PACKAGE_OVERLAYS on framework-res is turned into an auto-generated product
+#    RRO named framework-res__$(PRODUCT_NAME)__auto_generated_rro_product.apk, which collides
+#    with the identically named prebuilt adevtool ships under vendor/google_devices/<dev>/overlays
+#    (soong "packaging conflict"). An explicit module has a unique name and coexists with it.
+#    platform signing is required to overlay the non-public config_* resources; isStatic makes it
+#    always-on at boot. See vendor/modern-apps/rro/MaosFrameworkResRRO/.
+PRODUCT_PACKAGES += MaosFrameworkResRRO
+
+#    The overlay/ dir now only carries the GrapheneOS Updater OTA-URL overlay (no framework-res
+#    overlay here, so no auto-generated framework-res RRO is produced).
 PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
 
 # 3b. Default-permission grant so the Speech recognizer/TTS gets RECORD_AUDIO headlessly.

@@ -1,0 +1,20 @@
+// MAOS framework-res config overlay, packaged as an explicit static, platform-signed RRO.
+//
+// Why not PRODUCT_PACKAGE_OVERLAYS: with PRODUCT_ENFORCE_RRO_TARGETS := * (from
+// generic_system.mk) a product overlay on framework-res becomes an auto-generated RRO named
+// framework-res__<device>__auto_generated_rro_product.apk, which collides with the prebuilt of
+// the same name that adevtool ships under vendor/google_devices/<device>/overlays. An explicit
+// module has a unique name and coexists with the prebuilt.
+//
+// certificate: "platform" is required to overlay the non-public framework config_* resources
+// (config_documentsUiPackage, config_default*SpeechRecognitionService, the geocoder /
+// network-location provider pins and their config_enable*Overlay bools). isStatic (in the
+// manifest) makes it always-on and applied early enough to take effect at boot. This mirrors
+// AOSP's own CarFrameworkResConfigRRO (packages/services/Car/.../rro/overlay-config/androidRRO).
+runtime_resource_overlay {
+    name: "MaosFrameworkResRRO",
+    resource_dirs: ["res"],
+    certificate: "platform",
+    manifest: "AndroidManifest.xml",
+    product_specific: true,
+}

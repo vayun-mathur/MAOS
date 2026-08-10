@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.vayunmathur.maos.overlay.frameworkres">
+    <application android:hasCode="false" />
+    <!-- targetPackage "android" == framework-res. isStatic: always-on, applied at boot.
+         priority above adevtool's product RRO (priority 1) so MAOS values win on overlap. -->
+    <overlay
+        android:targetPackage="android"
+        android:isStatic="true"
+        android:priority="10" />
+</manifest>
