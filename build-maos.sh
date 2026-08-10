@@ -200,9 +200,28 @@ EOF
     repo sync -j8
 }
 
+populate_prebuilts() {
+    cd "$TREE"
+    log "Populating Modern Apps prebuilt APKs"
+    local dest="vendor/modern-apps/prebuilts"; mkdir -p "$dest"
+    if [[ -n "$MODERN_APPS_SRC" ]]; then
+        vendor/modern-apps/scripts/collect-apks.sh "$MODERN_APPS_SRC"
+    else
+        warn "MODERN_APPS_SRC unset - downloading APKs from the $MODERN_APPS_GH latest release."
+        for app in "${APPS[@]}"; do
+            curl -fL -o "$dest/$app-release.apk" \
+                "https://github.com/$MODERN_APPS_GH/releases/latest/download/$app-release.apk" \
+                || die "Could not download $app-release.apk"
+        done
+    fi
+}
+
 phase_vendor() {
     log "Extracting Pixel vendor files for $DEVICE (adevtool)"
     cd "$TREE"; source build/envsetup.sh
+    # Modern Apps prebuilt APKs must exist before adevtool generate-all triggers a
+    # soong build that parses vendor/modern-apps/Android.bp (globs prebuilts/*-release.apk).
+    populate_prebuilts
     yarn --cwd vendor/adevtool/ install
     # adevtool is an oclif CLI — its launcher is vendor/adevtool/bin/run (there is no global
     # `adevtool` command, and `yarn run adevtool` has no such script). Prefer bin/run, with
@@ -219,18 +238,8 @@ phase_vendor() {
 phase_overlay() {
     cd "$TREE"
 
-    log "Populating Modern Apps prebuilt APKs"
-    local dest="vendor/modern-apps/prebuilts"; mkdir -p "$dest"
-    if [[ -n "$MODERN_APPS_SRC" ]]; then
-        vendor/modern-apps/scripts/collect-apks.sh "$MODERN_APPS_SRC"
-    else
-        warn "MODERN_APPS_SRC unset — downloading APKs from the $MODERN_APPS_GH latest release."
-        for app in "${APPS[@]}"; do
-            curl -fL -o "$dest/$app-release.apk" \
-                "https://github.com/$MODERN_APPS_GH/releases/latest/download/$app-release.apk" \
-                || die "Could not download $app-release.apk"
-        done
-    fi
+    # Modern Apps prebuilt APKs are populated in phase_vendor (populate_prebuilts),
+    # before adevtool runs soong; nothing to do here.
 
     log "Verifying stock module names against this tag"
     grep -rn --include=*.mk -e '\bCamera\b' -e '\bPdfViewer\b' -e '\bApps\b' \
@@ -239,9 +248,16 @@ phase_overlay() {
     warn "Confirm the names above match the filter-out list in vendor/modern-apps/modern_apps.mk."
 
     log "Wiring MAOS product config into the $DEVICE makefile"
-    local mk
-    mk="$(find device/google -name "aosp_${DEVICE}.mk" | head -1)"
-    [[ -n "$mk" ]] || mk="$(find device/google -name "*${DEVICE}*.mk" | head -1)"
+    # GrapheneOS generates the device product makefile under vendor/google_devices/<dev>/
+    # (there is no device/google/<family> product tree); prefer that, then fall back to
+    # older device/google layouts.
+    local mk="" _cand
+    for _cand in \
+        "vendor/google_devices/${DEVICE}/${DEVICE}.mk" \
+        "$(find device/google -name "aosp_${DEVICE}.mk" 2>/dev/null | head -1)" \
+        "$(find device/google -name "*${DEVICE}*.mk" 2>/dev/null | head -1)"; do
+        if [[ -n "$_cand" && -f "$_cand" ]]; then mk="$_cand"; break; fi
+    done
     [[ -n "$mk" ]] || die "Could not find the product makefile for $DEVICE."
     if ! grep -q 'vendor/modern-apps/modern_apps.mk' "$mk"; then
         printf '\n$(call inherit-product, vendor/modern-apps/modern_apps.mk)\n' >> "$mk"
@@ -267,9 +283,15 @@ phase_keys() {
     rm -rf "$KEYS_PLAIN"; mkdir -p "$KEYS_PLAIN"; chmod 700 "$KEYS_PLAIN"
     local CN="MAOS"
     for k in releasekey platform shared media networkstack bluetooth sdk_sandbox gmscompat_lib nfc; do
-        echo | development/tools/make_key "$KEYS_PLAIN/$k" "/CN=$CN/" || die "make_key $k failed"
+        # AOSP make_key always exits 1 via its EXIT trap even on success; ignore its exit
+        # status and verify the generated artifacts instead.
+        echo | development/tools/make_key "$KEYS_PLAIN/$k" "/CN=$CN/" || true
+        [[ -s "$KEYS_PLAIN/$k.pk8" && -s "$KEYS_PLAIN/$k.x509.pem" ]] || die "make_key $k failed"
     done
-    openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -out "$KEYS_PLAIN/avb.pem" -passout pass:
+    # AVB key must be an unencrypted RSA PEM: avbtool reads it non-interactively, and
+    # an encrypted key makes load_public_key() fall through to ML-DSA (unsupported by
+    # the system openssl). The whole key set is scrypt-encrypted later into MAOS_KEYS_FILE.
+    openssl genrsa -out "$KEYS_PLAIN/avb.pem" 4096
     external/avb/avbtool.py extract_public_key --key "$KEYS_PLAIN/avb.pem" \
         --output "$KEYS_PLAIN/avb_pkmd.bin"
     ssh-keygen -t ed25519 -N "" -f "$KEYS_PLAIN/id_ed25519" >/dev/null
