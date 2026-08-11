@@ -23,9 +23,11 @@
 #   -c CHANNEL   OTA channel to publish          (default: stable; stable|beta|testing)
 #   phases: deps sync vendor overlay keys build release publish all
 #
-# deps/sync/keys are device-independent and run ONCE; vendor/overlay/build/release/publish
-# run per selected device. In a multi-device run a failed device is logged and the run
-# continues to the next device, with a pass/fail summary printed at the end.
+# deps/sync/keys are device-independent and run ONCE; vendor/overlay/build run per device
+# (sequential — each build saturates the machine), then release runs across devices IN
+# PARALLEL (up to $MAOS_RELEASE_JOBS at once; it's decoupled from out/), then publish runs
+# per device. A failed device is logged and skipped for its later phases; the run continues
+# and a pass/fail summary is printed at the end.
 #
 # ── Signing keys ────────────────────────────────────────────────────────────────────────
 # Keys live in ONE scrypt-encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you
@@ -35,8 +37,8 @@
 # keys are never written to disk in the clear.
 #
 # The key set is DEVICE-INDEPENDENT: one shared set signs every device (the GrapheneOS
-# signing scripts read keys from keys/<device>, so unlock_keys symlinks the one shared
-# plaintext set in as keys/<device> for whichever device is being built).
+# signing scripts read keys from keys/<device>, so the release phase decrypts the set once
+# into RAM and symlinks it in as keys/<device> for whichever device is being built).
 #
 # ── Required environment ────────────────────────────────────────────────────────────────
 #   MAOS_KEYS_PASSPHRASE   passphrase for the encrypted key file (required for keys/build/release)
@@ -47,6 +49,8 @@
 #   MAOS_KEYS_FILE=$HOME/maos-keys/maos.keys.tar.gz.scrypt   encrypted key blob (shared, outside the tree)
 #   MODERN_APPS_SRC=<path>         Modern-Apps checkout/dir with release APKs; if unset, the 9
 #                                  APKs are downloaded from the Modern-Apps GitHub release
+#   MAOS_RELEASE_JOBS=<n>          how many devices to sign/package (release) in parallel (default 4).
+#                                  Lower it if a big multi-device release run runs low on RAM/disk.
 #
 # ── Hardcoded ─────────────────────────────────────────────────────────────────────────────
 #   TREE=$HOME/maos (ext4 checkout)   R2_BUCKET=maos   BUILD=<tag> (matches the GrapheneOS tag)
@@ -142,20 +146,27 @@ require_passphrase() {
     command -v scrypt >/dev/null || die "the 'scrypt' utility is missing — run the 'deps' phase."
 }
 
-# Decrypt the key blob into RAM and symlink it in as $TREE/keys/$DEVICE for the GrapheneOS
-# signing scripts (which read keys from keys/<device>).
-unlock_keys() {
+# Decrypt the shared key blob into RAM once (idempotent). The GrapheneOS signing scripts read
+# keys from keys/<device>, so link_keys symlinks this one RAM key set in per device. Splitting
+# "unlock once" from "link per device" lets the release phase run in parallel across devices
+# without racing on decryption.
+unlock_keys_shared() {
     require_passphrase
     [[ -f "$MAOS_KEYS_FILE" ]] || die "Key file $MAOS_KEYS_FILE not found — run the 'keys' phase first."
-    log "Unlocking signing keys into RAM"
+    # Already unlocked this run? (releasekey.pk8 is always in the set.)
+    [[ -s "$KEYS_PLAIN/releasekey.pk8" ]] && return 0
+    log "Unlocking signing keys into RAM (shared across devices)"
     rm -rf "$KEYS_PLAIN"; mkdir -p "$KEYS_PLAIN"; chmod 700 "$KEYS_PLAIN"
     rm -f "$KEYS_TAR"
     scrypt_dec "$MAOS_KEYS_FILE" "$KEYS_TAR" || die "Failed to decrypt keys (wrong passphrase?)."
     tar xzf "$KEYS_TAR" -C "$KEYS_PLAIN"
     shred -u "$KEYS_TAR" 2>/dev/null || rm -f "$KEYS_TAR"
+}
+
+link_keys() { # link_keys <device> — symlink the shared RAM key set in as keys/<device>
     mkdir -p "$TREE/keys"
-    rm -rf "$TREE/keys/$DEVICE"
-    ln -s "$KEYS_PLAIN" "$TREE/keys/$DEVICE"
+    rm -rf "$TREE/keys/$1"
+    ln -s "$KEYS_PLAIN" "$TREE/keys/$1"
 }
 
 # Resolve $BUILD to the real build number GrapheneOS generated (date-based), written to
@@ -249,8 +260,17 @@ EOF
 
 populate_prebuilts() {
     cd "$TREE"
-    log "Populating Modern Apps prebuilt APKs"
     local dest="vendor/modern-apps/prebuilts"; mkdir -p "$dest"
+    # The Modern Apps APKs are device-independent, so only populate them once: skip if every
+    # APK is already present and non-empty (this makes it a no-op on every device after the
+    # first in a multi-device run instead of re-downloading all of them each time).
+    local missing=0 app
+    for app in "${APPS[@]}"; do [[ -s "$dest/$app-release.apk" ]] || { missing=1; break; }; done
+    if [[ "$missing" -eq 0 ]]; then
+        log "Modern Apps prebuilt APKs already present — skipping."
+        return 0
+    fi
+    log "Populating Modern Apps prebuilt APKs"
     if [[ -n "$MODERN_APPS_SRC" ]]; then
         vendor/modern-apps/scripts/collect-apks.sh "$MODERN_APPS_SRC"
     else
@@ -269,7 +289,8 @@ phase_vendor() {
     # Modern Apps prebuilt APKs must exist before adevtool generate-all triggers a
     # soong build that parses vendor/modern-apps/Android.bp (globs prebuilts/*-release.apk).
     populate_prebuilts
-    yarn --cwd vendor/adevtool/ install
+    # adevtool's node deps are device-independent; install them once (skip if already present).
+    [[ -d vendor/adevtool/node_modules ]] || yarn --cwd vendor/adevtool/ install
     # adevtool is an oclif CLI — its launcher is vendor/adevtool/bin/run (there is no global
     # `adevtool` command, and `yarn run adevtool` has no such script). Prefer bin/run, with
     # fallbacks for older layouts / a PATH install.
@@ -353,29 +374,45 @@ phase_keys() {
 }
 
 phase_build() {
-    log "Building MAOS for $DEVICE (tag $TAG, build $BUILD)"
+    log "Building MAOS for $DEVICE (tag $TAG, build ${BUILD_NUMBER:-$BUILD})"
     cd "$TREE"; source build/envsetup.sh
     export OFFICIAL_BUILD=true
     lunch "${DEVICE}-cur-user"
     rm -rf out
-    # Pixel 7 Pro needs the vendor boot + vendor kernel boot images.
-    m vendorbootimage vendorkernelbootimage target-files-package
+    # Pixel 6 (Tensor G1: bluejay/raven/oriole) has no separate vendor_kernel_boot image;
+    # every device since the Pixel 6a does. Building vendorkernelbootimage for a Pixel 6 fails.
+    local boot_targets="vendorbootimage vendorkernelbootimage"
+    case "$DEVICE" in bluejay|raven|oriole) boot_targets="vendorbootimage" ;; esac
+    # Build device images, target-files AND otatools in one graph pass (as GrapheneOS does);
+    # otatools is device-independent host tooling that finalize/generate-release need.
+    m $boot_targets target-files-package otatools-package
+    # Stage <device>-target_files.zip + <device>-otatools.zip into releases/<build>/ so the
+    # release phase runs decoupled from out/ (hence in parallel across devices). finalize.sh
+    # reads BUILD_NUMBER/OUT/ANDROID_HOST_OUT/TARGET_PRODUCT from the lunch'd env.
+    resolve_build_number
+    export BUILD_NUMBER="$BUILD"
+    script/finalize.sh
+    log "Staged target_files + otatools for $DEVICE into releases/$BUILD/"
 }
 
 phase_release() {
-    log "Signing + generating factory image and full OTA"
-    cd "$TREE"; source build/envsetup.sh
-    unlock_keys
+    # Decoupled from out/: generate-release.sh works entirely from the staged
+    # releases/<build>/<device>-{target_files,otatools}.zip, so this can run in parallel across
+    # devices. Keys are unlocked into RAM + symlinked as keys/<device> by the dispatch before
+    # the release pass (so parallel jobs don't race on decryption); the fallback below covers a
+    # standalone `release` invocation.
+    log "Signing + generating factory image and full OTA for $DEVICE (build $BUILD)"
+    cd "$TREE"
+    if [[ ! -L "$TREE/keys/$DEVICE" ]]; then
+        unlock_keys_shared
+        link_keys "$DEVICE"
+    fi
     # GrapheneOS's script/decrypt-keys (invoked by generate-release.sh) prompts for the
     # passphrase the per-key .pk8/avb.pem are encrypted with. build-maos.sh keeps the individual
-    # keys UNENCRYPTED inside the scrypt blob (already unlocked into RAM by unlock_keys above),
-    # so that passphrase is empty. Predefine it so decrypt-keys runs non-interactively and takes
-    # the plaintext path instead of trying to decrypt an already-plaintext key (which fails with
-    # an openssl "asn1 ... wrong tag / X509_SIG" error).
+    # keys UNENCRYPTED inside the scrypt blob (already unlocked into RAM), so that passphrase is
+    # empty. Predefine it so decrypt-keys runs non-interactively and takes the plaintext path
+    # instead of trying to decrypt an already-plaintext key (openssl "asn1 wrong tag" error).
     export password=""
-    m otatools-package
-    resolve_build_number
-    script/finalize.sh
     script/generate-release.sh "$DEVICE" "$BUILD"
     log "Release at releases/$BUILD/release-$DEVICE-$BUILD"
 }
@@ -414,65 +451,142 @@ plan.json mirroring flash-all (incl. flashing avb_custom_key before lock)."
 }
 
 # ---- Dispatch ----
-run_phase() {
-    case "$1" in
-        deps) phase_deps ;;
-        sync) phase_sync ;;
-        vendor) phase_vendor ;;
-        overlay) phase_overlay ;;
-        keys) phase_keys ;;
-        build) phase_build ;;
-        release) phase_release ;;
-        publish) phase_publish ;;
-        *) die "Unknown phase '$1'. Use: deps sync vendor overlay keys build release publish all" ;;
-    esac
+# Run phase_release for each device argument, up to MAOS_RELEASE_JOBS (default 4) at a time.
+# Release is decoupled from out/ (works from the staged target_files/otatools zips), so it
+# parallelizes safely; builds themselves stay sequential (each saturates the machine). Each
+# job runs in a subshell (set -e -> abort just that device; EXIT key-wipe trap reset inside
+# subshells), and its output goes to a per-device log. Appends successes to RELEASED_OK.
+run_release_parallel() {
+    local jobs="${MAOS_RELEASE_JOBS:-4}"
+    local logdir="$TREE/releases/$BUILD/logs"; mkdir -p "$logdir"
+    log "Releasing $# device(s), up to $jobs at a time (MAOS_RELEASE_JOBS); logs in $logdir"
+    local -a bpids=() bdevs=(); local dev i
+    for dev in "$@"; do
+        ( set -e; DEVICE="$dev"; phase_release ) >"$logdir/release-$dev.log" 2>&1 &
+        bpids+=("$!"); bdevs+=("$dev")
+        log "release[$dev] started (pid $!) -> $logdir/release-$dev.log"
+        if (( ${#bpids[@]} >= jobs )); then
+            for i in "${!bpids[@]}"; do
+                if wait "${bpids[$i]}"; then log "release[${bdevs[$i]}] OK"; RELEASED_OK+=("${bdevs[$i]}")
+                else warn "release[${bdevs[$i]}] FAILED — see $logdir/release-${bdevs[$i]}.log"; fi
+            done
+            bpids=(); bdevs=()
+        fi
+    done
+    if (( ${#bpids[@]} > 0 )); then
+        for i in "${!bpids[@]}"; do
+            if wait "${bpids[$i]}"; then log "release[${bdevs[$i]}] OK"; RELEASED_OK+=("${bdevs[$i]}")
+            else warn "release[${bdevs[$i]}] FAILED — see $logdir/release-${bdevs[$i]}.log"; fi
+        done
+    fi
 }
-
-# deps/sync/keys are device-independent (run once); everything else runs per device.
-is_independent() { case "$1" in deps|sync|keys) return 0 ;; *) return 1 ;; esac; }
 
 [[ $# -gt 0 ]] || { echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>   (phases: deps sync vendor overlay keys build release publish all; -d accepts a codename, 'all', or a comma-separated subset)"; exit 2; }
 
-# Expand 'all' and split the requested phases into run-once (device-independent) and
-# per-device groups, preserving order within each group.
-INDEP_PHASES=()
-PERDEV_PHASES=()
+# Parse requested phases into booleans; the passes below enforce canonical order and the
+# once/sequential-build/parallel-release/sequential-publish structure.
+want_deps=false; want_sync=false; want_keys=false
+want_vendor=false; want_overlay=false; want_build=false; want_release=false; want_publish=false
 for p in "$@"; do
     case "$p" in
-        all)
-            INDEP_PHASES+=(deps sync keys)
-            PERDEV_PHASES+=(vendor overlay build release publish) ;;
-        deps|sync|vendor|overlay|keys|build|release|publish)
-            if is_independent "$p"; then INDEP_PHASES+=("$p"); else PERDEV_PHASES+=("$p"); fi ;;
+        all) want_deps=true; want_sync=true; want_keys=true
+             want_vendor=true; want_overlay=true; want_build=true; want_release=true; want_publish=true ;;
+        deps) want_deps=true ;;
+        sync) want_sync=true ;;
+        keys) want_keys=true ;;
+        vendor) want_vendor=true ;;
+        overlay) want_overlay=true ;;
+        build) want_build=true ;;
+        release) want_release=true ;;
+        publish) want_publish=true ;;
         *) die "Unknown phase '$p'. Use: deps sync vendor overlay keys build release publish all" ;;
     esac
 done
 
 log "MAOS build — devices=[${DEVICES_LIST[*]}] tag=$TAG build=$BUILD channel=$OTA_CHANNEL tree=$TREE bucket=$R2_BUCKET"
 
-# 1) Device-independent phases, once.
-for p in ${INDEP_PHASES[@]+"${INDEP_PHASES[@]}"}; do
-    run_phase "$p"
-done
+# ---- Pass 1: device-independent phases, once ----
+if $want_deps; then phase_deps; fi
+if $want_sync; then phase_sync; fi
+if $want_keys; then phase_keys; fi
 
-# 2) Per-device phases, once per selected device. Each device runs in a subshell so that a
-#    failure (set -e) aborts only that device — we log it and continue to the next — and the
-#    EXIT key-wipe trap (reset inside subshells) does not fire between devices.
-if [[ "${#PERDEV_PHASES[@]}" -gt 0 ]]; then
-    SUMMARY=()
+# ---- Pass 2: build group (vendor/overlay/build), per device, sequential ----
+BUILT_OK=()
+build_group=false
+if $want_vendor || $want_overlay || $want_build; then build_group=true; fi
+if $build_group; then
+    build_pinned=false
     for dev in "${DEVICES_LIST[@]}"; do
-        log "=== Device $dev: ${PERDEV_PHASES[*]} ==="
-        if ( for p in "${PERDEV_PHASES[@]}"; do DEVICE="$dev"; run_phase "$p"; done ); then
-            SUMMARY+=("$dev: OK")
+        log "=== Build $dev ==="
+        if ( set -e; DEVICE="$dev"
+             if $want_vendor;  then phase_vendor;  fi
+             if $want_overlay; then phase_overlay; fi
+             if $want_build;   then phase_build;   fi ); then
+            BUILT_OK+=("$dev")
         else
-            warn "Device $dev FAILED during: ${PERDEV_PHASES[*]} — continuing with the next device."
-            SUMMARY+=("$dev: FAILED")
+            warn "Device $dev FAILED during build — skipping its release/publish."
+        fi
+        # Pin the batch build number from the first build so every device lands in one
+        # releases/<build>/ dir (keeps date-based numbering consistent across the batch).
+        if ! $build_pinned && $want_build && [[ -f "$TREE/out/soong/build_number.txt" ]]; then
+            resolve_build_number
+            export BUILD_NUMBER="$BUILD"
+            build_pinned=true
         fi
     done
-    log "Per-device summary (${#DEVICES_LIST[@]} device(s)):"
-    for s in "${SUMMARY[@]}"; do printf '   %s\n' "$s"; done
-    # Non-zero exit if any device failed, so callers/CI can detect a partial run.
-    for s in "${SUMMARY[@]}"; do [[ "$s" == *": FAILED" ]] && exit 1; done
+else
+    # No build this run: release/publish operate on all selected devices.
+    BUILT_OK=("${DEVICES_LIST[@]}")
+fi
+
+# ---- Pass 3: release, across devices, in parallel ----
+RELEASED_OK=()
+if $want_release; then
+    resolve_build_number            # pin BUILD for all parallel release jobs
+    reldevs=()
+    if (( ${#BUILT_OK[@]} > 0 )); then reldevs=("${BUILT_OK[@]}"); fi
+    if (( ${#reldevs[@]} == 0 )); then
+        warn "No devices available to release."
+    else
+        unlock_keys_shared          # decrypt once; each job just reads keys/<device>
+        for dev in "${reldevs[@]}"; do link_keys "$dev"; done
+        run_release_parallel "${reldevs[@]}"
+    fi
+else
+    if (( ${#BUILT_OK[@]} > 0 )); then RELEASED_OK=("${BUILT_OK[@]}"); fi
+fi
+
+# ---- Pass 4: publish, per device, sequential ----
+PUBLISHED_OK=()
+if $want_publish; then
+    pubdevs=()
+    if (( ${#RELEASED_OK[@]} > 0 )); then pubdevs=("${RELEASED_OK[@]}"); fi
+    if (( ${#pubdevs[@]} == 0 )); then warn "No devices available to publish."; fi
+    for dev in ${pubdevs[@]+"${pubdevs[@]}"}; do
+        log "=== Publish $dev ==="
+        if ( set -e; DEVICE="$dev"; phase_publish ); then
+            PUBLISHED_OK+=("$dev")
+        else
+            warn "Device $dev FAILED during publish — continuing with the next device."
+        fi
+    done
+fi
+
+# ---- Summary ----
+if $build_group || $want_release || $want_publish; then
+    if   $want_publish; then success=("${PUBLISHED_OK[@]+"${PUBLISHED_OK[@]}"}"); laststage=publish
+    elif $want_release; then success=("${RELEASED_OK[@]+"${RELEASED_OK[@]}"}");   laststage=release
+    else                     success=("${BUILT_OK[@]+"${BUILT_OK[@]}"}");         laststage=build
+    fi
+    declare -A _ok=()
+    for d in ${success[@]+"${success[@]}"}; do _ok[$d]=1; done
+    log "Per-device summary through '$laststage' (${#DEVICES_LIST[@]} device(s)):"
+    any_fail=false
+    for d in "${DEVICES_LIST[@]}"; do
+        if [[ -n "${_ok[$d]:-}" ]]; then printf '   %s: OK\n' "$d"
+        else printf '   %s: FAILED\n' "$d"; any_fail=true; fi
+    done
+    if $any_fail; then log "Requested phases complete (with failures)."; exit 1; fi
 fi
 
 log "All requested phases complete."
