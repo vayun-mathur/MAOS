@@ -319,6 +319,13 @@ phase_release() {
     log "Signing + generating factory image and full OTA"
     cd "$TREE"; source build/envsetup.sh
     unlock_keys
+    # GrapheneOS's script/decrypt-keys (invoked by generate-release.sh) prompts for the
+    # passphrase the per-key .pk8/avb.pem are encrypted with. build-maos.sh keeps the individual
+    # keys UNENCRYPTED inside the scrypt blob (already unlocked into RAM by unlock_keys above),
+    # so that passphrase is empty. Predefine it so decrypt-keys runs non-interactively and takes
+    # the plaintext path instead of trying to decrypt an already-plaintext key (which fails with
+    # an openssl "asn1 ... wrong tag / X509_SIG" error).
+    export password=""
     m otatools-package
     script/finalize.sh
     script/generate-release.sh "$DEVICE" "$BUILD"
