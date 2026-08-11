@@ -23,12 +23,12 @@
 #   -c CHANNEL   OTA channel to publish          (default: stable; stable|beta|testing)
 #   phases: deps sync vendor overlay keys build release publish all
 #
-# deps/sync/keys are device-independent and run ONCE. Then vendor/overlay (prep) run per
-# device SEQUENTIALLY (they touch shared parts of the source tree), after which build, release
-# and publish each fan out ACROSS devices IN PARALLEL: builds go into their own out-<device>/
-# dirs (up to $MAOS_BUILD_JOBS at once, cores divided between them), release and publish run up
-# to $MAOS_RELEASE_JOBS / $MAOS_PUBLISH_JOBS at once. A device that fails a pass is logged and
-# skipped for its later phases; a pass/fail summary prints at the end.
+# deps/sync/keys are device-independent and run ONCE. Then vendor/overlay (prep) and build run
+# per device SEQUENTIALLY (prep touches shared source; builds share the default out/, which
+# soong's siso/product config is anchored to). release and publish then fan out ACROSS devices
+# IN PARALLEL (up to $MAOS_RELEASE_JOBS / $MAOS_PUBLISH_JOBS at once), working from each
+# device's staged target_files/otatools zips. A device that fails a pass is logged and skipped
+# for its later phases; a pass/fail summary prints at the end.
 #
 # ── Signing keys ────────────────────────────────────────────────────────────────────────
 # Keys live in ONE scrypt-encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you
@@ -52,12 +52,7 @@
 #                                  APKs are downloaded from the Modern-Apps GitHub release
 #   MAOS_RELEASE_JOBS=<n>          how many devices to sign/package (release) in parallel (default 4).
 #   MAOS_PUBLISH_JOBS=<n>          how many devices to upload (publish) in parallel (default 4).
-#   MAOS_BUILD_JOBS=<n>            how many device builds to run at once, each in its own
-#                                  out-<device>/ (default 2). Each needs ~150 GB + lots of RAM.
-#   MAOS_BUILD_NINJA_JOBS=<n>      ninja -j per build (default: nproc / MAOS_BUILD_JOBS, to avoid
-#                                  CPU oversubscription across concurrent builds).
 #   MAOS_BUILD_NUMBER=<n>          pin the build number (default: today's UTC date + "00").
-#   MAOS_KEEP_OUT=1                keep each out-<device>/ after staging (default: delete to save disk).
 #
 # ── Hardcoded ─────────────────────────────────────────────────────────────────────────────
 #   TREE=$HOME/maos (ext4 checkout)   R2_BUCKET=maos   BUILD=<tag> (matches the GrapheneOS tag)
@@ -398,34 +393,27 @@ phase_keys() {
 }
 
 phase_build() {
-    log "Building MAOS for $DEVICE (tag $TAG, build $BUILD) into out-$DEVICE"
+    log "Building MAOS for $DEVICE (tag $TAG, build $BUILD)"
     cd "$TREE"; source build/envsetup.sh
     export OFFICIAL_BUILD=true
-    # Each concurrent build gets its own output tree so parallel builds don't clobber each
-    # other (AOSP's supported multi-output mechanism). The source tree is only read during a
-    # build (vendor extraction/overlay already wrote it in the sequential prep pass).
-    export OUT_DIR="$TREE/out-$DEVICE"
-    rm -rf "$OUT_DIR"
+    # Build in the DEFAULT out/. soong's siso/product config is anchored to it (a custom
+    # OUT_DIR breaks '@config//main.star' loading during bootstrap), so builds run one at a
+    # time. rm -rf for a clean build (GrapheneOS does the same between devices).
+    rm -rf out
     lunch "${DEVICE}-cur-user"
     # Pixel 6 (Tensor G1: bluejay/raven/oriole) has no separate vendor_kernel_boot image;
     # every device since the Pixel 6a does. Building vendorkernelbootimage for a Pixel 6 fails.
     local boot_targets="vendorbootimage vendorkernelbootimage"
     case "$DEVICE" in bluejay|raven|oriole) boot_targets="vendorbootimage" ;; esac
-    # Divide cores across concurrent builds (set by the dispatch) to avoid oversubscription.
-    local jflag=""
-    if [[ -n "${MAOS_BUILD_NINJA_JOBS:-}" ]]; then jflag="-j${MAOS_BUILD_NINJA_JOBS}"; fi
-    # BUILD_NUMBER is pinned by the dispatch (pin_build_number); soong honors it so every
-    # device's build_number.txt / artifacts match. Build device images, target-files AND
-    # otatools in one graph pass (as GrapheneOS does).
+    # BUILD_NUMBER is pinned by the dispatch (pin_build_number); soong honors it so artifacts
+    # match. Build device images, target-files AND otatools in one graph pass.
     export BUILD_NUMBER="$BUILD"
-    m $jflag $boot_targets target-files-package otatools-package
+    m $boot_targets target-files-package otatools-package
     # Stage <device>-target_files.zip + <device>-otatools.zip into releases/<build>/ so the
-    # release phase runs decoupled from out/ (hence in parallel). finalize.sh reads
-    # BUILD_NUMBER/OUT/ANDROID_HOST_OUT/TARGET_PRODUCT from the lunch'd env.
+    # release phase runs decoupled from out/ (hence in parallel across devices). finalize.sh
+    # reads BUILD_NUMBER/OUT/ANDROID_HOST_OUT/TARGET_PRODUCT from the lunch'd env.
     script/finalize.sh
     log "Staged target_files + otatools for $DEVICE into releases/$BUILD/"
-    # Reclaim ~150 GB: the staged zips are all the release phase needs. MAOS_KEEP_OUT=1 keeps it.
-    [[ "${MAOS_KEEP_OUT:-0}" == "1" ]] || rm -rf "$OUT_DIR"
 }
 
 phase_release() {
@@ -568,20 +556,23 @@ else
     copy_arr PREP_OK DEVICES_LIST
 fi
 
-# ---- Pass 2b: build, across devices, IN PARALLEL (each into its own out-<device>/) ----
+# ---- Pass 2b: build, per device, SEQUENTIAL (default out/; live output) ----
+# soong's siso/product config is anchored to the default out/ dir, so we can't give each
+# device its own out/ in one checkout (a custom OUT_DIR breaks '@config//main.star' at soong
+# bootstrap). Builds therefore run one at a time with full cores; release/publish still fan
+# out in parallel below. Each build runs in a backgrounded subshell + wait so set -e is
+# honored inside (an `if ( set -e; … )` condition would DISABLE it) while output still
+# streams live to the terminal.
 BUILT_OK=()
 if $want_build; then
-    build_jobs="${MAOS_BUILD_JOBS:-2}"
-    # Divide cores across concurrent builds to avoid CPU oversubscription/thrash.
-    if [[ -z "${MAOS_BUILD_NINJA_JOBS:-}" ]]; then
-        _ncpu="$(nproc 2>/dev/null || echo 8)"
-        MAOS_BUILD_NINJA_JOBS=$(( _ncpu / build_jobs > 0 ? _ncpu / build_jobs : 1 ))
-    fi
-    export MAOS_BUILD_NINJA_JOBS
-    log "Parallel builds: $build_jobs at a time, ~$MAOS_BUILD_NINJA_JOBS ninja jobs each (MAOS_BUILD_JOBS/MAOS_BUILD_NINJA_JOBS)."
     blddevs=(); copy_arr blddevs PREP_OK
-    if (( ${#blddevs[@]} == 0 )); then warn "No devices available to build."
-    else run_parallel build phase_build "$build_jobs" BUILT_OK "${blddevs[@]}"; fi
+    if (( ${#blddevs[@]} == 0 )); then warn "No devices available to build."; fi
+    for dev in ${blddevs[@]+"${blddevs[@]}"}; do
+        log "=== Build $dev ==="
+        ( set -e; DEVICE="$dev"; phase_build ) &
+        if wait $!; then BUILT_OK+=("$dev")
+        else warn "Device $dev FAILED during build — skipping its release/publish."; fi
+    done
 else
     copy_arr BUILT_OK PREP_OK
 fi
