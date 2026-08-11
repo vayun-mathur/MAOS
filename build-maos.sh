@@ -23,11 +23,12 @@
 #   -c CHANNEL   OTA channel to publish          (default: stable; stable|beta|testing)
 #   phases: deps sync vendor overlay keys build release publish all
 #
-# deps/sync/keys are device-independent and run ONCE; vendor/overlay/build run per device
-# (sequential — each build saturates the machine), then release runs across devices IN
-# PARALLEL (up to $MAOS_RELEASE_JOBS at once; it's decoupled from out/), then publish runs
-# per device. A failed device is logged and skipped for its later phases; the run continues
-# and a pass/fail summary is printed at the end.
+# deps/sync/keys are device-independent and run ONCE. Then vendor/overlay (prep) run per
+# device SEQUENTIALLY (they touch shared parts of the source tree), after which build, release
+# and publish each fan out ACROSS devices IN PARALLEL: builds go into their own out-<device>/
+# dirs (up to $MAOS_BUILD_JOBS at once, cores divided between them), release and publish run up
+# to $MAOS_RELEASE_JOBS / $MAOS_PUBLISH_JOBS at once. A device that fails a pass is logged and
+# skipped for its later phases; a pass/fail summary prints at the end.
 #
 # ── Signing keys ────────────────────────────────────────────────────────────────────────
 # Keys live in ONE scrypt-encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you
@@ -50,7 +51,13 @@
 #   MODERN_APPS_SRC=<path>         Modern-Apps checkout/dir with release APKs; if unset, the 9
 #                                  APKs are downloaded from the Modern-Apps GitHub release
 #   MAOS_RELEASE_JOBS=<n>          how many devices to sign/package (release) in parallel (default 4).
-#                                  Lower it if a big multi-device release run runs low on RAM/disk.
+#   MAOS_PUBLISH_JOBS=<n>          how many devices to upload (publish) in parallel (default 4).
+#   MAOS_BUILD_JOBS=<n>            how many device builds to run at once, each in its own
+#                                  out-<device>/ (default 2). Each needs ~150 GB + lots of RAM.
+#   MAOS_BUILD_NINJA_JOBS=<n>      ninja -j per build (default: nproc / MAOS_BUILD_JOBS, to avoid
+#                                  CPU oversubscription across concurrent builds).
+#   MAOS_BUILD_NUMBER=<n>          pin the build number (default: today's UTC date + "00").
+#   MAOS_KEEP_OUT=1                keep each out-<device>/ after staging (default: delete to save disk).
 #
 # ── Hardcoded ─────────────────────────────────────────────────────────────────────────────
 #   TREE=$HOME/maos (ext4 checkout)   R2_BUCKET=maos   BUILD=<tag> (matches the GrapheneOS tag)
@@ -89,10 +96,10 @@ fi
 # ---- Hardcoded config ----
 TREE="$HOME/maos"                              # AOSP checkout (ext4; never /mnt/c)
 R2_BUCKET="maos"                               # R2 bucket / ota.ma.vayunmathur.com
-# Default the build number to the tag, but phase_release/phase_publish override it with the
-# ACTUAL number GrapheneOS generates at build time (out/soong/build_number.txt) via
-# resolve_build_number -- that is what finalize.sh and the artifacts are named with. Tag and
-# build number only coincide when you build on the tag's own date.
+# BUILD starts as the tag, but the build number for a run is pinned by pin_build_number
+# (today's UTC date + "00", or $MAOS_BUILD_NUMBER) and exported as BUILD_NUMBER so every
+# parallel build shares it; resolve_build_number recovers it for standalone release/publish.
+# That pinned number — not the tag — is what finalize.sh and the artifacts are named with.
 BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
@@ -169,17 +176,34 @@ link_keys() { # link_keys <device> — symlink the shared RAM key set in as keys
     ln -s "$KEYS_PLAIN" "$TREE/keys/$1"
 }
 
-# Resolve $BUILD to the real build number GrapheneOS generated (date-based), written to
-# out/soong/build_number.txt during the build. finalize.sh and the produced artifacts are named
-# with THIS number, not the base tag, so release/publish must use it too.
+# The build number is a single value for the whole invocation (all devices in a batch share
+# it). Parallel builds each write into their own out-<device>/ dir, so we PIN the number up
+# front (exported as BUILD_NUMBER, which soong honors) instead of reading it back per build.
+# pin_build_number: default = today's UTC date + "00" (matches how the tree generates it);
+# override with MAOS_BUILD_NUMBER (e.g. to reproduce a specific dated build).
+pin_build_number() {
+    BUILD="${MAOS_BUILD_NUMBER:-$(date -u +%Y%m%d)00}"
+    export BUILD_NUMBER="$BUILD"
+    log "Build number for this run: $BUILD (override with MAOS_BUILD_NUMBER)"
+}
+
+# For phases that DIDN'T build this run (standalone release/publish), figure out which build
+# number to use: the one pinned/exported this run, else MAOS_BUILD_NUMBER, else the newest
+# out*/soong/build_number.txt, else the newest staged releases/<n>/ dir, else the tag.
 resolve_build_number() {
-    local f="$TREE/out/soong/build_number.txt"
-    if [[ -f "$f" ]]; then
-        BUILD="$(cat "$f")"
-        log "Using build number $BUILD (from out/soong/build_number.txt)"
+    if [[ -n "${BUILD_NUMBER:-}" ]]; then BUILD="$BUILD_NUMBER"
+    elif [[ -n "${MAOS_BUILD_NUMBER:-}" ]]; then BUILD="$MAOS_BUILD_NUMBER"
     else
-        warn "out/soong/build_number.txt not found; using BUILD=$BUILD (tag) as a fallback."
+        local f n
+        f="$(ls -1t "$TREE"/out*/soong/build_number.txt 2>/dev/null | head -1 || true)"
+        if [[ -n "$f" && -f "$f" ]]; then
+            BUILD="$(cat "$f")"
+        else
+            n="$(ls -1 "$TREE/releases" 2>/dev/null | grep -E '^[0-9]+$' | sort -rn | head -1 || true)"
+            [[ -n "$n" ]] && BUILD="$n" || warn "no build number found; using BUILD=$BUILD (tag) fallback"
+        fi
     fi
+    log "Using build number $BUILD"
 }
 
 # ---- Phases ----
@@ -374,25 +398,34 @@ phase_keys() {
 }
 
 phase_build() {
-    log "Building MAOS for $DEVICE (tag $TAG, build ${BUILD_NUMBER:-$BUILD})"
+    log "Building MAOS for $DEVICE (tag $TAG, build $BUILD) into out-$DEVICE"
     cd "$TREE"; source build/envsetup.sh
     export OFFICIAL_BUILD=true
+    # Each concurrent build gets its own output tree so parallel builds don't clobber each
+    # other (AOSP's supported multi-output mechanism). The source tree is only read during a
+    # build (vendor extraction/overlay already wrote it in the sequential prep pass).
+    export OUT_DIR="$TREE/out-$DEVICE"
+    rm -rf "$OUT_DIR"
     lunch "${DEVICE}-cur-user"
-    rm -rf out
     # Pixel 6 (Tensor G1: bluejay/raven/oriole) has no separate vendor_kernel_boot image;
     # every device since the Pixel 6a does. Building vendorkernelbootimage for a Pixel 6 fails.
     local boot_targets="vendorbootimage vendorkernelbootimage"
     case "$DEVICE" in bluejay|raven|oriole) boot_targets="vendorbootimage" ;; esac
-    # Build device images, target-files AND otatools in one graph pass (as GrapheneOS does);
-    # otatools is device-independent host tooling that finalize/generate-release need.
-    m $boot_targets target-files-package otatools-package
-    # Stage <device>-target_files.zip + <device>-otatools.zip into releases/<build>/ so the
-    # release phase runs decoupled from out/ (hence in parallel across devices). finalize.sh
-    # reads BUILD_NUMBER/OUT/ANDROID_HOST_OUT/TARGET_PRODUCT from the lunch'd env.
-    resolve_build_number
+    # Divide cores across concurrent builds (set by the dispatch) to avoid oversubscription.
+    local jflag=""
+    if [[ -n "${MAOS_BUILD_NINJA_JOBS:-}" ]]; then jflag="-j${MAOS_BUILD_NINJA_JOBS}"; fi
+    # BUILD_NUMBER is pinned by the dispatch (pin_build_number); soong honors it so every
+    # device's build_number.txt / artifacts match. Build device images, target-files AND
+    # otatools in one graph pass (as GrapheneOS does).
     export BUILD_NUMBER="$BUILD"
+    m $jflag $boot_targets target-files-package otatools-package
+    # Stage <device>-target_files.zip + <device>-otatools.zip into releases/<build>/ so the
+    # release phase runs decoupled from out/ (hence in parallel). finalize.sh reads
+    # BUILD_NUMBER/OUT/ANDROID_HOST_OUT/TARGET_PRODUCT from the lunch'd env.
     script/finalize.sh
     log "Staged target_files + otatools for $DEVICE into releases/$BUILD/"
+    # Reclaim ~150 GB: the staged zips are all the release phase needs. MAOS_KEEP_OUT=1 keeps it.
+    [[ "${MAOS_KEEP_OUT:-0}" == "1" ]] || rm -rf "$OUT_DIR"
 }
 
 phase_release() {
@@ -451,40 +484,42 @@ plan.json mirroring flash-all (incl. flashing avb_custom_key before lock)."
 }
 
 # ---- Dispatch ----
-# Run phase_release for each device argument, up to MAOS_RELEASE_JOBS (default 4) at a time.
-# Release is decoupled from out/ (works from the staged target_files/otatools zips), so it
-# parallelizes safely; builds themselves stay sequential (each saturates the machine). Each
-# job runs in a subshell (set -e -> abort just that device; EXIT key-wipe trap reset inside
-# subshells), and its output goes to a per-device log. Appends successes to RELEASED_OK.
-run_release_parallel() {
-    local jobs="${MAOS_RELEASE_JOBS:-4}"
+# Generic fan-out: run <fn> for each device arg, up to <jobs> at once, each in its own
+# subshell + per-device log; append succeeded devices to the named array (<resultvar>). Used
+# for build/release/publish. set -e inside each job aborts just that device; the EXIT
+# key-wipe trap is reset inside subshells so it never fires mid-run.
+run_parallel() { # run_parallel <label> <fn> <jobs> <resultvar> <device...>
+    local label="$1" fn="$2" jobs="$3"; local -n __ok_ref="$4"; shift 4
     local logdir="$TREE/releases/$BUILD/logs"; mkdir -p "$logdir"
-    log "Releasing $# device(s), up to $jobs at a time (MAOS_RELEASE_JOBS); logs in $logdir"
+    log "$label: $# device(s), up to $jobs at a time; per-device logs in $logdir"
     local -a bpids=() bdevs=(); local dev i
     for dev in "$@"; do
-        ( set -e; DEVICE="$dev"; phase_release ) >"$logdir/release-$dev.log" 2>&1 &
+        ( set -e; DEVICE="$dev"; "$fn" ) >"$logdir/$label-$dev.log" 2>&1 &
         bpids+=("$!"); bdevs+=("$dev")
-        log "release[$dev] started (pid $!) -> $logdir/release-$dev.log"
+        log "$label[$dev] started (pid $!) -> $logdir/$label-$dev.log"
         if (( ${#bpids[@]} >= jobs )); then
             for i in "${!bpids[@]}"; do
-                if wait "${bpids[$i]}"; then log "release[${bdevs[$i]}] OK"; RELEASED_OK+=("${bdevs[$i]}")
-                else warn "release[${bdevs[$i]}] FAILED — see $logdir/release-${bdevs[$i]}.log"; fi
+                if wait "${bpids[$i]}"; then log "$label[${bdevs[$i]}] OK"; __ok_ref+=("${bdevs[$i]}")
+                else warn "$label[${bdevs[$i]}] FAILED — see $logdir/$label-${bdevs[$i]}.log"; fi
             done
             bpids=(); bdevs=()
         fi
     done
     if (( ${#bpids[@]} > 0 )); then
         for i in "${!bpids[@]}"; do
-            if wait "${bpids[$i]}"; then log "release[${bdevs[$i]}] OK"; RELEASED_OK+=("${bdevs[$i]}")
-            else warn "release[${bdevs[$i]}] FAILED — see $logdir/release-${bdevs[$i]}.log"; fi
+            if wait "${bpids[$i]}"; then log "$label[${bdevs[$i]}] OK"; __ok_ref+=("${bdevs[$i]}")
+            else warn "$label[${bdevs[$i]}] FAILED — see $logdir/$label-${bdevs[$i]}.log"; fi
         done
     fi
 }
 
+# Copy a (possibly empty) array safely under `set -u`: copy_arr <destvar> <srcvar>
+copy_arr() { local -n __d="$1"; local -n __s="$2"; __d=(); (( ${#__s[@]} > 0 )) && __d=("${__s[@]}"); return 0; }
+
 [[ $# -gt 0 ]] || { echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>   (phases: deps sync vendor overlay keys build release publish all; -d accepts a codename, 'all', or a comma-separated subset)"; exit 2; }
 
 # Parse requested phases into booleans; the passes below enforce canonical order and the
-# once/sequential-build/parallel-release/sequential-publish structure.
+# once / sequential-prep / parallel-build / parallel-release / parallel-publish structure.
 want_deps=false; want_sync=false; want_keys=false
 want_vendor=false; want_overlay=false; want_build=false; want_release=false; want_publish=false
 for p in "$@"; do
@@ -503,80 +538,86 @@ for p in "$@"; do
     esac
 done
 
-log "MAOS build — devices=[${DEVICES_LIST[*]}] tag=$TAG build=$BUILD channel=$OTA_CHANNEL tree=$TREE bucket=$R2_BUCKET"
+log "MAOS build — devices=[${DEVICES_LIST[*]}] tag=$TAG channel=$OTA_CHANNEL tree=$TREE bucket=$R2_BUCKET"
 
 # ---- Pass 1: device-independent phases, once ----
 if $want_deps; then phase_deps; fi
 if $want_sync; then phase_sync; fi
 if $want_keys; then phase_keys; fi
 
-# ---- Pass 2: build group (vendor/overlay/build), per device, sequential ----
-BUILT_OK=()
-build_group=false
-if $want_vendor || $want_overlay || $want_build; then build_group=true; fi
-if $build_group; then
-    build_pinned=false
-    for dev in "${DEVICES_LIST[@]}"; do
-        log "=== Build $dev ==="
-        if ( set -e; DEVICE="$dev"
-             if $want_vendor;  then phase_vendor;  fi
-             if $want_overlay; then phase_overlay; fi
-             if $want_build;   then phase_build;   fi ); then
-            BUILT_OK+=("$dev")
-        else
-            warn "Device $dev FAILED during build — skipping its release/publish."
-        fi
-        # Pin the batch build number from the first build so every device lands in one
-        # releases/<build>/ dir (keeps date-based numbering consistent across the batch).
-        if ! $build_pinned && $want_build && [[ -f "$TREE/out/soong/build_number.txt" ]]; then
-            resolve_build_number
-            export BUILD_NUMBER="$BUILD"
-            build_pinned=true
-        fi
-    done
+# Pin the batch build number up front (so prep logs, all out-<device>/ builds, release and
+# publish share one releases/<build>/ dir) when we're going to build.
+if $want_build; then pin_build_number; fi
+
+# ---- Pass 2a: prep (vendor + overlay), per device, SEQUENTIAL ----
+# These write shared parts of the source tree (adevtool's internal build, the shared Updater
+# config.xml), so they must not run concurrently. Builds afterward only read the tree. We run
+# them via run_parallel with jobs=1 (not `if ( set -e; ... )`, which would DISABLE the inner
+# set -e — bash ignores errexit for a subshell used as an if-condition — and hide a
+# phase_vendor failure behind a later phase_overlay success).
+_prep_one() {
+    if $want_vendor;  then phase_vendor;  fi
+    if $want_overlay; then phase_overlay; fi
+}
+PREP_OK=()
+did_prep=false
+if $want_vendor || $want_overlay; then did_prep=true; fi
+if $did_prep; then
+    run_parallel prep _prep_one 1 PREP_OK "${DEVICES_LIST[@]}"
 else
-    # No build this run: release/publish operate on all selected devices.
-    BUILT_OK=("${DEVICES_LIST[@]}")
+    copy_arr PREP_OK DEVICES_LIST
 fi
 
-# ---- Pass 3: release, across devices, in parallel ----
+# ---- Pass 2b: build, across devices, IN PARALLEL (each into its own out-<device>/) ----
+BUILT_OK=()
+if $want_build; then
+    build_jobs="${MAOS_BUILD_JOBS:-2}"
+    # Divide cores across concurrent builds to avoid CPU oversubscription/thrash.
+    if [[ -z "${MAOS_BUILD_NINJA_JOBS:-}" ]]; then
+        _ncpu="$(nproc 2>/dev/null || echo 8)"
+        MAOS_BUILD_NINJA_JOBS=$(( _ncpu / build_jobs > 0 ? _ncpu / build_jobs : 1 ))
+    fi
+    export MAOS_BUILD_NINJA_JOBS
+    log "Parallel builds: $build_jobs at a time, ~$MAOS_BUILD_NINJA_JOBS ninja jobs each (MAOS_BUILD_JOBS/MAOS_BUILD_NINJA_JOBS)."
+    blddevs=(); copy_arr blddevs PREP_OK
+    if (( ${#blddevs[@]} == 0 )); then warn "No devices available to build."
+    else run_parallel build phase_build "$build_jobs" BUILT_OK "${blddevs[@]}"; fi
+else
+    copy_arr BUILT_OK PREP_OK
+fi
+
+# ---- Pass 3: release, across devices, IN PARALLEL ----
 RELEASED_OK=()
 if $want_release; then
     resolve_build_number            # pin BUILD for all parallel release jobs
-    reldevs=()
-    if (( ${#BUILT_OK[@]} > 0 )); then reldevs=("${BUILT_OK[@]}"); fi
-    if (( ${#reldevs[@]} == 0 )); then
-        warn "No devices available to release."
+    reldevs=(); copy_arr reldevs BUILT_OK
+    if (( ${#reldevs[@]} == 0 )); then warn "No devices available to release."
     else
         unlock_keys_shared          # decrypt once; each job just reads keys/<device>
         for dev in "${reldevs[@]}"; do link_keys "$dev"; done
-        run_release_parallel "${reldevs[@]}"
+        export password=""
+        run_parallel release phase_release "${MAOS_RELEASE_JOBS:-4}" RELEASED_OK "${reldevs[@]}"
     fi
 else
-    if (( ${#BUILT_OK[@]} > 0 )); then RELEASED_OK=("${BUILT_OK[@]}"); fi
+    copy_arr RELEASED_OK BUILT_OK
 fi
 
-# ---- Pass 4: publish, per device, sequential ----
+# ---- Pass 4: publish, across devices, IN PARALLEL ----
 PUBLISHED_OK=()
 if $want_publish; then
-    pubdevs=()
-    if (( ${#RELEASED_OK[@]} > 0 )); then pubdevs=("${RELEASED_OK[@]}"); fi
-    if (( ${#pubdevs[@]} == 0 )); then warn "No devices available to publish."; fi
-    for dev in ${pubdevs[@]+"${pubdevs[@]}"}; do
-        log "=== Publish $dev ==="
-        if ( set -e; DEVICE="$dev"; phase_publish ); then
-            PUBLISHED_OK+=("$dev")
-        else
-            warn "Device $dev FAILED during publish — continuing with the next device."
-        fi
-    done
+    resolve_build_number
+    pubdevs=(); copy_arr pubdevs RELEASED_OK
+    if (( ${#pubdevs[@]} == 0 )); then warn "No devices available to publish."
+    else run_parallel publish phase_publish "${MAOS_PUBLISH_JOBS:-4}" PUBLISHED_OK "${pubdevs[@]}"; fi
 fi
 
 # ---- Summary ----
-if $build_group || $want_release || $want_publish; then
-    if   $want_publish; then success=("${PUBLISHED_OK[@]+"${PUBLISHED_OK[@]}"}"); laststage=publish
-    elif $want_release; then success=("${RELEASED_OK[@]+"${RELEASED_OK[@]}"}");   laststage=release
-    else                     success=("${BUILT_OK[@]+"${BUILT_OK[@]}"}");         laststage=build
+if $did_prep || $want_build || $want_release || $want_publish; then
+    success=()
+    if   $want_publish; then copy_arr success PUBLISHED_OK; laststage=publish
+    elif $want_release; then copy_arr success RELEASED_OK;  laststage=release
+    elif $want_build;   then copy_arr success BUILT_OK;     laststage=build
+    else                     copy_arr success PREP_OK;      laststage=prep
     fi
     declare -A _ok=()
     for d in ${success[@]+"${success[@]}"}; do _ok[$d]=1; done
