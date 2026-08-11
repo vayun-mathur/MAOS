@@ -58,8 +58,10 @@ shift $((OPTIND - 1))
 # ---- Hardcoded config ----
 TREE="$HOME/maos"                              # AOSP checkout (ext4; never /mnt/c)
 R2_BUCKET="maos"                               # R2 bucket / ota.ma.vayunmathur.com
-# The release build number always matches the GrapheneOS base tag (their tags are the build
-# numbers), so OTA/version identity lines up with the upstream release.
+# Default the build number to the tag, but phase_release/phase_publish override it with the
+# ACTUAL number GrapheneOS generates at build time (out/soong/build_number.txt) via
+# resolve_build_number -- that is what finalize.sh and the artifacts are named with. Tag and
+# build number only coincide when you build on the tag's own date.
 BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
@@ -122,6 +124,19 @@ unlock_keys() {
     mkdir -p "$TREE/keys"
     rm -rf "$TREE/keys/$DEVICE"
     ln -s "$KEYS_PLAIN" "$TREE/keys/$DEVICE"
+}
+
+# Resolve $BUILD to the real build number GrapheneOS generated (date-based), written to
+# out/soong/build_number.txt during the build. finalize.sh and the produced artifacts are named
+# with THIS number, not the base tag, so release/publish must use it too.
+resolve_build_number() {
+    local f="$TREE/out/soong/build_number.txt"
+    if [[ -f "$f" ]]; then
+        BUILD="$(cat "$f")"
+        log "Using build number $BUILD (from out/soong/build_number.txt)"
+    else
+        warn "out/soong/build_number.txt not found; using BUILD=$BUILD (tag) as a fallback."
+    fi
 }
 
 # ---- Phases ----
@@ -327,6 +342,7 @@ phase_release() {
     # an openssl "asn1 ... wrong tag / X509_SIG" error).
     export password=""
     m otatools-package
+    resolve_build_number
     script/finalize.sh
     script/generate-release.sh "$DEVICE" "$BUILD"
     log "Release at releases/$BUILD/release-$DEVICE-$BUILD"
@@ -335,6 +351,7 @@ phase_release() {
 phase_publish() {
     : "${R2_ACCOUNT_ID:?set R2_ACCOUNT_ID}"; : "${R2_ACCESS_KEY_ID:?}"; : "${R2_SECRET_ACCESS_KEY:?}"
     cd "$TREE"
+    resolve_build_number
     local rel="releases/$BUILD/release-$DEVICE-$BUILD"
     [[ -d "$rel" ]] || die "Release dir $rel not found — run the 'release' phase first."
 
