@@ -8,15 +8,24 @@
 #
 # It is phase-based and resumable — rerun a phase or the whole thing safely.
 #
-#   ./build-maos.sh all                         # full pipeline
+#   ./build-maos.sh all                         # full pipeline (cheetah)
 #   ./build-maos.sh sync                         # just one phase
 #   ./build-maos.sh -d panther -t 2026080500 all # override device/tag via flags
+#   ./build-maos.sh -d all all                   # build EVERY supported Pixel
+#   ./build-maos.sh -d cheetah,panther build     # a comma-separated subset
 #
 # Usage: ./build-maos.sh [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>
 #   -d DEVICE    Pixel codename / build target   (default: cheetah)
+#                 - a single codename (e.g. cheetah)
+#                 - "all" to build every supported Pixel (see ALL_DEVICES)
+#                 - a comma-separated subset (e.g. cheetah,panther)
 #   -t TAG       GrapheneOS base tag             (default: 2026080500)
 #   -c CHANNEL   OTA channel to publish          (default: stable; stable|beta|testing)
 #   phases: deps sync vendor overlay keys build release publish all
+#
+# deps/sync/keys are device-independent and run ONCE; vendor/overlay/build/release/publish
+# run per selected device. In a multi-device run a failed device is logged and the run
+# continues to the next device, with a pass/fail summary printed at the end.
 #
 # ── Signing keys ────────────────────────────────────────────────────────────────────────
 # Keys live in ONE scrypt-encrypted file ($MAOS_KEYS_FILE), unlocked with a passphrase you
@@ -25,13 +34,17 @@
 # script decrypts it into RAM (/dev/shm), uses it, and shreds the plaintext on exit — the
 # keys are never written to disk in the clear.
 #
+# The key set is DEVICE-INDEPENDENT: one shared set signs every device (the GrapheneOS
+# signing scripts read keys from keys/<device>, so unlock_keys symlinks the one shared
+# plaintext set in as keys/<device> for whichever device is being built).
+#
 # ── Required environment ────────────────────────────────────────────────────────────────
 #   MAOS_KEYS_PASSPHRASE   passphrase for the encrypted key file (required for keys/build/release)
 # For publishing:
 #   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY   Cloudflare R2 creds
 #
 # ── Optional environment ────────────────────────────────────────────────────────────────
-#   MAOS_KEYS_FILE=$HOME/maos-keys/$DEVICE.keys.tar.gz.enc   encrypted key blob (outside the tree)
+#   MAOS_KEYS_FILE=$HOME/maos-keys/maos.keys.tar.gz.scrypt   encrypted key blob (shared, outside the tree)
 #   MODERN_APPS_SRC=<path>         Modern-Apps checkout/dir with release APKs; if unset, the 9
 #                                  APKs are downloaded from the Modern-Apps GitHub release
 #
@@ -49,11 +62,25 @@ while getopts "d:t:c:h" _opt; do
         d) DEVICE="$OPTARG" ;;
         t) TAG="$OPTARG" ;;
         c) OTA_CHANNEL="$OPTARG" ;;
-        h) sed -n '2,15p' "$0"; exit 0 ;;
+        h) sed -n '2,32p' "$0"; exit 0 ;;
         *) echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>" >&2; exit 2 ;;
     esac
 done
 shift $((OPTIND - 1))
+
+# Every supported Pixel (fastboot codenames), kept in sync with the web installer's DEVICES
+# map (location_share_server/os_installer/installer.js). `-d all` expands to this list.
+ALL_DEVICES=(stallion rango mustang blazer frankel tegu comet komodo caiman tokay \
+             akita husky shiba felix tangorpro lynx cheetah panther bluejay raven oriole)
+
+# Expand -d into DEVICES_LIST: "all" -> every device; "a,b,c" -> that subset; else a single device.
+if [[ "$DEVICE" == "all" ]]; then
+    DEVICES_LIST=("${ALL_DEVICES[@]}")
+elif [[ "$DEVICE" == *,* ]]; then
+    IFS=',' read -r -a DEVICES_LIST <<< "$DEVICE"
+else
+    DEVICES_LIST=("$DEVICE")
+fi
 
 # ---- Hardcoded config ----
 TREE="$HOME/maos"                              # AOSP checkout (ext4; never /mnt/c)
@@ -69,11 +96,12 @@ MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
 APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music networklocation)
 
 # ---- Derived / optional-env config ----
-MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/$DEVICE.keys.tar.gz.scrypt}"
+# ONE shared, device-independent key set (see the "Signing keys" note above).
+MAOS_KEYS_FILE="${MAOS_KEYS_FILE:-$HOME/maos-keys/maos.keys.tar.gz.scrypt}"
 MODERN_APPS_SRC="${MODERN_APPS_SRC:-}"
 
 # Plaintext keys are only ever materialized here (RAM-backed), and shredded on exit.
-KEYS_PLAIN="/dev/shm/maos-keys-$DEVICE"
+KEYS_PLAIN="/dev/shm/maos-keys"
 
 # Prefer user-writable tool installs (a writable `repo` launcher so it can self-update instead
 # of warning, plus anything else we drop in ~/.local/bin) over system copies.
@@ -94,8 +122,12 @@ wipe_plain_keys() {
         find "$KEYS_PLAIN" -type f -exec shred -u {} + 2>/dev/null || true
         rm -rf "$KEYS_PLAIN"
     fi
-    # Drop the in-tree symlink to the RAM keys, if we made one.
-    [[ -L "$TREE/keys/$DEVICE" ]] && rm -f "$TREE/keys/$DEVICE" || true
+    # Drop every in-tree symlink to the RAM keys we created (one keys/<device> per built device).
+    if [[ -d "$TREE/keys" ]]; then
+        for _l in "$TREE"/keys/*; do
+            [[ -L "$_l" ]] && rm -f "$_l" || true
+        done
+    fi
 }
 trap wipe_plain_keys EXIT
 
@@ -371,10 +403,13 @@ phase_publish() {
         --only-show-errors
 
     log "Publishing factory image for the web installer"
+    # The web installer consumes the *install* zip (contains super_1..N.img already split to
+    # the device max-download-size, plus script.txt — GrapheneOS's verified flash sequence).
+    # prepare-factory.sh translates that script.txt into the ordered installer manifest.
     R2_BUCKET="$R2_BUCKET" vendor/modern-apps/installer/prepare-factory.sh \
-        -d "$DEVICE" -b "$BUILD" -f "$rel/$DEVICE-factory-$BUILD.zip" \
-        || warn "prepare-factory.sh failed — see its output. For a real release pass -P plan.json \
-mirroring flash-all (incl. flashing avb_custom_key before lock)."
+        -d "$DEVICE" -b "$BUILD" -f "$rel/$DEVICE-install-$BUILD.zip" \
+        || warn "prepare-factory.sh failed — see its output. For a factory-zip fallback pass -P \
+plan.json mirroring flash-all (incl. flashing avb_custom_key before lock)."
     log "Done. OTA: https://ota.ma.vayunmathur.com/$DEVICE-$OTA_CHANNEL"
 }
 
@@ -389,14 +424,55 @@ run_phase() {
         build) phase_build ;;
         release) phase_release ;;
         publish) phase_publish ;;
-        all)
-            phase_deps; phase_sync; phase_vendor; phase_overlay
-            phase_keys; phase_build; phase_release; phase_publish ;;
         *) die "Unknown phase '$1'. Use: deps sync vendor overlay keys build release publish all" ;;
     esac
 }
 
-[[ $# -gt 0 ]] || { echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>   (phases: deps sync vendor overlay keys build release publish all)"; exit 2; }
-log "MAOS build — device=$DEVICE tag=$TAG build=$BUILD channel=$OTA_CHANNEL tree=$TREE bucket=$R2_BUCKET"
-for p in "$@"; do run_phase "$p"; done
+# deps/sync/keys are device-independent (run once); everything else runs per device.
+is_independent() { case "$1" in deps|sync|keys) return 0 ;; *) return 1 ;; esac; }
+
+[[ $# -gt 0 ]] || { echo "usage: $0 [-d DEVICE] [-t TAG] [-c CHANNEL] <phase...>   (phases: deps sync vendor overlay keys build release publish all; -d accepts a codename, 'all', or a comma-separated subset)"; exit 2; }
+
+# Expand 'all' and split the requested phases into run-once (device-independent) and
+# per-device groups, preserving order within each group.
+INDEP_PHASES=()
+PERDEV_PHASES=()
+for p in "$@"; do
+    case "$p" in
+        all)
+            INDEP_PHASES+=(deps sync keys)
+            PERDEV_PHASES+=(vendor overlay build release publish) ;;
+        deps|sync|vendor|overlay|keys|build|release|publish)
+            if is_independent "$p"; then INDEP_PHASES+=("$p"); else PERDEV_PHASES+=("$p"); fi ;;
+        *) die "Unknown phase '$p'. Use: deps sync vendor overlay keys build release publish all" ;;
+    esac
+done
+
+log "MAOS build — devices=[${DEVICES_LIST[*]}] tag=$TAG build=$BUILD channel=$OTA_CHANNEL tree=$TREE bucket=$R2_BUCKET"
+
+# 1) Device-independent phases, once.
+for p in ${INDEP_PHASES[@]+"${INDEP_PHASES[@]}"}; do
+    run_phase "$p"
+done
+
+# 2) Per-device phases, once per selected device. Each device runs in a subshell so that a
+#    failure (set -e) aborts only that device — we log it and continue to the next — and the
+#    EXIT key-wipe trap (reset inside subshells) does not fire between devices.
+if [[ "${#PERDEV_PHASES[@]}" -gt 0 ]]; then
+    SUMMARY=()
+    for dev in "${DEVICES_LIST[@]}"; do
+        log "=== Device $dev: ${PERDEV_PHASES[*]} ==="
+        if ( for p in "${PERDEV_PHASES[@]}"; do DEVICE="$dev"; run_phase "$p"; done ); then
+            SUMMARY+=("$dev: OK")
+        else
+            warn "Device $dev FAILED during: ${PERDEV_PHASES[*]} — continuing with the next device."
+            SUMMARY+=("$dev: FAILED")
+        fi
+    done
+    log "Per-device summary (${#DEVICES_LIST[@]} device(s)):"
+    for s in "${SUMMARY[@]}"; do printf '   %s\n' "$s"; done
+    # Non-zero exit if any device failed, so callers/CI can detect a partial run.
+    for s in "${SUMMARY[@]}"; do [[ "$s" == *": FAILED" ]] && exit 1; done
+fi
+
 log "All requested phases complete."

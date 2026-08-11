@@ -9,8 +9,9 @@ flashes the MAOS factory image — no `adb`/`fastboot` tools or command line nee
 | Where | What |
 | --- | --- |
 | `location_share_server/os_installer/` | The static front-end: `install.html`, `install.css`, `installer.js` (wizard), `fastboot.js` (WebUSB fastboot client). Served at `/os/install` on `ma.vayunmathur.com`. |
-| `MAOS/installer/prepare-factory.sh` | Build-host script: turns a factory image into a `manifest.json` + per-partition images (splitting oversized ones into sparse chunks) and uploads them to R2. |
-| `MAOS/installer/sparse_split.py` | Splits a raw image into multiple Android sparse images, each under the device's max-download-size. |
+| `MAOS/installer/prepare-factory.sh` | Build-host script: turns a release image into a `manifest.json` + per-partition images and uploads them to R2. For the **install zip** (preferred) it translates GrapheneOS's `script.txt` verbatim; for a legacy **factory zip** it builds a best-effort/`-P` plan and splits oversized images into sparse chunks. |
+| `MAOS/installer/script_to_manifest.py` | Translates an install zip's `script.txt` (GrapheneOS's verified flash sequence) into ordered manifest steps. |
+| `MAOS/installer/sparse_split.py` | Splits a raw image into multiple Android sparse images, each under the device's max-download-size (legacy factory-zip path only). |
 | R2 (`ota.ma.vayunmathur.com/factory/<device>/…`) | Hosts the manifest + images; the browser streams them directly. |
 
 ## Flow
@@ -24,9 +25,12 @@ factory image ──prepare-factory.sh──▶ manifest.json + images ──▶
      Pixel in bootloader mode  ◀────────── streams images from R2 ──────
 ```
 
-The installer reads `factory/<device>/latest/manifest.json`, then for each step does
-`flash` / `erase` / `reboot-bootloader` / `reboot` over WebUSB, streaming each referenced
-image straight from R2.
+The installer reads `factory/<device>/latest/manifest.json`, then for each step drives the
+device over WebUSB — `check-var` / `check-requirements` (verify), `flash` (to the active or
+inactive/"other" slot), `erase`, `run-cmd`, `toggle-active-slot` / `set-active`,
+`snapshot-update-cancel`, `reboot-bootloader`, `reboot` — streaming each referenced image
+straight from R2 and flashing it before fetching the next (so a multi-GB `super` never has
+to fit in memory at once).
 
 ## Before you have any builds
 
@@ -50,32 +54,47 @@ either a 404 or `available: false` as "no build yet" (a friendly notice, not an 
 ## Publishing a build for the installer
 
 ```bash
-# On the Linux build host, after producing a factory image (runbook step 8):
+# On the Linux build host, after producing a release (runbook step 8):
 export R2_ACCESS_KEY_ID=...  R2_SECRET_ACCESS_KEY=...  R2_ACCOUNT_ID=...
-installer/prepare-factory.sh -d shusky -b "$BUILD" -f <device>-factory-*.zip
+installer/prepare-factory.sh -d cheetah -b "$BUILD" -f <device>-install-<build>.zip
 ```
 
 This uploads to both `factory/<device>/<build>/` and `factory/<device>/latest/` (the
-installer defaults to `latest`).
+installer defaults to `latest`). `build-maos.sh`'s `publish` phase runs this for you with the
+install zip.
 
-### The flash plan (READ THIS)
+### The flash plan
 
-The exact partitions/slots/order for a real install are defined by the factory image's own
-`flash-all.sh` and are device/release specific. `prepare-factory.sh` without `-P` generates
-a **best-effort** plan and prints a warning — treat it as a scaffold, not a guarantee. For a
-real release, pass an explicit plan mirroring that device's `flash-all`:
+The correct, brick-safe flash sequence for a release is GrapheneOS's own — shipped as
+`script.txt` inside the **install zip** (`<device>-install-<build>.zip`), alongside the whole
+`super` already pre-split into `super_*.img`. When `prepare-factory.sh` sees a `script.txt`
+it translates it verbatim (`script_to_manifest.py`) into ordered manifest steps and copies
+the images as-is — no re-splitting, no invented plan. This is the default and what you should
+use for a real release.
+
+Supported step actions: `check-var`, `check-requirements`, `flash` (optional `slot:"other"`),
+`erase`, `run-cmd`, `toggle-active-slot`, `set-active`, `snapshot-update-cancel`,
+`reboot-bootloader`, `reboot`.
+
+#### Legacy factory-zip fallback
+
+If you only have a **factory zip** (no `script.txt`), `prepare-factory.sh` builds a
+partition→image map and either follows an explicit `-P plan.json` or emits a **best-effort**
+plan (and prints a warning). Oversized images (e.g. `super`) are split into sparse chunks
+with `sparse_split.py`. Treat the auto plan as a scaffold — pass `-P` mirroring that device's
+`flash-all` and validate on a device before publishing:
 
 ```bash
-installer/prepare-factory.sh -d shusky -b "$BUILD" -f factory.zip -P plan.json
+installer/prepare-factory.sh -d cheetah -b "$BUILD" -f factory.zip -P plan.json
 ```
 
 `plan.json` is a JSON array of steps, e.g.:
 
 ```json
 [
-  {"action":"flash","partition":"bootloader","image":"bootloader-shusky-*.img"},
+  {"action":"flash","partition":"bootloader","image":"bootloader-cheetah-*.img"},
   {"action":"reboot-bootloader"},
-  {"action":"flash","partition":"radio","image":"radio-shusky-*.img"},
+  {"action":"flash","partition":"radio","image":"radio-cheetah-*.img"},
   {"action":"reboot-bootloader"},
   {"action":"flash","partition":"boot","image":"boot.img"},
   {"action":"flash","partition":"init_boot","image":"init_boot.img"},
@@ -91,8 +110,6 @@ installer/prepare-factory.sh -d shusky -b "$BUILD" -f factory.zip -P plan.json
 `image` names an entry from the factory image (top-level or inside `image-*.zip`). Any image
 over `-m` bytes (default 100 MiB, e.g. `super`) is auto-split into sparse chunks and expanded
 into multiple flash steps to the same partition.
-
-Supported step actions: `flash`, `erase`, `reboot-bootloader`, `reboot`, `set-active`.
 
 ## Required: R2 CORS
 
