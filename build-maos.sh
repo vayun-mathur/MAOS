@@ -99,7 +99,7 @@ BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
 MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
-APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music networklocation)
+APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation)
 
 # ---- Derived / optional-env config ----
 # ONE shared, device-independent key set (see the "Signing keys" note above).
@@ -331,6 +331,8 @@ phase_overlay() {
     log "Verifying stock module names against this tag"
     grep -rn --include=*.mk -e '\bCamera\b' -e '\bPdfViewer\b' -e '\bApps\b' \
         -e '\bContacts\b' -e '\bDeskClock\b' -e 'Calculator' -e 'Gallery2' -e 'DocumentsUI' \
+        -e '\bDialer\b' -e '\bMessaging\b' -e '\bEuiccGoogle\b' \
+        -e '\bSeedvault\b' -e '\bContactsBackup\b' \
         build/ device/ vendor/ | grep -i 'PRODUCT_PACKAGES' || true
     warn "Confirm the names above match the filter-out list in vendor/modern-apps/modern_apps.mk."
 

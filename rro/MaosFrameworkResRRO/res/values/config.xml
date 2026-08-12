@@ -23,6 +23,17 @@
     <!-- TTS: Modern Apps Speech (Piper) is the only installed engine, so the framework
          selects it as the default TTS engine automatically; no dedicated config exists. -->
 
+    <!-- Default dialer role -> Modern Apps Communicate. Replaces GrapheneOS's Dialer
+         (com.android.dialer), removed in modern_apps.mk. Communicate declares an InCallService
+         and holds the DIALER role. -->
+    <string name="config_defaultDialer" translatable="false">com.vayunmathur.communicate</string>
+
+    <!-- Default SMS/MMS app role -> Modern Apps Communicate. Replaces GrapheneOS's Messaging
+         (com.android.messaging), removed in modern_apps.mk. Communicate declares the
+         SMS_DELIVER / WAP_PUSH_DELIVER receivers and holds the SMS role; the role system
+         auto-grants its SMS/Phone/Contacts runtime permissions. -->
+    <string name="config_defaultSms" translatable="false">com.vayunmathur.communicate</string>
+
     <!-- Offline geocoder -> Modern Apps NetworkLocation. Its GeocodeService (bound via the
          com.android.location.service.GeocodeProvider action) becomes THE system geocoder.
          Replaces GrapheneOS's NetworkLocation module (removed in modern_apps.mk). -->
@@ -40,4 +51,12 @@
          key, not the platform key, so it would never be selected. Force the explicit-pin path. -->
     <bool name="config_enableNetworkLocationOverlay">false</bool>
     <bool name="config_enableGeocoderOverlay">false</bool>
+
+    <!-- Default app-data backup transport -> Modern Apps Backup. Replaces GrapheneOS's
+         Seedvault (com.stevesoltys.seedvault) and the GrapheneOS contacts backup transport
+         (app.grapheneos.backup.contacts), both removed in modern_apps.mk. This is the AOSP
+         framework default-transport pin (a "package/service" component); Backup holds the
+         signature|privileged BACKUP permission (allowlisted in
+         privapp-permissions-modern-apps.xml) so the BackupManagerService will bind it. -->
+    <string name="config_backup_transport" translatable="false">com.vayunmathur.backup/.transport.ConfigurableBackupTransportService</string>
 </resources>

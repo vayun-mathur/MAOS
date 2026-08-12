@@ -26,6 +26,9 @@ repo.)
 | Speech | `com.vayunmathur.speech` | GrapheneOS SpeechServices (default STT + TTS) |
 | Calendar | `com.vayunmathur.calendar` | AOSP Calendar (uses system CalendarProvider) |
 | Music | `com.vayunmathur.music` | AOSP Music (incl. popup single-file player) |
+| Communicate | `com.vayunmathur.communicate` | AOSP Dialer **and** Messaging (default dialer + SMS app) |
+| Euicc | `com.vayunmathur.euicc` | Google's eSIM LPA **EuiccGoogle** (system LPA; Pixel `EuiccSupportPixel` backend kept — see below) |
+| Backup | `com.vayunmathur.backup` | **Seedvault** (`com.stevesoltys.seedvault`) **and** the GrapheneOS contacts backup transport (`app.grapheneos.backup.contacts`) — system app-data backup transport; see below |
 
 ## Layout
 
@@ -83,6 +86,23 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
     `DocumentPickerActivity`. It is the **same APK** as the F-Droid build — no separate flavor. The
     picker component ships disabled and a small `Application` enables it only when `MANAGE_DOCUMENTS`
     is granted (i.e. only in MAOS), so the userspace Files app is unchanged.
+- **Euicc is the eSIM LPA.** Modern Apps Euicc replaces Google's LPA app **EuiccGoogle**
+  (`com.google.android.euicc`) and its companion RRO **EuiccGoogleOverlay**. It ships as a
+  **priv-app** declaring `android.service.euicc.EuiccService`; with the Google LPA removed it is the
+  sole app resolving that intent with `WRITE_EMBEDDED_SUBSCRIPTIONS`, so the framework selects it as
+  the LPA automatically (no config pin). Its privileged perms (`WRITE_EMBEDDED_SUBSCRIPTIONS`,
+  `MODIFY_PHONE_STATE`, `READ_PRIVILEGED_PHONE_STATE`) are in the privapp allowlist. Only the LPA
+  *app* is swapped — the proprietary Pixel backend **`EuiccSupportPixel`** (`com.google.euiccpixel`)
+  and the modem firmware are **kept**, since they provide the low-level access to the built-in eUICC.
+- **Backup is the app-data backup transport.** Modern Apps Backup replaces GrapheneOS's
+  **Seedvault** (`com.stevesoltys.seedvault`) and the GrapheneOS contacts backup transport
+  (`app.grapheneos.backup.contacts`), both removed in `modern_apps.mk`. It ships as a **priv-app**
+  declaring `android.app.backup.BackupTransport` via a service with the `android.backup.TRANSPORT_HOST`
+  intent-filter (gated by the system-only `BIND_BACKUP_TRANSPORT`), and is pinned as the default
+  transport via `config_backup_transport` in the RRO. Its privileged perms (`BACKUP` to act as a
+  transport, `WRITE_SECURE_SETTINGS` to activate itself) are in the privapp allowlist. Backups are
+  encrypted end-to-end with a **BIP-39** recovery code and written to a SAF folder or a
+  WebDAV/Nextcloud remote, so there is no separate account/content-provider backend to keep.
 - **APKs are `presigned`** so each keeps its `com.vayunmathur` certificate, preserving the
   app-store update chain. The *OS* is signed with your own platform keys.
 - **Silent-breakage guard:** `modern_apps.mk` fails the build if any stock module we meant

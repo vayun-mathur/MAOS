@@ -23,6 +23,9 @@ PRODUCT_PACKAGES += \
     ModernAppsSpeech \
     ModernAppsCalendar \
     ModernAppsMusic \
+    ModernAppsCommunicate \
+    ModernAppsEuicc \
+    ModernAppsBackup \
     ModernAppsNetworkLocation
 
 # 2. Remove the stock userspace apps we're replacing.
@@ -51,8 +54,14 @@ _maos_remove := \
     LatinIME \
     SpeechServices \
     Music \
+    Dialer \
+    Messaging \
     InfoApp \
     Auditor \
+    EuiccGoogle \
+    EuiccGoogleOverlay \
+    Seedvault \
+    ContactsBackup \
     NetworkLocation
 
 # Safety: refuse to remove any content-provider backend. This makes the Contacts/Calendar
@@ -83,6 +92,16 @@ PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
 # in the keyboard app's own manifest (Modern-Apps repo). With LatinIME removed it is the sole
 # preinstalled IME, so the system enables/selects it by default.
 
+# NOTE on communicate (dialer + messaging): Modern Apps Communicate (com.vayunmathur.communicate)
+# is a single app that provides BOTH the phone dialer and the SMS/MMS messenger. It replaces the
+# two separate GrapheneOS/AOSP UI apps Dialer (com.android.dialer) and Messaging
+# (com.android.messaging), both removed above. It is made the default dialer via config_defaultDialer
+# and the default SMS app via config_defaultSms in the frameworks/base overlay (RRO). Holding the
+# DIALER and SMS roles causes the role system to auto-grant its runtime permissions, so it is NOT a
+# priv-app and needs no default-permissions grant. Only the UI apps are removed; the telephony
+# backends (TelephonyProvider, telecom framework) stay intact. Neither `Dialer` nor `Messaging` ends
+# in `Provider`, so the safety guard above correctly permits removing them.
+
 # NOTE on network location + geocoder: Modern Apps NetworkLocation (com.vayunmathur.networklocation)
 # is a priv-app that provides BOTH the network location provider and the offline geocoder. It
 # replaces GrapheneOS's NetworkLocation module (app.grapheneos.networklocation), which we remove
@@ -93,6 +112,37 @@ PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
 # Data-Saver exemptions (for always-on background operation) from sysconfig-modern-apps.xml below.
 # `NetworkLocation` is a provider *implementation* app, NOT a content-provider backend — it does not
 # end in `Provider`, so the safety guard above correctly permits removing it.
+
+# NOTE on eSIM (euicc): Modern Apps Euicc (com.vayunmathur.euicc) is a priv-app that is the system
+# eSIM LPA (Local Profile Assistant). It declares android.service.euicc.EuiccService plus the eSIM
+# management LUI (MANAGE_/PROVISION_EMBEDDED_SUBSCRIPTIONS) and implements the full SGP.22 stack,
+# driving the eUICC over a telephony logical channel. It gets its signature|privileged perms
+# (WRITE_EMBEDDED_SUBSCRIPTIONS / MODIFY_PHONE_STATE / READ_PRIVILEGED_PHONE_STATE) from
+# privapp-permissions-modern-apps.xml. It replaces Google's LPA app EuiccGoogle
+# (com.google.android.euicc) and its companion RRO EuiccGoogleOverlay (com.google.android.euiccoverlay),
+# both removed above; with the Google LPA gone, ours is the sole app resolving the EuiccService intent
+# with the privileged eSIM permission, so the framework selects it as the LPA automatically (no config
+# pin needed). Only the LPA *app* layer is replaced: the proprietary Pixel hardware backend
+# EuiccSupportPixel (com.google.euiccpixel) and the modem/Shannon firmware are KEPT — they provide the
+# low-level access to the built-in eUICC that this app sits on top of. `EuiccGoogle`/`EuiccGoogleOverlay`
+# are not content-provider backends (they don't end in `Provider`), so the safety guard permits removal.
+
+# NOTE on backup: Modern Apps Backup (com.vayunmathur.backup) is a priv-app that is the system
+# app-data backup transport. It declares android.app.backup.BackupTransport via a service with the
+# android.backup.TRANSPORT_HOST intent-filter (gated by the system-only BIND_BACKUP_TRANSPORT
+# permission) and also performs standalone encrypted file/media backup. It gets its
+# signature|privileged perms (BACKUP to act as a transport, WRITE_SECURE_SETTINGS to activate
+# itself) from privapp-permissions-modern-apps.xml, and is pinned as the default transport via
+# config_backup_transport in the frameworks/base overlay (RRO). It replaces GrapheneOS's Seedvault
+# (com.stevesoltys.seedvault, module Seedvault) and the GrapheneOS contacts backup transport
+# (app.grapheneos.backup.contacts, module ContactsBackup), both removed above; with Seedvault gone,
+# ours is the transport pinned by config_backup_transport. Backups are encrypted end-to-end with a
+# BIP-39 recovery code, so there is no separate account/content-provider backend to keep. Neither
+# `Seedvault` nor `ContactsBackup` ends in `Provider`, so the safety guard above permits removal.
+# (Module names are the GrapheneOS build names — re-confirm on your synced tree if a build surprises
+# you, per the note on the removal list above.)
+
+# 3. framework-res config
 
 # 3. framework-res config (default browser, documents UI, speech recognition service, and the
 #    geocoder / network-location provider pins + their override bools) ships as an explicit
@@ -113,9 +163,11 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/default-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/default-permissions/default-permissions-modern-apps.xml
 
-# 4. Privileged-permission allowlist so Files (priv-app) may hold MANAGE_DOCUMENTS, and
+# 4. Privileged-permission allowlist so Files (priv-app) may hold MANAGE_DOCUMENTS,
 #    NetworkLocation (priv-app) may hold INSTALL_LOCATION_PROVIDER / LOCATION_HARDWARE /
-#    MODIFY_PHONE_STATE / UPDATE_DEVICE_STATS.
+#    MODIFY_PHONE_STATE / UPDATE_DEVICE_STATS, Euicc (priv-app, the eSIM LPA) may hold
+#    WRITE_EMBEDDED_SUBSCRIPTIONS / MODIFY_PHONE_STATE / READ_PRIVILEGED_PHONE_STATE, and
+#    Backup (priv-app, the app-data backup transport) may hold BACKUP / WRITE_SECURE_SETTINGS.
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/privapp-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/privapp-permissions-modern-apps.xml
 

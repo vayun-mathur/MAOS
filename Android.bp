@@ -170,3 +170,61 @@ android_app_import {
         enabled: false,
     },
 }
+
+// Communicate is a unified dialer + messaging app. It replaces BOTH GrapheneOS's Dialer
+// (com.android.dialer, module Dialer) and Messaging (com.android.messaging, module Messaging),
+// which are removed in modern_apps.mk. It becomes the default dialer and default SMS app via
+// config_defaultDialer / config_defaultSms in the frameworks/base overlay (RRO). It holds the
+// DIALER and SMS roles (declares an InCallService and the SMS_DELIVER/WAP_PUSH_DELIVER
+// receivers); the role system auto-grants its runtime permissions, so it is NOT privileged and
+// needs no default-permissions grant. The telephony backends (TelephonyProvider, telecom
+// framework) are untouched — only the UI apps are removed.
+android_app_import {
+    name: "ModernAppsCommunicate",
+    apk: "prebuilts/communicate-release.apk",
+    presigned: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Euicc is PRIVILEGED: it is the system eSIM LPA (Local Profile Assistant). It declares the
+// android.service.euicc.EuiccService and the eSIM management LUI, and drives the eUICC over a
+// telephony logical channel, so it needs the signature|privileged WRITE_EMBEDDED_SUBSCRIPTIONS /
+// MODIFY_PHONE_STATE / READ_PRIVILEGED_PHONE_STATE perms (allowlisted in
+// privapp-permissions-modern-apps.xml). It replaces Google's LPA app EuiccGoogle
+// (com.google.android.euicc, removed in modern_apps.mk). The proprietary Pixel hardware backend
+// EuiccSupportPixel (com.google.euiccpixel) and the modem firmware are KEPT — they provide the
+// low-level access to the built-in eUICC that this app sits on top of.
+android_app_import {
+    name: "ModernAppsEuicc",
+    apk: "prebuilts/euicc-release.apk",
+    presigned: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Backup is PRIVILEGED: it is the system app-data backup transport (declares
+// android.app.backup.BackupTransport via a TRANSPORT_HOST service) and also does
+// standalone encrypted file/media backup. Being the transport requires the
+// signature|privileged BACKUP permission, and setting itself active requires
+// WRITE_SECURE_SETTINGS — both allowlisted in privapp-permissions-modern-apps.xml.
+// It replaces GrapheneOS's Seedvault (com.stevesoltys.seedvault) and the GrapheneOS
+// contacts backup transport (app.grapheneos.backup.contacts), both removed in
+// modern_apps.mk. It is pinned as the default transport via config_backup_transport
+// in the frameworks/base overlay (RRO). Backups are encrypted with a BIP-39 recovery
+// code; there is no separate content-provider backend to keep.
+android_app_import {
+    name: "ModernAppsBackup",
+    apk: "prebuilts/backup-release.apk",
+    presigned: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}

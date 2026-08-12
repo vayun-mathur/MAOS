@@ -24,4 +24,23 @@
         <permission name="android.permission.MODIFY_PHONE_STATE" />
         <permission name="android.permission.UPDATE_DEVICE_STATS" />
     </privapp-permissions>
+
+    <!-- Euicc is the system eSIM LPA (declares EuiccService). Managing embedded subscriptions
+         and driving the eUICC over a telephony logical channel requires these signature|privileged
+         perms. Replaces Google's EuiccGoogle LPA; the EuiccSupportPixel hardware backend is kept. -->
+    <privapp-permissions package="com.vayunmathur.euicc">
+        <permission name="android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS" />
+        <permission name="android.permission.MODIFY_PHONE_STATE" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+    </privapp-permissions>
+
+    <!-- Backup is the system app-data backup transport (declares BackupTransport via a
+         TRANSPORT_HOST service). Acting as a transport requires the signature|privileged
+         BACKUP permission; activating itself as the current transport requires
+         WRITE_SECURE_SETTINGS. Replaces GrapheneOS's Seedvault; pinned as the default
+         transport via config_backup_transport. -->
+    <privapp-permissions package="com.vayunmathur.backup">
+        <permission name="android.permission.BACKUP" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+    </privapp-permissions>
 </permissions>
