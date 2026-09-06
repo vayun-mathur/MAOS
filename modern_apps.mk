@@ -8,6 +8,12 @@
 #
 # -----------------------------------------------------------------------------------
 
+# 0. Register this directory's Soong namespace. Android.bp here opens with
+#    `soong_namespace {}`, and modules in an unregistered namespace are never
+#    exported to Make - Soong emits rules for them but PRODUCT_PACKAGES silently
+#    matches nothing, which is how a build shipped zero MAOS apps and still passed.
+PRODUCT_SOONG_NAMESPACES += vendor/modern-apps
+
 # 1. App membership (which Modern Apps ship, which stock apps are dropped) is applied
 #    by patches/platform_build.patch against build/make/target/product/*.mk. The
 #    Android.bp modules referenced there are defined alongside this file.
