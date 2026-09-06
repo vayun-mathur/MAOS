@@ -252,7 +252,10 @@ apply_maos_patches() {
     local patches="vendor/modern-apps/patches"
     [[ -d "$patches" ]] || die "Missing $patches — is vendor/modern-apps synced?"
     local spec repo patch
-    for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch"; do
+    for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
+                "frameworks/base:frameworks_base.patch" \
+                "packages/apps/Settings:settings.patch" \
+                "packages/apps/SetupWizard2:setupwizard2.patch"; do
         repo="${spec%%:*}"; patch="$TREE/$patches/${spec##*:}"
         [[ -f "$patch" ]] || die "Missing patch file: $patch"
         [[ -d "$repo" ]]  || die "Missing repo for patch: $repo"

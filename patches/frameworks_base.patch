@@ -1,0 +1,205 @@
+diff --git a/data/fonts/fonts.xml b/data/fonts/fonts.xml
+index 8cbc3000c250..a453346df82e 100644
+--- a/data/fonts/fonts.xml
++++ b/data/fonts/fonts.xml
+@@ -36,93 +36,84 @@
+ <familyset version="23">
+     <!-- first font is default -->
+     <family name="sans-serif">
+-        <font weight="100" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="100" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="100" />
+         </font>
+-        <font weight="200" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="200" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="200" />
+         </font>
+-        <font weight="300" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="300" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="300" />
+         </font>
+-        <font weight="400" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="400" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="400" />
+         </font>
+-        <font weight="500" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="500" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="500" />
+         </font>
+-        <font weight="600" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="600" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="600" />
+         </font>
+-        <font weight="700" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="700" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="700" />
+         </font>
+-        <font weight="800" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="800" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="800" />
+         </font>
+-        <font weight="900" style="normal">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="0" />
++        <font weight="900" style="normal">GoogleSansFlex.ttf
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="900" />
+         </font>
+-        <font weight="100" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="100" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="100" />
+         </font>
+-        <font weight="200" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="200" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="200" />
+         </font>
+-        <font weight="300" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="300" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="300" />
+         </font>
+-        <font weight="400" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="400" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="400" />
+         </font>
+-        <font weight="500" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="500" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="500" />
+         </font>
+-        <font weight="600" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="600" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="600" />
+         </font>
+-        <font weight="700" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="700" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="700" />
+         </font>
+-        <font weight="800" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="800" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="800" />
+         </font>
+-        <font weight="900" style="italic">Roboto-Regular.ttf
+-          <axis tag="ital" stylevalue="1" />
++        <font weight="900" style="italic">GoogleSansFlex.ttf
++          <axis tag="slnt" stylevalue="-10" />
+           <axis tag="wdth" stylevalue="100" />
+           <axis tag="wght" stylevalue="900" />
+         </font>
+@@ -383,6 +374,34 @@
+     </family>
+ 
+     <!-- fallback fonts -->
++    <!--
++        Google Sans Flex is Latin-focused, and the fallback families below start at Arabic:
++        nothing else here draws Cyrillic, Greek, IPA or most of Latin Extended-B. Roboto
++        stays first in the fallback chain so those scripts render in Roboto instead of
++        tofu. It is no longer the default face, only the safety net behind it.
++    -->
++    <family>
++        <font weight="400" style="normal">Roboto-Regular.ttf
++          <axis tag="ital" stylevalue="0" />
++          <axis tag="wdth" stylevalue="100" />
++          <axis tag="wght" stylevalue="400" />
++        </font>
++        <font weight="700" style="normal">Roboto-Regular.ttf
++          <axis tag="ital" stylevalue="0" />
++          <axis tag="wdth" stylevalue="100" />
++          <axis tag="wght" stylevalue="700" />
++        </font>
++        <font weight="400" style="italic">Roboto-Regular.ttf
++          <axis tag="ital" stylevalue="1" />
++          <axis tag="wdth" stylevalue="100" />
++          <axis tag="wght" stylevalue="400" />
++        </font>
++        <font weight="700" style="italic">Roboto-Regular.ttf
++          <axis tag="ital" stylevalue="1" />
++          <axis tag="wdth" stylevalue="100" />
++          <axis tag="wght" stylevalue="700" />
++        </font>
++    </family>
+     <family lang="und-Arab" variant="elegant">
+         <font weight="400" style="normal" postScriptName="NotoNaskhArabic">
+             NotoNaskhArabic-Regular.ttf
+diff --git a/services/core/java/com/android/server/location/LocationManagerService.java b/services/core/java/com/android/server/location/LocationManagerService.java
+index e6fba2fadd1e..94a93f0e83f5 100644
+--- a/services/core/java/com/android/server/location/LocationManagerService.java
++++ b/services/core/java/com/android/server/location/LocationManagerService.java
+@@ -23,8 +23,6 @@ import static android.app.compat.CompatChanges.isChangeEnabled;
+ import static android.content.pm.PackageManager.MATCH_DIRECT_BOOT_AWARE;
+ import static android.content.pm.PackageManager.MATCH_SYSTEM_ONLY;
+ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+-import static android.ext.settings.GeocoderSettings.GEOCODER_DISABLED;
+-import static android.ext.settings.GeocoderSettings.GEOCODER_SETTING;
+ import static android.location.LocationManager.BLOCK_PENDING_INTENT_SYSTEM_API_USAGE;
+ import static android.location.LocationManager.FUSED_PROVIDER;
+ import static android.location.LocationManager.GPS_HARDWARE_PROVIDER;
+@@ -1485,7 +1483,12 @@ public class LocationManagerService extends ILocationManager.Stub implements
+ 
+     @Override
+     public boolean isGeocodeAvailable() {
+-        return mGeocodeProvider != null && GEOCODER_SETTING.get(mContext) != GEOCODER_DISABLED
++        // MAOS drops GrapheneOS's Settings.Global.geocoder gate. That setting chose between
++        // GrapheneOS's and OpenStreetMap's geocoding servers, and MAOS pins the provider to
++        // com.vayunmathur.networklocation, which answers from an on-device database instead -
++        // so there is nothing left to choose and no UI that writes it. Leaving the gate in
++        // would let a stored 0 from an older build disable geocoding with no way to undo it.
++        return mGeocodeProvider != null
+                 && mContext.checkCallingPermission(android.Manifest.permission.INTERNET)
+                 == PERMISSION_GRANTED;
+     }
+@@ -1497,7 +1500,7 @@ public class LocationManagerService extends ILocationManager.Stub implements
+                         mContext, request.getCallingPackage(), request.getCallingAttributionTag());
+         Preconditions.checkArgument(identity.getUid() == request.getCallingUid());
+ 
+-        if (mGeocodeProvider != null && GEOCODER_SETTING.get(mContext) != GEOCODER_DISABLED) {
++        if (mGeocodeProvider != null) {
+             boolean hasInternetPerm = mContext.checkCallingPermission(
+                     android.Manifest.permission.INTERNET) == PERMISSION_GRANTED;
+             if (hasInternetPerm) {
+@@ -1525,7 +1528,7 @@ public class LocationManagerService extends ILocationManager.Stub implements
+                         mContext, request.getCallingPackage(), request.getCallingAttributionTag());
+         Preconditions.checkArgument(identity.getUid() == request.getCallingUid());
+ 
+-        if (mGeocodeProvider != null && GEOCODER_SETTING.get(mContext) != GEOCODER_DISABLED) {
++        if (mGeocodeProvider != null) {
+             boolean hasInternetPerm = mContext.checkCallingPermission(
+                     android.Manifest.permission.INTERNET) == PERMISSION_GRANTED;
+             if (hasInternetPerm) {

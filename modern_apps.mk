@@ -121,6 +121,14 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/sysconfig-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/sysconfig-modern-apps.xml
 
+# 4c. Google Sans Flex as the system sans-serif. patches/frameworks_base.patch repoints the
+#     sans-serif family in fonts.xml at this file; Minikin reads fonts.xml from /system/etc, so
+#     this cannot be an RRO. The upstream filename contains commas, which the build dislikes,
+#     so it is shipped renamed. The font is SIL Open Font Licensed - OFL.txt travels with it.
+PRODUCT_COPY_FILES += \
+    vendor/modern-apps/fonts/GoogleSansFlex.ttf:$(TARGET_COPY_OUT_SYSTEM)/fonts/GoogleSansFlex.ttf \
+    vendor/modern-apps/fonts/OFL.txt:$(TARGET_COPY_OUT_SYSTEM)/fonts/OFL-GoogleSansFlex.txt
+
 # 5. MAOS branding (PRODUCT_* + ro.maos.* props). Kept separate for readability.
 $(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
 

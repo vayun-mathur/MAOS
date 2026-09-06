@@ -1,0 +1,207 @@
+diff --git a/java/app/grapheneos/setupwizard/action/LocationActions.kt b/java/app/grapheneos/setupwizard/action/LocationActions.kt
+index 7bf31bb..ebbaeaf 100644
+--- a/java/app/grapheneos/setupwizard/action/LocationActions.kt
++++ b/java/app/grapheneos/setupwizard/action/LocationActions.kt
+@@ -1,11 +1,5 @@
+ package app.grapheneos.setupwizard.action
+ 
+-import android.ext.settings.GeocoderSettings.GEOCODER_DISABLED
+-import android.ext.settings.GeocoderSettings.GEOCODER_SERVER_GRAPHENEOS
+-import android.ext.settings.GeocoderSettings.GEOCODER_SETTING
+-import android.ext.settings.NetworkLocationSettings.NETWORK_LOCATION_DISABLED
+-import android.ext.settings.NetworkLocationSettings.NETWORK_LOCATION_GRAPHENEOS_APPLE_PROXY
+-import android.ext.settings.NetworkLocationSettings.NETWORK_LOCATION_SETTING
+ import android.location.LocationManager
+ import android.net.wifi.WifiManager
+ import android.util.Log
+@@ -25,54 +19,22 @@ object LocationActions {
+         refreshCurrentState()
+     }
+ 
+-    fun setNetworkLocationEnabled(enabled: Boolean) {
+-        Log.d(TAG, "setNetworkLocationEnabled: $enabled")
+-        NETWORK_LOCATION_SETTING.put(
+-            appContext,
+-            if (enabled) NETWORK_LOCATION_GRAPHENEOS_APPLE_PROXY else NETWORK_LOCATION_DISABLED
+-        )
+-        refreshCurrentState()
+-    }
+-
+     fun setWifiScanningAlwaysAvailableEnabled(enabled: Boolean) {
+         Log.d(TAG, "setWifiScanningAlwaysAvailableEnabled: $enabled")
+         getWifiManager().isScanAlwaysAvailable = enabled
+         refreshCurrentState()
+     }
+ 
+-    fun setGeocoderEnabled(enabled: Boolean) {
+-        Log.d(TAG, "setGeocoderEnabled: $enabled")
+-        GEOCODER_SETTING.put(
+-            appContext,
+-            if (enabled) GEOCODER_SERVER_GRAPHENEOS else GEOCODER_DISABLED
+-        )
+-        refreshCurrentState()
+-    }
+-
+     private fun refreshCurrentState() {
+         LocationData.locationEnabled.value = getLocationManager().isLocationEnabled
+         Log.d(TAG, "refreshCurrentState: locationEnabled = ${LocationData.locationEnabled.value}")
+ 
+-        LocationData.networkLocationEnabled.value =
+-            NETWORK_LOCATION_SETTING.get(appContext) != NETWORK_LOCATION_DISABLED
+-        Log.d(
+-            TAG,
+-            "refreshCurrentState: networkLocationEnabled = ${LocationData.networkLocationEnabled.value}"
+-        )
+-
+         @Suppress("DEPRECATION") // WifiManager.isScanAlwaysAvailable is not deprecated for platform apps
+         LocationData.wifiScanningAlwaysAvailableEnabled.value = getWifiManager().isScanAlwaysAvailable
+         Log.d(
+             TAG,
+             "refreshCurrentState: wifiScanningAlwaysAvailableEnabled = ${LocationData.wifiScanningAlwaysAvailableEnabled.value}"
+         )
+-
+-        LocationData.geocoderEnabled.value =
+-            GEOCODER_SETTING.get(appContext) != GEOCODER_DISABLED
+-        Log.d(
+-            TAG,
+-            "refreshCurrentState: geocoderEnabled = ${LocationData.geocoderEnabled.value}"
+-        )
+     }
+ 
+     private fun getLocationManager(): LocationManager {
+diff --git a/java/app/grapheneos/setupwizard/data/LocationData.kt b/java/app/grapheneos/setupwizard/data/LocationData.kt
+index 5691c54..ff1b3fd 100644
+--- a/java/app/grapheneos/setupwizard/data/LocationData.kt
++++ b/java/app/grapheneos/setupwizard/data/LocationData.kt
+@@ -6,9 +6,7 @@ import app.grapheneos.setupwizard.action.LocationActions
+ 
+ object LocationData : ViewModel() {
+     val locationEnabled = MutableLiveData<Boolean>()
+-    val networkLocationEnabled = MutableLiveData<Boolean>()
+     val wifiScanningAlwaysAvailableEnabled = MutableLiveData<Boolean>()
+-    val geocoderEnabled = MutableLiveData<Boolean>()
+ 
+     init {
+         LocationActions
+diff --git a/java/app/grapheneos/setupwizard/view/activity/LocationActivity.kt b/java/app/grapheneos/setupwizard/view/activity/LocationActivity.kt
+index 3b660f5..6bc29ef 100644
+--- a/java/app/grapheneos/setupwizard/view/activity/LocationActivity.kt
++++ b/java/app/grapheneos/setupwizard/view/activity/LocationActivity.kt
+@@ -17,11 +17,7 @@ class LocationActivity : SetupWizardActivity(
+ ) {
+     private lateinit var locationEnabled: SwitchItem
+     // only initialized when in primary user
+-    private lateinit var networkLocationEnabled: SwitchItem
+-    // only initialized when in primary user
+     private lateinit var wifiScanningAlwaysAvailableEnabled: SwitchItem
+-    // only initialized when in primary user
+-    private lateinit var geocoderEnabled: SwitchItem
+ 
+     override fun bindViews() {
+         val layout = requireViewById<GlifRecyclerLayout>(R.id.glif_layout)
+@@ -35,18 +31,11 @@ class LocationActivity : SetupWizardActivity(
+         itemGroup.addChild(locationEnabled)
+         LocationData.locationEnabled.observe(this) { locationEnabled.isChecked = it }
+ 
+-        // Network location, Wi-Fi scanning, and Geocoder are global settings.
++        // Wi-Fi scanning is a global setting.
++        //
++        // Network location and geocoding are always on in Modern Apps OS - one pinned,
++        // on-device provider serves both - so there is nothing here for the user to choose.
+         if (SetupWizard.isPrimaryUser) {
+-            networkLocationEnabled = SwitchItem().apply {
+-                id = View.generateViewId()
+-                title = getString(R.string.network_location_enabled_title)
+-                summary = getString(R.string.network_location_enabled_desc)
+-            }
+-            itemGroup.addChild(networkLocationEnabled)
+-            LocationData.networkLocationEnabled.observe(this) {
+-                networkLocationEnabled.isChecked = it
+-            }
+-
+             wifiScanningAlwaysAvailableEnabled = SwitchItem().apply {
+                 id = View.generateViewId()
+                 title = getString(R.string.wifi_scanning_always_available_enabled_title)
+@@ -56,16 +45,6 @@ class LocationActivity : SetupWizardActivity(
+             LocationData.wifiScanningAlwaysAvailableEnabled.observe(this) {
+                 wifiScanningAlwaysAvailableEnabled.isChecked = it
+             }
+-
+-            geocoderEnabled = SwitchItem().apply {
+-                id = View.generateViewId()
+-                title = getString(R.string.geocoder_enabled_title)
+-                summary = getString(R.string.geocoder_enabled_desc)
+-            }
+-            itemGroup.addChild(geocoderEnabled)
+-            LocationData.geocoderEnabled.observe(this) {
+-                geocoderEnabled.isChecked = it
+-            }
+         }
+ 
+         val adapter = RecyclerItemAdapter(itemGroup)
+@@ -82,32 +61,18 @@ class LocationActivity : SetupWizardActivity(
+     override fun setupActions() {
+         locationEnabled.setOnCheckedChangeListener { _, isChecked ->
+             if (SetupWizard.isPrimaryUser) {
+-                val areDependentsEnabled = isChecked
+-                networkLocationEnabled.isEnabled = areDependentsEnabled
+-                wifiScanningAlwaysAvailableEnabled.isEnabled = areDependentsEnabled
++                wifiScanningAlwaysAvailableEnabled.isEnabled = isChecked
+             }
+             LocationActions.setLocationEnabled(isChecked)
+         }
+ 
+-        // Network location, Wi-Fi scanning, and Geocoder are global settings.
++        // Wi-Fi scanning is a global setting.
+         if (SetupWizard.isPrimaryUser) {
+-            networkLocationEnabled.run {
+-                setOnCheckedChangeListener { _, isChecked ->
+-                    LocationActions.setNetworkLocationEnabled(isChecked)
+-                }
+-            }
+-
+             wifiScanningAlwaysAvailableEnabled.run {
+                 setOnCheckedChangeListener { _, isChecked ->
+                     LocationActions.setWifiScanningAlwaysAvailableEnabled(isChecked)
+                 }
+             }
+-
+-            geocoderEnabled.run {
+-                setOnCheckedChangeListener { _, isChecked ->
+-                    LocationActions.setGeocoderEnabled(isChecked)
+-                }
+-            }
+         }
+ 
+         primaryButton.setOnClickListener { SetupWizard.next(this) }
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 1aaad57..7ab5470 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -2,8 +2,8 @@
+     <string name="app_name">SetupWizard</string>
+     <string name="next">Next</string>
+     <string name="skip">Skip</string>
+-    <string name="welcome_to_grapheneos">Welcome to GrapheneOS</string>
+-    <string name="grapheneos_icon">GrapheneOS icon</string>
++    <string name="welcome_to_grapheneos">Welcome to Modern Apps OS</string>
++    <string name="grapheneos_icon">Modern Apps OS icon</string>
+     <string name="grapheneos_desc">Privacy and security, crafted for your mobile device, usable by everyone.</string>
+     <string name="lets_setup_your_device">Let\'s set up your device in a few steps.</string>
+     <string name="lets_setup_your_profile">Let\'s set up your user profile in a few steps.</string>
+@@ -17,14 +17,10 @@
+     <string name="location_services">Location services</string>
+     <string name="location_access_title">Use location</string>
+     <string name="location_access_desc">Allow apps that have asked your permission to use your location information. This may include your current location and past locations.</string>
+-    <string name="network_location_enabled_title">Network location</string>
+-    <string name="network_location_enabled_desc">Enable network location to determine your location better (such as when indoors) and more efficiently. Nearby wireless signal identifiers will be sent to an Apple server through a GrapheneOS proxy only when network location is being used.</string>
+     <string name="wifi_scanning_always_available_enabled_title">Wi-Fi scanning always available</string>
+     <string name="wifi_scanning_always_available_enabled_desc">Allow apps and services with permission to scan for Wi-Fi networks to do so even when Wi-Fi is off. For example, when network location is on, this allows it to scan for Wi-Fi networks even when Wi-Fi is off, improving location accuracy.</string>
+-    <string name="geocoder_enabled_title">Geocoder</string>
+-    <string name="geocoder_enabled_desc">Enable geocoder to allow apps to use a network-based service hosted by GrapheneOS to convert between geographic coordinates and human-readable addresses. Some apps need this for critical functionality.</string>
+     <string name="restore_apps_and_data"><![CDATA[Restore apps & data]]></string>
+-    <string name="data_restore_desc">If you have a backup from your previous GrapheneOS device, you can restore it here.</string>
++    <string name="data_restore_desc">If you have a backup from your previous Modern Apps OS device, you can restore it here.</string>
+     <string name="you_re_all_set_now">You\'re all set now!</string>
+     <string name="device_setup_done_desc">You\'re ready to start using your device</string>
+     <string name="profile_setup_done_desc">You\'re ready to start using your user profile</string>

@@ -1,0 +1,235 @@
+diff --git a/res/values/strings_app_exploit_protection.xml b/res/values/strings_app_exploit_protection.xml
+index 59348a1fc82..42111bf22a0 100644
+--- a/res/values/strings_app_exploit_protection.xml
++++ b/res/values/strings_app_exploit_protection.xml
+@@ -34,7 +34,7 @@ This behavior can be disabled in the %2$s section.</string>
+     <string name="aep_ir_exploit_protection_compat_mode">%1$s is enabled</string>
+ 
+     <string name="aep_compat_mode_title">Exploit protection compatibility mode</string>
+-    <string name="aep_compat_mode_summary">Improves compatibility by disabling some of the GrapheneOS exploit protections for this app</string>
++    <string name="aep_compat_mode_summary">Improves compatibility by disabling some of the Modern Apps OS exploit protections for this app</string>
+ 
+     <string name="aep_hmalloc">Hardened memory allocator</string>
+     <string name="aep_hmalloc_footer">
+diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
+index 18de9b0a68d..11762c05793 100644
+--- a/res/values/strings_ext.xml
++++ b/res/values/strings_ext.xml
+@@ -196,7 +196,7 @@ There are HTTP, HTTPS, DNS, DNS-over-TLS and DNS-over-HTTPS connectivity checks.
+     <string name="duress_pwd_pref_title">Duress password</string>
+     <string name="duress_pwd_description">"Duress password can be entered instead of the user password in any place that asks for it, such as the lock screen of any user and any user or work profile password prompt.
+ 
+-Submitting the duress password will immediately make the storage contents permanently inaccessible, delete all eSIMs and then power off the device. GrapheneOS will remain installed.
++Submitting the duress password will immediately make the storage contents permanently inaccessible, delete all eSIMs and then power off the device. Modern Apps OS will remain installed.
+ 
+ Duress PIN works the same way duress password does."</string>
+     <string name="duress_pwd_enter_pin">Enter duress PIN</string>
+@@ -226,7 +226,7 @@ Duress PIN works the same way duress password does."</string>
+     <string name="alt_touchscreen_mode_confirm_button">Confirm</string>
+ 
+     <string name="app_play_integrity_api">Play Integrity API</string>
+-    <string name="app_play_integrity_top_intro">The Play Integrity API allows services to verify properties of a device through their app. Most services check for the device or strong integrity level which requires having the unmodified stock OS on a device licensing Google Mobile Services. Not every app using it will ban using GrapheneOS. GrapheneOS passes the basic integrity level and the miscellaneous checks for licensing, Play Protect, etc. work fine. We recommend leaving feedback for apps using it to ban GrapheneOS asking them to stop banning using a much more secure OS. Apps can use the standard Android hardware attestation API to verify the hardware, OS and app with GrapheneOS.</string>
++    <string name="app_play_integrity_top_intro">The Play Integrity API allows services to verify properties of a device through their app. Most services check for the device or strong integrity level which requires having the unmodified stock OS on a device licensing Google Mobile Services. Not every app using it will ban using Modern Apps OS. Modern Apps OS passes the basic integrity level and the miscellaneous checks for licensing, Play Protect, etc. work fine. We recommend leaving feedback for apps using it to ban Modern Apps OS asking them to stop banning using a much more secure OS. Apps can use the standard Android hardware attestation API to verify the hardware, OS and app with Modern Apps OS.</string>
+     <string name="app_play_integrity_contact_app_developer">Contact app developer</string>
+     <string name="app_play_integrity_show_usage_notifications">Show usage notifications</string>
+     <string name="app_play_integrity_block_usage_attempts">Block usage attempts</string>
+@@ -238,6 +238,13 @@ Duress PIN works the same way duress password does."</string>
+     <string name="app_play_integrity_see_all_apps">Show apps that used the Play Integrity API</string>
+ 
+     <string name="network_location_title">Network location</string>
++    <!-- Location services row covering both network location and geocoding, which Modern
++         Apps OS serves from one always-on provider rather than two server pickers. -->
++    <string name="network_location_geocoding_title">Network location &amp; geocoding</string>
++    <!-- Summary of the row above, when the offline databases have been downloaded. -->
++    <string name="network_location_geocoding_ready">Works offline</string>
++    <!-- Summary of the row above, when the offline databases have not been downloaded. -->
++    <string name="network_location_geocoding_setup_required">Setup required</string>
+     <string name="network_location_footer">
+ "Network location is a method of determining your device’s location by using various nearby signals, such as Wi-Fi networks, Bluetooth devices, and cell towers. Your device scans for these signals and sends their identifiers to a server, which then provides positioning data that your device uses to estimate its location. Currently, Wi-Fi networks and cell towers are used.
+ 
+diff --git a/res/xml/location_services.xml b/res/xml/location_services.xml
+index e33f3a5eace..32d14f99642 100644
+--- a/res/xml/location_services.xml
++++ b/res/xml/location_services.xml
+@@ -37,13 +37,7 @@
+         <com.android.settingslib.RestrictedPreference
+             android:order="1002"
+             android:key="location_services_network_location"
+-            android:title="@string/network_location_title"
++            android:title="@string/network_location_geocoding_title"
+             settings:controller="com.android.settings.location.LocationServicesNetworkLocationPreferenceController"/>
+ 
+-        <com.android.settingslib.RestrictedPreference
+-            android:key="location_services_geocoder"
+-            android:order="1003"
+-            android:title="@string/geocoder_title"
+-            settings:controller="com.android.settings.location.LocationServicesGeocoderPreferenceController" />
+-
+ </PreferenceScreen>
+diff --git a/src/com/android/settings/location/LocationServicesGeocoderPreferenceController.kt b/src/com/android/settings/location/LocationServicesGeocoderPreferenceController.kt
+deleted file mode 100644
+index 2951671fd99..00000000000
+--- a/src/com/android/settings/location/LocationServicesGeocoderPreferenceController.kt
++++ /dev/null
+@@ -1,34 +0,0 @@
+-package com.android.settings.location
+-
+-import android.content.Context
+-import android.ext.settings.GeocoderSettings
+-import androidx.preference.PreferenceScreen
+-import com.android.settings.R
+-import com.android.settings.ext.IntSettingPrefController
+-import com.android.settings.ext.RadioButtonPickerFragment2
+-
+-/**
+- * Preference controller for Geocoder in Location Services.
+- */
+-class LocationServicesGeocoderPreferenceController(ctx: Context, key: String?) :
+-    IntSettingPrefController(ctx, key, GeocoderSettings.GEOCODER_SETTING) {
+-
+-    override fun addPrefsAfterList(fragment: RadioButtonPickerFragment2, screen: PreferenceScreen) {
+-        addFooterPreference(screen, R.string.geocoder_footer)
+-    }
+-
+-    override fun getEntries(entries: Entries) {
+-        entries.add(
+-            R.string.geocoder_enabled_grapheneos_server,
+-            GeocoderSettings.GEOCODER_SERVER_GRAPHENEOS
+-        )
+-        entries.add(
+-            R.string.geocoder_enabled_openstreetmap_server,
+-            GeocoderSettings.GEOCODER_SERVER_OPENSTREETMAP
+-        )
+-        entries.add(
+-            R.string.geocoder_disabled,
+-            GeocoderSettings.GEOCODER_DISABLED
+-        )
+-    }
+-}
+diff --git a/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt b/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt
+index 4b34ea66db5..8c554b97fb1 100644
+--- a/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt
++++ b/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt
+@@ -1,38 +1,97 @@
++/*
++ * Copyright (C) 2026 Modern Apps OS
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
+ package com.android.settings.location
+ 
++import android.content.ActivityNotFoundException
++import android.content.ComponentName
+ import android.content.Context
+-import android.ext.settings.NetworkLocationSettings
+-import androidx.preference.PreferenceScreen
++import android.content.Intent
++import android.net.Uri
++import android.os.UserManager
++import android.util.Log
++import androidx.preference.Preference
+ import com.android.settings.R
+-import com.android.settings.ext.IntSettingPrefController
+-import com.android.settings.ext.RadioButtonPickerFragment2
++import com.android.settings.core.BasePreferenceController
++import com.android.settingslib.RestrictedPreference
+ 
+ /**
+- * Preference controller for Network location in Location Services.
++ * The single Location services row for network location and geocoding.
++ *
++ * This replaces GrapheneOS's separate "Network location" and "Geocoder" pickers. Both were
++ * server choices for GrapheneOS's own NetworkLocation app, which Modern Apps OS does not ship:
++ * the provider is pinned to [PROVIDER_PACKAGE], which is always on and answers from on-device
++ * databases, so there is nothing left to pick. What the user can still act on is whether those
++ * databases have been downloaded, which is what this row reports and links to.
+  */
+ class LocationServicesNetworkLocationPreferenceController(ctx: Context, key: String?) :
+-    IntSettingPrefController(ctx, key, NetworkLocationSettings.NETWORK_LOCATION_SETTING) {
++    BasePreferenceController(ctx, key) {
++
++    override fun getAvailabilityStatus(): Int = AVAILABLE
++
++    override fun updateState(preference: Preference) {
++        (preference as RestrictedPreference)
++            .checkRestrictionAndSetDisabled(UserManager.DISALLOW_CONFIG_LOCATION)
++        refreshSummary(preference)
++    }
++
++    override fun getSummary(): CharSequence = mContext.getString(
++        if (databasesPresent()) {
++            R.string.network_location_geocoding_ready
++        } else {
++            R.string.network_location_geocoding_setup_required
++        }
++    )
+ 
+-    override fun addPrefsAfterList(fragment: RadioButtonPickerFragment2, screen: PreferenceScreen) {
+-        addFooterPreference(screen, R.string.network_location_footer)
++    override fun handlePreferenceTreeClick(preference: Preference): Boolean {
++        if (preference.key != preferenceKey) return false
++        val intent = Intent(Intent.ACTION_MAIN)
++            .setComponent(ComponentName(PROVIDER_PACKAGE, PROVIDER_ACTIVITY))
++            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
++        try {
++            mContext.startActivity(intent)
++        } catch (e: ActivityNotFoundException) {
++            Log.e(TAG, "$PROVIDER_PACKAGE is not installed", e)
++        }
++        return true
+     }
+ 
+-    override fun getEntries(entries: Entries) {
+-        entries.add(
+-            R.string.network_location_enabled_grapheneos_apple_proxy,
+-            NetworkLocationSettings.NETWORK_LOCATION_GRAPHENEOS_APPLE_PROXY
+-        )
+-        entries.add(
+-            R.string.network_location_enabled_apple,
+-            NetworkLocationSettings.NETWORK_LOCATION_APPLE
+-        )
+-        entries.add(
+-            R.string.network_location_enabled_apple_china,
+-            NetworkLocationSettings.NETWORK_LOCATION_APPLE_CHINA
+-        )
+-        entries.add(
+-            R.string.network_location_disabled,
+-            NetworkLocationSettings.NETWORK_LOCATION_DISABLED
+-        )
++    /**
++     * Whether the provider reports every offline database on disk.
++     *
++     * Absent, unreadable or malformed means "not yet", which is the same thing the user has to
++     * act on — so a failure here degrades to "Setup required" rather than throwing in the
++     * middle of building the Location screen.
++     */
++    private fun databasesPresent(): Boolean = try {
++        mContext.contentResolver.query(STATUS_URI, null, null, null, null)?.use { cursor ->
++            cursor.moveToFirst() && cursor.getInt(0) == 1
++        } ?: false
++    } catch (e: Exception) {
++        Log.w(TAG, "could not read $STATUS_URI", e)
++        false
++    }
++
++    private companion object {
++        const val TAG = "LocationServicesNetworkLocation"
++
++        const val PROVIDER_PACKAGE = "com.vayunmathur.networklocation"
++        const val PROVIDER_ACTIVITY = "com.vayunmathur.networklocation.MainActivity"
++
++        /** Mirrors `DatabaseStatusContract` in the networklocation app. */
++        val STATUS_URI: Uri =
++            Uri.parse("content://com.vayunmathur.networklocation.status/databases")
+     }
+ }
