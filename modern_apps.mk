@@ -1,77 +1,16 @@
 # MAOS (Modern Apps OS) — product configuration overlay.
 #
-# Include this from your device product makefile AFTER the base GrapheneOS/AOSP
-# product has been inherited, so the $(filter-out ...) below can see and remove the
-# stock app modules. Example (in device/.../aosp_<device>.mk):
-#
-#     $(call inherit-product, vendor/modern-apps/modern_apps.mk)   # must be LAST
+# Inherited from the device product makefile. The MAOS app list itself lives in
+# GrapheneOS's build/make/target/product/*.mk, patched in by phase_overlay - a
+# makefile inherited from here cannot add or remove PRODUCT_PACKAGES entries that
+# belong to the parent, because inherit-product defers resolution (see
+# build/make/core/product.mk:539).
 #
 # -----------------------------------------------------------------------------------
 
-# 1. Add the Modern Apps prebuilts (defined in Android.bp).
-PRODUCT_PACKAGES += \
-    ModernAppsWeb \
-    ModernAppsCamera \
-    ModernAppsPdf \
-    ModernAppsContacts \
-    ModernAppsCalculator \
-    ModernAppsClock \
-    ModernAppsFiles \
-    ModernAppsPhotos \
-    ModernAppsStore \
-    ModernAppsKeyboard \
-    ModernAppsSpeech \
-    ModernAppsCalendar \
-    ModernAppsMusic \
-    ModernAppsCommunicate \
-    ModernAppsEuicc \
-    ModernAppsBackup \
-    ModernAppsNetworkLocation
-
-# 2. Remove the stock userspace apps we're replacing.
-#    IMPORTANT: only ever remove *UI apps*, never content-provider backends. Contacts and
-#    Calendar are each split in AOSP/GrapheneOS:
-#      - UI:       Contacts (com.android.contacts), Calendar (com.android.calendar)
-#      - backend:  ContactsProvider (com.android.providers.contacts),
-#                  CalendarProvider (com.android.providers.calendar)
-#    The *Provider modules implement ContactsContract/CalendarContract that our apps (and
-#    everything else) depend on — removing them breaks the whole system. So we remove only
-#    the UI apps, leaving ContactsProvider/CalendarProvider intact.
-#
-#    Module names below are VERIFIED against a real GrapheneOS device (Pixel 9 Pro XL, from
-#    the /product/app/<Module>/<Module>.apk install paths). They should match cheetah (same
-#    OS build across Pixels), but re-confirm on your synced tree if a build surprises you.
-_maos_remove := \
-    Camera \
-    PdfViewerGOS \
-    AppStore \
-    Contacts \
-    Calendar \
-    DeskClock \
-    ExactCalculator \
-    Gallery2 \
-    DocumentsUI \
-    LatinIME \
-    SpeechServices \
-    Music \
-    Dialer \
-    Messaging \
-    InfoApp \
-    Auditor \
-    EuiccGoogle \
-    EuiccGoogleOverlay \
-    Seedvault \
-    ContactsBackup \
-    NetworkLocation
-
-# Safety: refuse to remove any content-provider backend. This makes the Contacts/Calendar
-# footgun structurally impossible — if a *Provider ever ends up in the list, fail loudly.
-_maos_providers := $(filter %Provider,$(_maos_remove))
-ifneq ($(_maos_providers),)
-$(error MAOS: refusing to remove content providers: $(_maos_providers). Remove only UI apps, never *Provider backends.)
-endif
-
-PRODUCT_PACKAGES := $(filter-out $(_maos_remove),$(PRODUCT_PACKAGES))
+# 1. App membership (which Modern Apps ship, which stock apps are dropped) is applied
+#    by patches/platform_build.patch against build/make/target/product/*.mk. The
+#    Android.bp modules referenced there are defined alongside this file.
 
 # NOTE on the browser (Vanadium): Vanadium provides BOTH the default browser AND the
 # system WebView provider. We make Modern Apps Web the default browser via the
@@ -179,9 +118,7 @@ PRODUCT_COPY_FILES += \
 # 5. MAOS branding (PRODUCT_* + ro.maos.* props). Kept separate for readability.
 $(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
 
-# 6. Build-time guard: fail the build if any stock app we meant to drop is still in
-#    PRODUCT_PACKAGES (catches upstream module renames that would silently re-add it).
-_maos_leaked := $(filter $(_maos_remove),$(PRODUCT_PACKAGES))
-ifneq ($(_maos_leaked),)
-$(error MAOS: stock apps still present in PRODUCT_PACKAGES: $(_maos_leaked). Update the _maos_remove list in vendor/modern-apps/modern_apps.mk)
-endif
+# 6. The old leak guard lived here. It filtered the same local PRODUCT_PACKAGES as the
+#    removal above, so it was always empty and never fired - which is why a build that
+#    shipped zero MAOS apps still reported success. Removal is now a patch, and a patch
+#    that no longer applies fails loudly in phase_overlay.

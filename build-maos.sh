@@ -245,6 +245,29 @@ phase_deps() {
     fi
 }
 
+# Apply MAOS's patches to GrapheneOS-owned sources. Idempotent: a patch that is already
+# applied is skipped, and one that no longer applies is fatal rather than silent.
+apply_maos_patches() {
+    cd "$TREE"
+    local patches="vendor/modern-apps/patches"
+    [[ -d "$patches" ]] || die "Missing $patches — is vendor/modern-apps synced?"
+    local spec repo patch
+    for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch"; do
+        repo="${spec%%:*}"; patch="$TREE/$patches/${spec##*:}"
+        [[ -f "$patch" ]] || die "Missing patch file: $patch"
+        [[ -d "$repo" ]]  || die "Missing repo for patch: $repo"
+        if git -C "$repo" apply --reverse --check "$patch" 2>/dev/null; then
+            log "Patch already applied to $repo (${spec##*:})"
+        elif git -C "$repo" apply --check "$patch" 2>/dev/null; then
+            git -C "$repo" apply "$patch"
+            log "Applied ${spec##*:} to $repo"
+        else
+            die "${spec##*:} does not apply to $repo. GrapheneOS tag $TAG likely moved these
+    files; rebase the patch (edit $repo, then: git -C $repo diff > $patch)."
+        fi
+    done
+}
+
 phase_sync() {
     log "Syncing GrapheneOS $TAG into $TREE"
     case "$TREE" in /mnt/*) die "TREE is under /mnt (Windows FS). Use ext4, e.g. \$HOME/maos.";; esac
@@ -275,6 +298,8 @@ phase_sync() {
 EOF
     log "repo sync (this downloads ~150 GB; resumable)"
     repo sync -j8
+    # repo sync is exactly what reverts these, so re-apply right after.
+    apply_maos_patches
 }
 
 populate_prebuilts() {
@@ -303,6 +328,9 @@ populate_prebuilts() {
 }
 
 phase_vendor() {
+    # Must precede generate-all: the eSIM removal lives in adevtool's vendor
+    # skeletons, which are the source this copies into vendor/google_devices/.
+    apply_maos_patches
     log "Extracting Pixel vendor files for $DEVICE (adevtool)"
     cd "$TREE"; source build/envsetup.sh
     # Modern Apps prebuilt APKs must exist before adevtool generate-all triggers a

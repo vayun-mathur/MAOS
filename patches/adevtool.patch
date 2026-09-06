@@ -1,0 +1,260 @@
+diff --git a/vendor-skels/google_devices/akita/akita.mk b/vendor-skels/google_devices/akita/akita.mk
+index d81ccef5b..d7ec08bc9 100644
+--- a/vendor-skels/google_devices/akita/akita.mk
++++ b/vendor-skels/google_devices/akita/akita.mk
+@@ -583,8 +583,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/blazer/blazer.mk b/vendor-skels/google_devices/blazer/blazer.mk
+index a72a5650b..5c6411530 100644
+--- a/vendor-skels/google_devices/blazer/blazer.mk
++++ b/vendor-skels/google_devices/blazer/blazer.mk
+@@ -598,8 +598,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/bluejay/bluejay.mk b/vendor-skels/google_devices/bluejay/bluejay.mk
+index cc36d92b6..58c6f0812 100644
+--- a/vendor-skels/google_devices/bluejay/bluejay.mk
++++ b/vendor-skels/google_devices/bluejay/bluejay.mk
+@@ -541,8 +541,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/caiman/caiman.mk b/vendor-skels/google_devices/caiman/caiman.mk
+index a4e971eb2..ec3ab63fe 100644
+--- a/vendor-skels/google_devices/caiman/caiman.mk
++++ b/vendor-skels/google_devices/caiman/caiman.mk
+@@ -592,8 +592,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/cheetah/cheetah.mk b/vendor-skels/google_devices/cheetah/cheetah.mk
+index e0a7c32ff..51d9b6675 100644
+--- a/vendor-skels/google_devices/cheetah/cheetah.mk
++++ b/vendor-skels/google_devices/cheetah/cheetah.mk
+@@ -569,8 +569,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/comet/comet.mk b/vendor-skels/google_devices/comet/comet.mk
+index 3caac251e..363abfdc0 100644
+--- a/vendor-skels/google_devices/comet/comet.mk
++++ b/vendor-skels/google_devices/comet/comet.mk
+@@ -602,8 +602,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/felix/felix.mk b/vendor-skels/google_devices/felix/felix.mk
+index 3c808dc59..237f3fd8e 100644
+--- a/vendor-skels/google_devices/felix/felix.mk
++++ b/vendor-skels/google_devices/felix/felix.mk
+@@ -579,8 +579,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/frankel/frankel.mk b/vendor-skels/google_devices/frankel/frankel.mk
+index caab39760..651dd850c 100644
+--- a/vendor-skels/google_devices/frankel/frankel.mk
++++ b/vendor-skels/google_devices/frankel/frankel.mk
+@@ -593,8 +593,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/husky/husky.mk b/vendor-skels/google_devices/husky/husky.mk
+index 8094ff978..20ff8d47d 100644
+--- a/vendor-skels/google_devices/husky/husky.mk
++++ b/vendor-skels/google_devices/husky/husky.mk
+@@ -577,8 +577,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/komodo/komodo.mk b/vendor-skels/google_devices/komodo/komodo.mk
+index 30ce39a98..17ec484f0 100644
+--- a/vendor-skels/google_devices/komodo/komodo.mk
++++ b/vendor-skels/google_devices/komodo/komodo.mk
+@@ -592,8 +592,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/lynx/lynx.mk b/vendor-skels/google_devices/lynx/lynx.mk
+index d765bc351..076223174 100644
+--- a/vendor-skels/google_devices/lynx/lynx.mk
++++ b/vendor-skels/google_devices/lynx/lynx.mk
+@@ -567,8 +567,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/mustang/mustang.mk b/vendor-skels/google_devices/mustang/mustang.mk
+index 4f44cdbaf..2348377e3 100644
+--- a/vendor-skels/google_devices/mustang/mustang.mk
++++ b/vendor-skels/google_devices/mustang/mustang.mk
+@@ -598,8 +598,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/oriole/oriole.mk b/vendor-skels/google_devices/oriole/oriole.mk
+index c031b121f..6f42bac22 100644
+--- a/vendor-skels/google_devices/oriole/oriole.mk
++++ b/vendor-skels/google_devices/oriole/oriole.mk
+@@ -552,8 +552,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/panther/panther.mk b/vendor-skels/google_devices/panther/panther.mk
+index d8c8b4ac3..80c560494 100644
+--- a/vendor-skels/google_devices/panther/panther.mk
++++ b/vendor-skels/google_devices/panther/panther.mk
+@@ -570,8 +570,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/rango/rango.mk b/vendor-skels/google_devices/rango/rango.mk
+index 79da5d0fd..bc07df294 100644
+--- a/vendor-skels/google_devices/rango/rango.mk
++++ b/vendor-skels/google_devices/rango/rango.mk
+@@ -611,8 +611,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/raven/raven.mk b/vendor-skels/google_devices/raven/raven.mk
+index b4b7dd1f6..7bc84e728 100644
+--- a/vendor-skels/google_devices/raven/raven.mk
++++ b/vendor-skels/google_devices/raven/raven.mk
+@@ -554,8 +554,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel \
+     EuiccSupportPixelPermissions \
+     HbmSVManager \
+diff --git a/vendor-skels/google_devices/shiba/shiba.mk b/vendor-skels/google_devices/shiba/shiba.mk
+index 311cac53b..f866d3136 100644
+--- a/vendor-skels/google_devices/shiba/shiba.mk
++++ b/vendor-skels/google_devices/shiba/shiba.mk
+@@ -573,8 +573,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/stallion/stallion.mk b/vendor-skels/google_devices/stallion/stallion.mk
+index 7875f23fe..e67f2fa50 100644
+--- a/vendor-skels/google_devices/stallion/stallion.mk
++++ b/vendor-skels/google_devices/stallion/stallion.mk
+@@ -586,8 +586,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/tegu/tegu.mk b/vendor-skels/google_devices/tegu/tegu.mk
+index 21b538b72..85448456b 100644
+--- a/vendor-skels/google_devices/tegu/tegu.mk
++++ b/vendor-skels/google_devices/tegu/tegu.mk
+@@ -588,8 +588,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
+diff --git a/vendor-skels/google_devices/tokay/tokay.mk b/vendor-skels/google_devices/tokay/tokay.mk
+index 67eac4ffa..e52a53917 100644
+--- a/vendor-skels/google_devices/tokay/tokay.mk
++++ b/vendor-skels/google_devices/tokay/tokay.mk
+@@ -588,8 +588,6 @@ PRODUCT_PACKAGES += \
+ 
+ # file-based packages
+ PRODUCT_PACKAGES += \
+-    EuiccGoogle \
+-    EuiccGoogleOverlay \
+     EuiccSupportPixel-P23 \
+     EuiccSupportPixelPermissions \
+     OemRilHookService \
