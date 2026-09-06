@@ -107,7 +107,7 @@ index 2951671fd99..00000000000
 -    }
 -}
 diff --git a/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt b/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt
-index 4b34ea66db5..8c554b97fb1 100644
+index 4b34ea66db5..d4c383cc0d8 100644
 --- a/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt
 +++ b/src/com/android/settings/location/LocationServicesNetworkLocationPreferenceController.kt
 @@ -1,38 +1,97 @@
@@ -154,8 +154,9 @@ index 4b34ea66db5..8c554b97fb1 100644
 + * databases, so there is nothing left to pick. What the user can still act on is whether those
 + * databases have been downloaded, which is what this row reports and links to.
   */
- class LocationServicesNetworkLocationPreferenceController(ctx: Context, key: String?) :
+-class LocationServicesNetworkLocationPreferenceController(ctx: Context, key: String?) :
 -    IntSettingPrefController(ctx, key, NetworkLocationSettings.NETWORK_LOCATION_SETTING) {
++class LocationServicesNetworkLocationPreferenceController(ctx: Context, key: String) :
 +    BasePreferenceController(ctx, key) {
 +
 +    override fun getAvailabilityStatus(): Int = AVAILABLE
