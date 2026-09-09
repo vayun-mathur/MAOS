@@ -1,0 +1,59 @@
+diff --git a/font_config.json b/font_config.json
+index 5e46ece..9b44e99 100644
+--- a/font_config.json
++++ b/font_config.json
+@@ -1,10 +1,19 @@
+ [
+     {
++        // MAOS ships Google Sans Flex as the system font. It is a display face with only
++        // ~535 codepoints - no Cyrillic, almost no Greek - so it cannot stand alone; the
++        // "roboto-latin" fallback below covers everything it is missing. It does carry a
++        // full wght axis (1-1000) and a wdth axis (25-151), so both the regular and the
++        // condensed family are real instances rather than synthesised ones.
++        //
++        // supportedAxes stays "wght" because Google Sans Flex has no "ital" axis - it
++        // slants via "slnt", which generate_fonts_xml does not accept (font_builder.py
++        // allows only "wght" and "wght,ital"). Italic text is therefore synthesised.
+         "name": "sans-serif",
+         "fonts": [
+             {
+-                "file": "Roboto-Regular.ttf",
+-                "supportedAxes": "wght,ital",
++                "file": "GoogleSansFlex.ttf",
++                "supportedAxes": "wght",
+                 "axes": {
+                     "wdth": "100"
+                 }
+@@ -13,12 +22,31 @@
+     },
+     {
+         "name": "sans-serif-condensed",
++        "fonts": [
++            {
++                "file": "GoogleSansFlex.ttf",
++                "supportedAxes": "wght",
++                "axes": {
++                    "wdth": "75"
++                }
++            }
++        ]
++    },
++    {
++        // Every glyph Google Sans Flex lacks - all Cyrillic, most Greek and Latin Ext-B,
++        // most punctuation - resolves here. Registered first in fallback_order.json so it
++        // is reached before the Noto faces, which would otherwise pick up Cyrillic and
++        // render it in a visibly different design.
++        //
++        // A fallback family needs an id or a lang that fallback_order.json knows about;
++        // FallbackOrder asserts on any family it cannot place.
++        "id": "roboto-latin",
+         "fonts": [
+             {
+                 "file": "Roboto-Regular.ttf",
+                 "supportedAxes": "wght,ital",
+                 "axes": {
+-                    "wdth": "75"
++                    "wdth": "100"
+                 }
+             }
+         ]

@@ -9,9 +9,20 @@
     - allow-in-power-save        exempt from Doze app-standby (runs during idle windows)
     - allow-in-data-usage-save   exempt from Data Saver background-data restrictions
     - allow-unthrottled-location exempt from the background location throttle
+
+  Backup (com.vayunmathur.backup) is the system app-data backup transport, replacing Seedvault.
+  A transport is only bindable if its service is named here: BackupManagerService reads this
+  allowlist through SystemConfig.getBackupTransportWhitelist() and refuses to bind anything
+  absent from it, so config_backup_transport alone is not enough to select ours. Mirrors
+  Seedvault's own allowlist_com.stevesoltys.seedvault.xml, including the Doze exemption its
+  file-backup foreground service needs to start from the background.
 -->
 <config>
     <allow-in-power-save package="com.vayunmathur.networklocation" />
     <allow-in-data-usage-save package="com.vayunmathur.networklocation" />
     <allow-unthrottled-location package="com.vayunmathur.networklocation" />
+
+    <backup-transport-whitelisted-service
+        service="com.vayunmathur.backup/.service.ConfigurableBackupTransportService" />
+    <allow-in-power-save package="com.vayunmathur.backup" />
 </config>

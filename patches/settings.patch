@@ -1,3 +1,126 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index d4e5e0e8670..6ea7e2e8713 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -150,7 +150,7 @@
+     <uses-permission android:name="android.permission.SATELLITE_COMMUNICATION" />
+     <uses-permission android:name="android.permission.READ_SYSTEM_GRAMMATICAL_GENDER" />
+     <uses-permission android:name="android.permission.MANAGE_COMPANION_DEVICES" />
+-    <uses-permission android:name="app.grapheneos.logviewer.SHOW_LOGCAT" />
++    <uses-permission android:name="com.vayunmathur.logviewer.SHOW_LOGCAT" />
+     <uses-permission android:name="android.permission.CONTROL_SIM_AUTO_PIN_MANAGEMENT" />
+     <uses-permission android:name="android.permission.MANAGE_COMPUTER_CONTROL_CONSENT" />
+ 
+diff --git a/res/values-en-rAU/strings.xml b/res/values-en-rAU/strings.xml
+index c181c5bc2b2..225af58eee0 100644
+--- a/res/values-en-rAU/strings.xml
++++ b/res/values-en-rAU/strings.xml
+@@ -973,7 +973,7 @@
+     <string name="external_display_topology_a11y_display_moved_down" msgid="6028544722984648702">"Display: %1$s moved down"</string>
+     <string name="external_display_topology_a11y_display_moved_left" msgid="5308110789317472437">"Display: %1$s moved left"</string>
+     <string name="external_display_topology_a11y_display_moved_right" msgid="3802527156765844475">"Display: %1$s moved right"</string>
+-    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Google Cast"</string>
++    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Cast"</string>
+     <string name="keywords_wifi_display_settings" msgid="5753883229564422679">"mirror"</string>
+     <string name="wifi_display_enable_menu_item" msgid="7391841780777318134">"Enable wireless display"</string>
+     <string name="wifi_display_no_devices_found" msgid="7904877793677102805">"No nearby devices were found."</string>
+@@ -3775,7 +3775,7 @@
+     <string name="keywords_text_cursor_blink_rate" msgid="7682963763334011148">"caret, text caret, text cursor, cursor, blinking, blink interval, blink rate, animation, reduce animation, remove animation"</string>
+     <string name="sound_dashboard_summary" msgid="8254699132423665654">"Volume and vibration"</string>
+     <string name="media_volume_option_title" msgid="5966569685119475630">"Media volume"</string>
+-    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Google Cast volume"</string>
++    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Cast volume"</string>
+     <string name="call_volume_option_title" msgid="1461105986437268924">"Call volume"</string>
+     <string name="alarm_volume_option_title" msgid="6398641749273697140">"Alarm volume"</string>
+     <string name="assistant_volume_option_title" msgid="7206008753384831048">"Assistant volume"</string>
+diff --git a/res/values-en-rCA/strings.xml b/res/values-en-rCA/strings.xml
+index 22b6f74c23f..0fa0efba534 100644
+--- a/res/values-en-rCA/strings.xml
++++ b/res/values-en-rCA/strings.xml
+@@ -973,7 +973,7 @@
+     <string name="external_display_topology_a11y_display_moved_down" msgid="6028544722984648702">"Display: %1$s moved down"</string>
+     <string name="external_display_topology_a11y_display_moved_left" msgid="5308110789317472437">"Display: %1$s moved left"</string>
+     <string name="external_display_topology_a11y_display_moved_right" msgid="3802527156765844475">"Display: %1$s moved right"</string>
+-    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Google Cast"</string>
++    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Cast"</string>
+     <string name="keywords_wifi_display_settings" msgid="5753883229564422679">"mirror"</string>
+     <string name="wifi_display_enable_menu_item" msgid="7391841780777318134">"Enable wireless display"</string>
+     <string name="wifi_display_no_devices_found" msgid="7904877793677102805">"No nearby devices were found."</string>
+@@ -3775,7 +3775,7 @@
+     <string name="keywords_text_cursor_blink_rate" msgid="7682963763334011148">"caret, text caret, text cursor, cursor, blinking, blink interval, blink rate, animation, reduce animation, remove animation"</string>
+     <string name="sound_dashboard_summary" msgid="8254699132423665654">"Volume and vibration"</string>
+     <string name="media_volume_option_title" msgid="5966569685119475630">"Media volume"</string>
+-    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Google Cast volume"</string>
++    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Cast volume"</string>
+     <string name="call_volume_option_title" msgid="1461105986437268924">"Call volume"</string>
+     <string name="alarm_volume_option_title" msgid="6398641749273697140">"Alarm volume"</string>
+     <string name="assistant_volume_option_title" msgid="7206008753384831048">"Assistant volume"</string>
+diff --git a/res/values-en-rGB/strings.xml b/res/values-en-rGB/strings.xml
+index ffe06a45ad7..3612e93b96b 100644
+--- a/res/values-en-rGB/strings.xml
++++ b/res/values-en-rGB/strings.xml
+@@ -973,7 +973,7 @@
+     <string name="external_display_topology_a11y_display_moved_down" msgid="6028544722984648702">"Display: %1$s moved down"</string>
+     <string name="external_display_topology_a11y_display_moved_left" msgid="5308110789317472437">"Display: %1$s moved left"</string>
+     <string name="external_display_topology_a11y_display_moved_right" msgid="3802527156765844475">"Display: %1$s moved right"</string>
+-    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Google Cast"</string>
++    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Cast"</string>
+     <string name="keywords_wifi_display_settings" msgid="5753883229564422679">"mirror"</string>
+     <string name="wifi_display_enable_menu_item" msgid="7391841780777318134">"Enable wireless display"</string>
+     <string name="wifi_display_no_devices_found" msgid="7904877793677102805">"No nearby devices were found."</string>
+@@ -3775,7 +3775,7 @@
+     <string name="keywords_text_cursor_blink_rate" msgid="7682963763334011148">"caret, text caret, text cursor, cursor, blinking, blink interval, blink rate, animation, reduce animation, remove animation"</string>
+     <string name="sound_dashboard_summary" msgid="8254699132423665654">"Volume and vibration"</string>
+     <string name="media_volume_option_title" msgid="5966569685119475630">"Media volume"</string>
+-    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Google Cast volume"</string>
++    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Cast volume"</string>
+     <string name="call_volume_option_title" msgid="1461105986437268924">"Call volume"</string>
+     <string name="alarm_volume_option_title" msgid="6398641749273697140">"Alarm volume"</string>
+     <string name="assistant_volume_option_title" msgid="7206008753384831048">"Assistant volume"</string>
+diff --git a/res/values-en-rIN/strings.xml b/res/values-en-rIN/strings.xml
+index 28a57a30e88..5ab0ed5d081 100644
+--- a/res/values-en-rIN/strings.xml
++++ b/res/values-en-rIN/strings.xml
+@@ -973,7 +973,7 @@
+     <string name="external_display_topology_a11y_display_moved_down" msgid="6028544722984648702">"Display: %1$s moved down"</string>
+     <string name="external_display_topology_a11y_display_moved_left" msgid="5308110789317472437">"Display: %1$s moved left"</string>
+     <string name="external_display_topology_a11y_display_moved_right" msgid="3802527156765844475">"Display: %1$s moved right"</string>
+-    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Google Cast"</string>
++    <string name="wifi_display_settings_title" msgid="2622548133505158832">"Cast"</string>
+     <string name="keywords_wifi_display_settings" msgid="5753883229564422679">"mirror"</string>
+     <string name="wifi_display_enable_menu_item" msgid="7391841780777318134">"Enable wireless display"</string>
+     <string name="wifi_display_no_devices_found" msgid="7904877793677102805">"No nearby devices were found."</string>
+@@ -3775,7 +3775,7 @@
+     <string name="keywords_text_cursor_blink_rate" msgid="7682963763334011148">"caret, text caret, text cursor, cursor, blinking, blink interval, blink rate, animation, reduce animation, remove animation"</string>
+     <string name="sound_dashboard_summary" msgid="8254699132423665654">"Volume and vibration"</string>
+     <string name="media_volume_option_title" msgid="5966569685119475630">"Media volume"</string>
+-    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Google Cast volume"</string>
++    <string name="remote_media_volume_option_title" msgid="7907330631195715350">"Cast volume"</string>
+     <string name="call_volume_option_title" msgid="1461105986437268924">"Call volume"</string>
+     <string name="alarm_volume_option_title" msgid="6398641749273697140">"Alarm volume"</string>
+     <string name="assistant_volume_option_title" msgid="7206008753384831048">"Assistant volume"</string>
+diff --git a/res/values/strings.xml b/res/values/strings.xml
+index 55de29a749a..9041d8a83e3 100644
+--- a/res/values/strings.xml
++++ b/res/values/strings.xml
+@@ -2283,7 +2283,7 @@
+     <string name="external_display_topology_a11y_display_moved_right">Display: %1$s moved right</string>
+ 
+     <!-- Wifi Display settings. The title of the screen. [CHAR LIMIT=40] -->
+-    <string name="wifi_display_settings_title">Google Cast</string>
++    <string name="wifi_display_settings_title">Cast</string>
+     <!-- Wifi Display settings. The keywords of the setting. [CHAR LIMIT=NONE] -->
+     <string name="keywords_wifi_display_settings">mirror</string>
+     <!-- Wifi Display settings. The title of a menu item to enable wireless display [CHAR LIMIT=40] -->
+@@ -9040,7 +9040,7 @@
+     <string name="media_volume_option_title">Media volume</string>
+ 
+     <!-- Sound: Title for the option managing remote media volume. [CHAR LIMIT=30] -->
+-    <string name="remote_media_volume_option_title">Google Cast volume</string>
++    <string name="remote_media_volume_option_title">Cast volume</string>
+ 
+     <!-- Sound: Title for the option managing call volume. [CHAR LIMIT=30] -->
+     <string name="call_volume_option_title">Call volume</string>
 diff --git a/res/values/strings_app_exploit_protection.xml b/res/values/strings_app_exploit_protection.xml
 index 59348a1fc82..42111bf22a0 100644
 --- a/res/values/strings_app_exploit_protection.xml

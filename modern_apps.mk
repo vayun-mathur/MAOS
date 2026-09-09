@@ -136,3 +136,30 @@ $(call inherit-product-if-exists, vendor/modern-apps/maos_branding.mk)
 #    removal above, so it was always empty and never fired - which is why a build that
 #    shipped zero MAOS apps still reported success. Removal is now a patch, and a patch
 #    that no longer applies fails loudly in phase_overlay.
+
+# 7. External USB (UVC) camera support, so a webcam is a real system camera visible to every
+#    camera2 client rather than to one app via UsbManager. Kernel support is already present
+#    (CONFIG_USB_VIDEO_CLASS=y) and android.hardware.usb.host is already a device feature.
+#
+#    No sepolicy is needed. system/sepolicy/vendor/file_contexts:42 already labels
+#    /vendor/bin/hw/...-external-service as hal_camera_default_exec, hal_camera_default.te
+#    gives it a domain via init_daemon_domain, and hal_camera.te:12-13 already allows
+#    read/write on video_device (which /dev/video[0-9]* is labelled). The extra cameraserver
+#    rules the AOSP docs mention are for passthrough HIDL mode; this is a binderized AIDL
+#    daemon in its own domain.
+#
+#    The non-lazy binary is deliberate: the lazy variant is oneshot+disabled and only starts
+#    on demand, whereas the eager one runs the inotify hotplug thread that notices a camera
+#    plugged in after boot. Note the lazy module `overrides` this one, so never add both.
+PRODUCT_PACKAGES += \
+    android.hardware.camera.provider-V1-external-service \
+    maos_vintf_fragment_camera_provider_external
+
+#    external_camera_config.xml must be at exactly this path - it is hardcoded as
+#    ExternalCameraConfig::kDefaultCfgPath. The feature file also re-declares
+#    android.hardware.camera.any, which four already-installed
+#    /vendor/etc/permissions/android.hardware.camera.*.prebuilt.xml files declare too;
+#    SystemConfig.addFeature merges duplicates, so that is harmless.
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.camera.external.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.camera.external.xml \
+    vendor/modern-apps/camera/external_camera_config.xml:$(TARGET_COPY_OUT_VENDOR)/etc/external_camera_config.xml

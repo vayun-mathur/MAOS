@@ -204,6 +204,80 @@ android_app_import {
     },
 }
 
+// FindFamily and Share are ordinary user apps, not system components: they replace nothing
+// GrapheneOS ships and hold no signature|privileged permission, so neither is `privileged:
+// true` and neither needs a privapp-permissions entry. They are preinstalled only so a fresh
+// device has them available; everything they use (location, contacts, nearby-device Bluetooth)
+// is a runtime permission the user grants, exactly as it would be from a store install.
+android_app_import {
+    name: "ModernAppsFindFamily",
+    apk: "prebuilts/findfamily-release.apk",
+    presigned: true,
+    preprocessed: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+android_app_import {
+    name: "ModernAppsShare",
+    apk: "prebuilts/share-release.apk",
+    presigned: true,
+    preprocessed: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Cast is PRIVILEGED: it is a remote display provider, and
+// RemoteDisplayProviderWatcher.verifyServiceTrusted only trusts a provider whose app holds
+// android.permission.REMOTE_DISPLAY_PROVIDER (signature|privileged). Without that the
+// watcher logs and skips the service and Settings' Cast page stays empty. It also needs
+// START_ACTIVITIES_FROM_BACKGROUND to reach the screen-capture consent activity from the
+// bound service. Both are allowlisted in privapp-permissions-modern-apps.xml.
+//
+// The TV receiver (com.vayunmathur.cast.tv) is deliberately NOT preinstalled: it targets a
+// television, not a phone.
+android_app_import {
+    name: "ModernAppsCast",
+    apk: "prebuilts/cast-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// LogViewer is PRIVILEGED: it replaces GrapheneOS's app.grapheneos.logviewer (module
+// LogViewer, removed from handheld_system.mk) and holds the same permissions it did.
+// READ_LOGS, READ_LOGS_FULL, READ_OEM_UNLOCK_STATE and QUERY_USERS are allowlisted in
+// privapp-permissions-modern-apps.xml; a missing entry there is a boot failure, not a
+// degraded feature. Without READ_LOGS in particular logd filters logcat down to our own
+// uid and the log simply looks EMPTY - exit code 0, no error.
+//
+// It declares two permissions of its own, com.vayunmathur.logviewer.SHOW_LOGCAT
+// (signature|privileged) and .SHOW_ERROR_REPORT (signature|preinstalled), which is how
+// Settings and the system crash dialog are allowed to open it. There is deliberately no
+// launcher entry: both activities are permission-guarded and reached by intent.
+//
+// frameworks/base/core/java/android/ext/LogViewerApp.java is patched to this package name;
+// it is the producer of every error-report intent and addresses them with setPackage().
+android_app_import {
+    name: "ModernAppsLogViewer",
+    apk: "prebuilts/logviewer-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
 // Euicc is PRIVILEGED: it is the system eSIM LPA (Local Profile Assistant). It declares the
 // android.service.euicc.EuiccService and the eSIM management LUI, and drives the eUICC over a
 // telephony logical channel, so it needs the signature|privileged WRITE_EMBEDDED_SUBSCRIPTIONS /
@@ -241,6 +315,81 @@ android_app_import {
     preprocessed: true,
     privileged: true,
     product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// SetupWizard is PRIVILEGED: it is the first-run setup wizard. The platform picks it by
+// resolving MAIN against the SETUP_WIZARD and HOME categories, and its intent-filter sits at
+// priority 999 so it wins that resolution over the launcher while the device is unprovisioned.
+// It sets the system locale, the clock and time zone, and the location master switch, reads
+// and clears OEM-unlock state, disables the status bar for the duration of setup, and writes
+// DEVICE_PROVISIONED / user_setup_complete to end it - so it needs the signature|privileged
+// CHANGE_CONFIGURATION / MANAGE_USER_OEM_UNLOCK_STATE / NETWORK_SETUP_WIZARD /
+// READ_PRIVILEGED_PHONE_STATE / READ_OEM_UNLOCK_STATE / REBOOT / SET_TIME / SET_TIME_ZONE /
+// STATUS_BAR / WRITE_SECURE_SETTINGS / WRITE_SETTINGS perms, allowlisted in
+// privapp-permissions-modern-apps.xml.
+//
+// It replaces GrapheneOS's SetupWizard2 (app.grapheneos.setupwizard). Both that module and
+// AOSP's fallback Provision are dropped by the `overrides` below, which is how GrapheneOS's own
+// SetupWizard2 module already drops `Provision` in this tree. Verified mechanism, not a guess:
+// soong_app_prebuilt.mk:167 sets PACKAGES.<m>.OVERRIDES for an android_app_import, and
+// main.mk:1011-1013 filters overridden modules out of the PRODUCT_PACKAGES-derived list before
+// expand-required-modules runs at :1016 (so SetupWizard2's `required:` etc-permissions file
+// drops with it, leaving no stale app.grapheneos.setupwizard.xml).
+//
+// `SetupWizard2` is deliberately LEFT listed in build/make/target/product/handheld_system_ext.mk
+// rather than also being deleted there. That line is not redundancy - it is the fallback for
+// THIS app going missing. An `overrides` from a module that is not installed does not apply, so
+// if the setupwizard prebuilt is ever absent from the image, SetupWizard2 still ships and the
+// device still completes setup. Delete that line and the same accident leaves zero activities
+// answering SETUP_WIZARD + HOME on an unprovisioned device, which does not boot. Keeping it
+// trades a wrong-wizard bug for a brick, in the right direction.
+//
+// ⚠️ The two must never be separated. With both this app and SetupWizard2 installed, the
+// SETUP_WIZARD + HOME resolution is ambiguous; with neither, there is no HOME activity while
+// the device is unprovisioned and first boot never completes.
+android_app_import {
+    name: "ModernAppsSetupWizard",
+    apk: "prebuilts/setupwizard-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    overrides: [
+        "Provision",
+        "SetupWizard2",
+    ],
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Updater is PRIVILEGED: it holds REBOOT, ACCESS_CACHE_FILESYSTEM and ALLOCATE_AGGRESSIVE, and
+// it drives android.os.UpdateEngine to write an OTA payload into the inactive A/B slot. All
+// three are signature|privileged and are allowlisted in privapp-permissions-modern-apps.xml.
+//
+// `overrides` displaces the GrapheneOS updater outright rather than shipping both. Two update
+// clients on one device is not a cosmetic problem: update_engine applies ONE payload at a time
+// device-wide, so a second client polling the same server races the first for the slot and the
+// loser fails with an error that looks like a corrupt package.
+//
+// ⚠️ This is the one app whose failure is not self-correcting. If this client is broken and the
+// GrapheneOS one is gone, the device cannot update in place and needs a manual flash. It fails
+// SAFE only in the sense that `overrides` is conditional on this module existing: a missing
+// prebuilt leaves app.seamlessupdate.client in the image. It does NOT protect against ours
+// shipping and then not working. Prove an end-to-end update on a real device before trusting it.
+android_app_import {
+    name: "ModernAppsUpdater",
+    apk: "prebuilts/updater-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    overrides: [
+        "Updater",
+    ],
     dex_preopt: {
         enabled: false,
     },

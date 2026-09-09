@@ -1,3 +1,61 @@
+diff --git a/core/java/android/ext/KnownSystemPackages.java b/core/java/android/ext/KnownSystemPackages.java
+index 839f04c0773b..e962c3bc4f64 100644
+--- a/core/java/android/ext/KnownSystemPackages.java
++++ b/core/java/android/ext/KnownSystemPackages.java
+@@ -37,7 +37,7 @@ public final class KnownSystemPackages {
+         mediaProvider = "com.android.providers.media.module";
+         permissionController = "com.android.permissioncontroller";
+         settings = "com.android.settings";
+-        setupWizard = "app.grapheneos.setupwizard";
++        setupWizard = "com.vayunmathur.setupwizard";
+         shell = "com.android.shell";
+         systemUi = res.getString(R.string.config_systemUi);
+     }
+diff --git a/core/java/android/ext/LogViewerApp.java b/core/java/android/ext/LogViewerApp.java
+index 0eb6239bc279..fa975ab112b9 100644
+--- a/core/java/android/ext/LogViewerApp.java
++++ b/core/java/android/ext/LogViewerApp.java
+@@ -11,7 +11,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
+ 
+ /** @hide */
+ public class LogViewerApp {
+-    private static final String PACKAGE_NAME = "app.grapheneos.logviewer";
++    private static final String PACKAGE_NAME = "com.vayunmathur.logviewer";
+ 
+     public static final String ACTION_ERROR_REPORT = PACKAGE_NAME + ".ERROR_REPORT";
+     public static final String ACTION_LOGCAT = PACKAGE_NAME + ".LOGCAT";
+diff --git a/core/res/res/values/config_ext.xml b/core/res/res/values/config_ext.xml
+index 9f66d22bca1a..6dd6906f4e34 100644
+--- a/core/res/res/values/config_ext.xml
++++ b/core/res/res/values/config_ext.xml
+@@ -38,7 +38,13 @@
+     <bool name="setting_default_force_app_memtag">false</bool>
+     <java-symbol type="bool" name="setting_default_force_app_memtag" />
+ 
+-    <string name="config_first_party_app_source_package_name">app.grapheneos.apps</string>
++    <!-- MAOS ships Modern Apps Store in place of GrapheneOS Apps, so it is the first-party
++         app source here. PackageInstallerSession lets only this package (or shell, or the
++         Play Store within version limits) install the Sandboxed Google Play components -
++         everything else is refused with "blocked to prevent breaking gmscompat". Leaving
++         GrapheneOS's value would name a package this OS does not ship, so nothing could
++         install GMS or Vending at all. -->
++    <string name="config_first_party_app_source_package_name">com.vayunmathur.appstore</string>
+     <java-symbol type="string" name="config_first_party_app_source_package_name" />
+ 
+     <!-- Certificate digests for trusted apps that will be allowed to obtain the knownSigner
+diff --git a/data/fonts/fallback_order.json b/data/fonts/fallback_order.json
+index 2fc3f3e3fc5b..3cac8625cdb5 100644
+--- a/data/fonts/fallback_order.json
++++ b/data/fonts/fallback_order.json
+@@ -1,4 +1,8 @@
+ [
++  // MAOS: Google Sans Flex backs sans-serif but covers only ~535 codepoints, so
++  // Roboto has to absorb everything it lacks. First in the list means Cyrillic and
++  // Greek reach Roboto instead of a Noto face, which would look out of place.
++  { "id": "roboto-latin" },
+   { "lang": "und-Arab" },
+   { "lang": "und-Ethi" },
+   { "lang": "und-Hebr" },
 diff --git a/data/fonts/fonts.xml b/data/fonts/fonts.xml
 index 8cbc3000c250..a453346df82e 100644
 --- a/data/fonts/fonts.xml

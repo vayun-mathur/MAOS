@@ -15,5 +15,38 @@
     <exception package="com.vayunmathur.networklocation">
         <permission name="android.permission.ACCESS_FINE_LOCATION" fixed="false" />
         <permission name="android.permission.ACCESS_BACKGROUND_LOCATION" fixed="false" />
+            <permission name="android.permission.ACCESS_COARSE_LOCATION" fixed="false" />
+        <permission name="android.permission.READ_PHONE_STATE" fixed="false" />
+        <permission name="android.permission.INTERNET" fixed="false" />
+</exception>
+    <!-- Cast finds receivers with NsdManager. Android 16's Local Network Protections gate
+         that browse on ACCESS_LOCAL_NETWORK, and rather than throwing, the platform
+         intercepts it and puts its own NsdPickerActivity in front of the user - so Settings'
+         Cast page lists nothing and spins forever while a system "choose a device to
+         connect" prompt appears over it. The app cannot ask for this itself: its route list
+         is published headlessly by a bound RemoteDisplayProvider service with no UI.
+         fixed="false" like the entries above, so the user can still revoke it. -->
+    <exception package="com.vayunmathur.cast">
+        <permission name="android.permission.ACCESS_LOCAL_NETWORK" fixed="false" />
+            <permission name="android.permission.INTERNET" fixed="false" />
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+</exception>
+
+    <!-- Share discovers peers over mDNS, Wi-Fi Aware and BLE. Every one of these is a
+         transport rather than a feature: with any of them missing a peer is simply never
+         found, which presents to the user as "nothing here" rather than as an error. -->
+    <exception package="com.vayunmathur.share">
+        <permission name="android.permission.ACCESS_LOCAL_NETWORK" fixed="false" />
+        <permission name="android.permission.NEARBY_WIFI_DEVICES" fixed="false" />
+        <permission name="android.permission.BLUETOOTH_ADVERTISE" fixed="false" />
+        <permission name="android.permission.BLUETOOTH_SCAN" fixed="false" />
+        <permission name="android.permission.INTERNET" fixed="false" />
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+    </exception>
+
+    <!-- Files reports long copies and deletions through a notification; its actual storage
+         access is MANAGE_EXTERNAL_STORAGE, which is an appop and not grantable here. -->
+    <exception package="com.vayunmathur.files">
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
     </exception>
 </exceptions>

@@ -1,0 +1,12 @@
+diff --git a/aconfig/trunk_staging/com.android.server.display.feature.flags/virtual_displays_support_desktop_mode_flag_values.textproto b/aconfig/trunk_staging/com.android.server.display.feature.flags/virtual_displays_support_desktop_mode_flag_values.textproto
+new file mode 100755
+index 000000000..8ecd4b885
+--- /dev/null
++++ b/aconfig/trunk_staging/com.android.server.display.feature.flags/virtual_displays_support_desktop_mode_flag_values.textproto
+@@ -0,0 +1,6 @@
++flag_value {
++  package: "com.android.server.display.feature.flags"
++  name: "virtual_displays_support_desktop_mode"
++  state: ENABLED
++  permission: READ_WRITE
++}

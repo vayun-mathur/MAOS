@@ -99,7 +99,7 @@ BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
 MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
-APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation)
+APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation findfamily share cast setupwizard logviewer updater)
 
 # ---- Derived / optional-env config ----
 # ONE shared, device-independent key set (see the "Signing keys" note above).
@@ -254,8 +254,12 @@ apply_maos_patches() {
     local spec repo patch
     for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
                 "frameworks/base:frameworks_base.patch" \
+                "frameworks/libs/systemui:frameworks_libs_systemui.patch" \
+                "build/release:build_release.patch" \
                 "packages/apps/Settings:settings.patch" \
-                "packages/apps/SetupWizard2:setupwizard2.patch"; do
+                "packages/apps/SetupWizard2:setupwizard2.patch" \
+                "external/roboto-fonts:roboto_fonts.patch" \
+                "packages/apps/GmsCompat:gmscompat.patch"; do
         repo="${spec%%:*}"; patch="$TREE/$patches/${spec##*:}"
         [[ -f "$patch" ]] || die "Missing patch file: $patch"
         [[ -d "$repo" ]]  || die "Missing repo for patch: $repo"

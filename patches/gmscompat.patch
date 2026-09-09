@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 676a024..1cb8642 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -10,7 +10,7 @@
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+   <!-- needed to be able to create TempServiceBinding to any package-->
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+-    <uses-permission android:name="app.grapheneos.logviewer.SHOW_ERROR_REPORT" />
++    <uses-permission android:name="com.vayunmathur.logviewer.SHOW_ERROR_REPORT" />
+     <!-- needed for config fragments for updating permissions for Android Auto, etc. -->
+     <uses-permission android:name="android.permission.UPDATE_AND_INVALIDATE_PERMISSION_STATE" />
+ 

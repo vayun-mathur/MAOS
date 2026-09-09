@@ -58,5 +58,35 @@
          framework default-transport pin (a "package/service" component); Backup holds the
          signature|privileged BACKUP permission (allowlisted in
          privapp-permissions-modern-apps.xml) so the BackupManagerService will bind it. -->
-    <string name="config_backup_transport" translatable="false">com.vayunmathur.backup/.transport.ConfigurableBackupTransportService</string>
+    <string name="config_backup_transport" translatable="false">com.vayunmathur.backup/.service.ConfigurableBackupTransportService</string>
+
+    <!-- Automotive projection role -> Modern Apps Cast.
+
+         This is the ONLY route by which cast can hold ADD_TRUSTED_DISPLAY, which is
+         `signature|role`. Privileged placement cannot grant it - that covers
+         `signature|privileged` only - and cast is presigned with the com.vayunmathur key, so the
+         `signature` half never matches. SYSTEM_AUTOMOTIVE_PROJECTION is the role carrying it
+         (roles.xml, minSdkVersion 34). Without this pin `createVirtualDisplay` throws
+         SecurityException and cast is stuck on MediaProjection screen capture: a consent prompt
+         every session, and no system mirror/extend switch.
+
+         WHAT THIS COSTS, stated plainly because it is not free and must not read as if it were.
+         `Role.grantAsUser` (role-controller/.../model/Role.java:945-950) calls
+         `Permissions.grantAsUser` over the role's WHOLE permission list, so holding the role
+         AUTO-GRANTS cast roughly 25 permissions: the microphone, location, nearby-devices and
+         notification sets, plus SEND_SMS, RECEIVE_SMS, READ_CONTACTS, READ_CALL_LOG,
+         READ_CALENDAR, CALL_PHONE, READ_PHONE_STATE, CREATE_VIRTUAL_DEVICE,
+         RECEIVE_SENSITIVE_NOTIFICATIONS and CAPTURE_SECURE_VIDEO_OUTPUT. Not "made grantable" -
+         granted. This was weighed against platform-signing the app and chosen deliberately.
+
+         The role name is not a borrowed one: MA Cast is intended to grow automotive projection
+         support, so this is the correct role slightly ahead of the feature.
+
+         exclusive="true", so nothing else in MAOS may hold it. systemOnly="true" is satisfied
+         because cast is preinstalled. config_systemAutomotiveProjection ships EMPTY in AOSP, so
+         there is no existing holder to displace.
+
+         Precedent: config_defaultSms above works the same way - the SMS role auto-grants its
+         SMS/Phone/Contacts runtime permissions. -->
+    <string name="config_systemAutomotiveProjection" translatable="false">com.vayunmathur.cast</string>
 </resources>

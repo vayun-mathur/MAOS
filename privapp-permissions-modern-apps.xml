@@ -43,4 +43,83 @@
         <permission name="android.permission.BACKUP" />
         <permission name="android.permission.WRITE_SECURE_SETTINGS" />
     </privapp-permissions>
+    <!-- Cast is PRIVILEGED: it is a remote display provider, which is what puts its receivers in
+         Settings' Cast page. RemoteDisplayProviderWatcher.verifyServiceTrusted only trusts a
+         provider whose app holds REMOTE_DISPLAY_PROVIDER (signature|privileged); without it the
+         watcher logs and skips the service and the page is simply empty.
+         START_ACTIVITIES_FROM_BACKGROUND (signature|privileged|vendorPrivileged|oem|verifier|role)
+         is needed because selecting a route ends at the screen-capture consent activity, launched
+         from a bound service while Settings is in front. CAPTURE_VIDEO_OUTPUT would avoid the
+         consent activity entirely but is signature-only, so it is unreachable for a presigned app.
+         The package attribute below must byte-match the installed package
+         (cast/build.gradle.kts applicationId). With ro.control_privapp_permissions=enforce a
+         mismatch is not a warning - the device does not boot.
+         The TV receiver (com.vayunmathur.cast.tv) is deliberately absent: it is not preinstalled. -->
+    <privapp-permissions package="com.vayunmathur.cast">
+        <permission name="android.permission.REMOTE_DISPLAY_PROVIDER" />
+        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND" />
+            <!-- Desktop-mode audio via MediaRecorder.AudioSource.REMOTE_SUBMIX. The
+             projection-scoped capture used by screen mirroring is unavailable on that
+             path because it deliberately holds no MediaProjection. -->
+        <permission name="android.permission.CAPTURE_AUDIO_OUTPUT"/>
+</privapp-permissions>
+
+    <!-- SetupWizard is PRIVILEGED: it is the first-run setup wizard, selected by the platform
+         as the HOME activity (MAIN + SETUP_WIZARD + HOME at priority 999) while the device is
+         unprovisioned. It sets the system locale, the clock, the time zone and the location
+         master switch, reads and clears the OEM-unlock state, disables the status bar for the
+         duration, and writes DEVICE_PROVISIONED / user_setup_complete to end setup - all of
+         which are signature|privileged. It replaces GrapheneOS's SetupWizard2
+         (app.grapheneos.setupwizard); that module and AOSP's fallback Provision are both
+         dropped by `overrides` on ModernAppsSetupWizard in Android.bp.
+
+         The package attribute below must byte-match the installed package
+         (setupwizard/build.gradle.kts applicationId). With
+         ro.control_privapp_permissions=enforce a mismatch is not a warning - the device does
+         not boot past setup.
+
+         This is GrapheneOS's etc/permissions/app.grapheneos.setupwizard.xml minus
+         com.stevesoltys.seedvault.RESTORE_BACKUP, which is gone with Seedvault.
+         SET_TIME / SET_TIME_ZONE ARE PENDING REMOVAL AND MUST NOT BE REMOVED YET. Source
+         stopped using them when the manual date-and-time step was replaced by the automatic
+         clock (a Settings.Global write, covered by WRITE_SECURE_SETTINGS below, not by
+         SET_TIME), and the app manifest no longer requests them - but the STAGED PREBUILT
+         still does, and this allowlist is matched against the installed APK, not against
+         source. Removing them before the prebuilt is rebuilt is the boot-fatal direction.
+         Sequence: rebuild + re-stage the APK, confirm with
+         analysis/probe_setupwizard_apk_perms.py, then run
+         analysis/setupwizard_drop_time_perms.py.
+         ACCESS_WIFI_STATE (normal) and app.seamlessupdate.client.OPEN_SECURITY_PREVIEW_SETTINGS
+         (declared by the updater, not the platform) are in the app manifest and correctly not
+         allowlisted here, matching upstream. -->
+    <privapp-permissions package="com.vayunmathur.setupwizard">
+        <permission name="android.permission.CHANGE_CONFIGURATION" />
+        <permission name="android.permission.MANAGE_USER_OEM_UNLOCK_STATE" />
+        <permission name="android.permission.NETWORK_SETUP_WIZARD" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+        <permission name="android.permission.READ_OEM_UNLOCK_STATE" />
+        <permission name="android.permission.REBOOT" />
+        <permission name="android.permission.SET_TIME" />
+        <permission name="android.permission.SET_TIME_ZONE" />
+        <permission name="android.permission.STATUS_BAR" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+        <permission name="android.permission.WRITE_SETTINGS" />
+    </privapp-permissions>
+
+    <privapp-permissions package="com.vayunmathur.logviewer">
+        <permission name="android.permission.READ_LOGS"/>
+        <permission name="android.permission.READ_LOGS_FULL"/>
+        <permission name="android.permission.READ_OEM_UNLOCK_STATE"/>
+        <permission name="android.permission.QUERY_USERS"/>
+    </privapp-permissions>
+
+    <privapp-permissions package="com.vayunmathur.updater">
+        <!-- Reboot into the slot update_engine just wrote. -->
+        <permission name="android.permission.REBOOT"/>
+        <!-- update_engine stages payload metadata under /cache. -->
+        <permission name="android.permission.ACCESS_CACHE_FILESYSTEM"/>
+        <!-- Evict cached data to make room for a 1-2 GB package. -->
+        <permission name="android.permission.ALLOCATE_AGGRESSIVE"/>
+    </privapp-permissions>
+
 </permissions>
