@@ -1,131 +1,61 @@
 # MAOS — Modern Apps OS
 
-A GrapheneOS-derived Android OS that ships the [Modern Apps](https://github.com/vayun-mathur)
-ecosystem (`com.vayunmathur.*`) in place of the stock GrapheneOS/AOSP userspace apps.
+MAOS is a private, de-Googled Android OS for Pixel phones. It's derived from
+[GrapheneOS](https://grapheneos.org) and replaces the stock system apps with the
+first-party [Modern Apps](https://github.com/vayun-mathur) suite (`com.vayunmathur.*`) —
+a clean, cohesive set of everyday apps built to work together.
 
-This repository is the **overlay** — the single repo you maintain. It is added to a
-GrapheneOS source tree at `vendor/modern-apps/` via a `repo` local manifest. There are
-**no long-lived AOSP forks**: additions, removals, and config are all expressed as
-overlays. (Full design rationale lives in `GRAPHENEOS_FORK_PLAN.md` in the Modern-Apps
-repo.)
+## Install
 
-## Apps swapped
+Flash MAOS straight from your browser with the WebUSB installer:
 
-| Modern App | Package | Replaces |
-| --- | --- | --- |
-| Web | `com.vayunmathur.web` | Vanadium (browser only; WebView kept) |
-| Camera | `com.vayunmathur.camera` | GrapheneOS Camera |
-| PDF | `com.vayunmathur.pdf` | PdfViewer |
-| Contacts | `com.vayunmathur.contacts` | AOSP Contacts |
-| Calculator | `com.vayunmathur.calculator` | AOSP Calculator |
-| Clock | `com.vayunmathur.clock` | AOSP DeskClock |
-| Files | `com.vayunmathur.files` | **DocumentsUI** (Files also takes over the SAF role — see below) |
-| Photos | `com.vayunmathur.photos` | AOSP Gallery |
-| App Store | `com.vayunmathur.appstore` | GrapheneOS Apps |
-| Keyboard | `com.vayunmathur.keyboard` | AOSP LatinIME (Direct Boot-aware for lock-screen input) |
-| Speech | `com.vayunmathur.speech` | GrapheneOS SpeechServices (default STT + TTS) |
-| Calendar | `com.vayunmathur.calendar` | AOSP Calendar (uses system CalendarProvider) |
-| Music | `com.vayunmathur.music` | AOSP Music (incl. popup single-file player) |
-| Communicate | `com.vayunmathur.communicate` | AOSP Dialer **and** Messaging (default dialer + SMS app) |
-| Euicc | `com.vayunmathur.euicc` | Google's eSIM LPA **EuiccGoogle** (system LPA; Pixel `EuiccSupportPixel` backend kept — see below) |
-| Backup | `com.vayunmathur.backup` | **Seedvault** (`com.stevesoltys.seedvault`) **and** the GrapheneOS contacts backup transport (`app.grapheneos.backup.contacts`) — system app-data backup transport; see below |
+**→ https://ma.vayunmathur.com/os/install**
 
-## Layout
+You'll need a supported Pixel and a Chromium-based desktop browser (Chrome, Edge). No
+command-line tools required. Once installed, MAOS keeps itself up to date automatically
+over the air.
 
-```
-Android.bp                            # android_app_import per app (Files: privileged)
-modern_apps.mk                        # PRODUCT_PACKAGES += ours; filter-out stock; overlays; privapp; branding
-maos_branding.mk                      # PRODUCT_* + ro.maos.* identity (inherited by modern_apps.mk)
-privapp-permissions-modern-apps.xml   # MANAGE_DOCUMENTS for Files
-overlay/                              # static overlays
-  frameworks/base/.../config.xml       #   config_defaultBrowser, config_documentsUiPackage
-  packages/apps/Updater/.../config.xml #   OTA server URL (verify resource name)
-prebuilts/                            # release APKs (git-ignored; populated by script)
-scripts/collect-apks.sh              # copies Modern-Apps release APKs into prebuilts/
-keys/generate-keys.sh                # generates the OS key set (offline; never committed)
-ota/                                 # build-ota.sh + publish-ota.sh (+ README)
-installer/                           # prepare-factory.sh + sparse_split.py for the web installer
-updater/                             # how to point the Updater at ota.ma.vayunmathur.com
-docs/BUILD_RUNBOOK.md                # end-to-end Linux build/sign/OTA/publish
-local_manifest.xml                    # adds this repo to the GrapheneOS tree
-```
+## What's included
 
-## Usage
+MAOS ships Modern Apps in place of the stock apps, including a **Web** browser, **Camera**,
+**Photos**, **PDF** viewer, **Files**, **Contacts**, **Calendar**, **Clock**, **Calculator**,
+**Communicate** (calls + texts), **Music**, **Keyboard**, **Speech**, **App Store**, and
+**Backup**. Everything else you expect from a GrapheneOS-based OS — the security and privacy
+hardening, sandboxed Google Play compatibility, and per-app permissions — is still there.
 
-1. Set up a GrapheneOS build environment and choose a release branch.
-2. Before `repo sync`, symlink the local manifest:
-   ```bash
-   mkdir -p .repo/local_manifests
-   ln -s /path/to/MAOS/local_manifest.xml .repo/local_manifests/modern-apps.xml
-   repo sync
-   ```
-   This lands the overlay at `vendor/modern-apps/`.
-3. Inherit the product config **last** in your device makefile
-   (`device/.../aosp_<device>.mk`):
-   ```make
-   $(call inherit-product, vendor/modern-apps/modern_apps.mk)
-   ```
-4. Populate the prebuilt APKs (build them from Modern-Apps first):
-   ```bash
-   vendor/modern-apps/scripts/collect-apks.sh /path/to/Modern-Apps
-   ```
-5. Generate OS signing keys (offline), build, sign, and rebrand — full sequence in
-   **[`docs/BUILD_RUNBOOK.md`](docs/BUILD_RUNBOOK.md)**. You cannot ship as "GrapheneOS".
+## What the apps can do on MAOS
 
-## Notes
+Because MAOS ships these apps as part of the OS, several of them do things a normal
+app installed from an app store simply can't:
 
-- **Vanadium stays installed** as the system WebView provider; only the default *browser*
-  role moves to Web (via `config_defaultBrowser`). Our Web app relies on system WebView.
-- **Files absorbs DocumentsUI.** DocumentsUI is the system Storage Access Framework (SAF)
-  picker (`OPEN_DOCUMENT` / `CREATE_DOCUMENT` / `OPEN_DOCUMENT_TREE` / `GET_CONTENT`), not
-  just a file manager. Removing it requires Files to take over that role **in the system
-  build only**:
-  - `config_documentsUiPackage` is overlaid to `com.vayunmathur.files`.
-  - Files ships as a **priv-app** holding `MANAGE_DOCUMENTS` (see the privapp allowlist).
-  - The SAF picker is implemented in the Files app (Modern-Apps repo) as a
-    `DocumentPickerActivity`. It is the **same APK** as the F-Droid build — no separate flavor. The
-    picker component ships disabled and a small `Application` enables it only when `MANAGE_DOCUMENTS`
-    is granted (i.e. only in MAOS), so the userspace Files app is unchanged.
-- **Euicc is the eSIM LPA.** Modern Apps Euicc replaces Google's LPA app **EuiccGoogle**
-  (`com.google.android.euicc`) and its companion RRO **EuiccGoogleOverlay**. It ships as a
-  **priv-app** declaring `android.service.euicc.EuiccService`; with the Google LPA removed it is the
-  sole app resolving that intent with `WRITE_EMBEDDED_SUBSCRIPTIONS`, so the framework selects it as
-  the LPA automatically (no config pin). Its privileged perms (`WRITE_EMBEDDED_SUBSCRIPTIONS`,
-  `MODIFY_PHONE_STATE`, `READ_PRIVILEGED_PHONE_STATE`) are in the privapp allowlist. Only the LPA
-  *app* is swapped — the proprietary Pixel backend **`EuiccSupportPixel`** (`com.google.euiccpixel`)
-  and the modem firmware are **kept**, since they provide the low-level access to the built-in eUICC.
-- **Backup is the app-data backup transport.** Modern Apps Backup replaces GrapheneOS's
-  **Seedvault** (`com.stevesoltys.seedvault`) and the GrapheneOS contacts backup transport
-  (`app.grapheneos.backup.contacts`), both removed in `modern_apps.mk`. It ships as a **priv-app**
-  declaring `android.app.backup.BackupTransport` via a service with the `android.backup.TRANSPORT_HOST`
-  intent-filter (gated by the system-only `BIND_BACKUP_TRANSPORT`), and is pinned as the default
-  transport via `config_backup_transport` in the RRO. Its privileged perms (`BACKUP` to act as a
-  transport, `WRITE_SECURE_SETTINGS` to activate itself) are in the privapp allowlist. Backups are
-  encrypted end-to-end with a **BIP-39** recovery code and written to a SAF folder or a
-  WebDAV/Nextcloud remote, so there is no separate account/content-provider backend to keep.
-- **APKs are `presigned`** so each keeps its `com.vayunmathur` certificate, preserving the
-  app-store update chain. The *OS* is signed with your own platform keys.
-- **Silent-breakage guard:** `modern_apps.mk` fails the build if any stock module we meant
-  to drop is still present in `PRODUCT_PACKAGES` (guards against upstream renames).
-- Alternative to `filter-out`: AOSP's `overrides:` field on `android_app_import` also
-  removes a named module. We use `filter-out` for a single, explicit removal list.
+- **Cast** — cast to a TV in **desktop mode**, using the TV as a separate, extended screen
+  rather than just mirroring your phone. You get a mirror-or-desktop chooser when you connect,
+  it picks the TV's best resolution automatically, and it shows up directly in
+  **Settings › Cast** (no need to open the app).
+- **Find Family** — locate your phone even when it's **powered off** or the battery has died,
+  and see its location before the phone is unlocked.
+- **Files** — is the **system file picker**: whenever any app asks you to open or save a
+  file, you browse with Files, with full access to your storage.
+- **Communicate** — is your default **phone and text-messaging** app, handling calls and
+  SMS/MMS.
+- **eSIM** — set up and manage **eSIMs** natively, built into the OS.
+- **Backup** — makes **encrypted backups** of your apps and data to a folder or your own
+  cloud (WebDAV/Nextcloud), protected by a recovery phrase.
+- **Speech** — provides **offline** voice typing (speech-to-text) and text-to-speech to
+  every app on the device.
+- **Keyboard** — is available on the **lock screen** and during first-time setup.
 
-## OTA
+The remaining apps (Camera, Photos, PDF, Contacts, Calculator, Clock, Calendar, Music,
+App Store, Web) are simply the built-in defaults — the same apps you'd get from the store.
 
-MAOS uses the standard A/B OTA flow (`update_engine`) with updates served from
-**`https://ota.ma.vayunmathur.com`**, a **Cloudflare R2 bucket** exposed via a custom
-domain. The build host uploads signed OTA zips + channel metadata straight to R2
-(`ota/publish-ota.sh`), and devices download directly from R2 — no GitHub Release and no
-server proxy, since the payloads are multi-GB. Build/publish scripts are in
-[`ota/`](ota/README.md); pointing the Updater at the server is covered in
-[`updater/`](updater/README.md). Full design rationale is in `GRAPHENEOS_FORK_PLAN.md`
-(Modern-Apps repo).
+## Building it yourself / technical details
 
-## Web installer
+This repository is the build overlay applied on top of GrapheneOS, not the OS source
+itself. Build instructions, the full list of app swaps, signing, and OTA details are in
+**[IMPLEMENTATION_README.md](IMPLEMENTATION_README.md)**.
 
-`https://ma.vayunmathur.com/os/install` is a browser-based WebUSB flasher (like
-GrapheneOS's `/install/web`) — flash MAOS to a Pixel with no command-line tools. The static
-front-end lives in the `location_share_server` repo (`os_installer/`); the build-host side
-(turning a factory image into the manifest + images it flashes, and uploading to R2) is in
-[`installer/`](installer/README.md). Requires a Chromium desktop browser and an R2 CORS
-policy allowing `https://ma.vayunmathur.com`.
+---
+
+_This is not the source code for the OS. This is a build script, which contains a collection
+of patches which are then applied to GrapheneOS. You may view all relevant source code and
+licenses [here](https://github.com/grapheneos)._
