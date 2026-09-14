@@ -108,6 +108,26 @@ PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
 PRODUCT_COPY_FILES += \
     vendor/modern-apps/default-permissions-modern-apps.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/default-permissions/default-permissions-modern-apps.xml
 
+# NOTE on screen time: Modern Apps Screen Time (com.vayunmathur.screentime) is the
+# self-managed wellbeing app (dashboard, timers, focus, wind-down). It is pinned via
+# config_systemWellbeing in the frameworks/base overlay (RRO), which makes it the default
+# holder of the SYSTEM_WELLBEING role - the role grant supplies SUSPEND_APPS,
+# SYSTEM_APPLICATION_OVERLAY and OBSERVE_APP_USAGE at runtime. It is NOT a priv-app, so it
+# has no privapp-permissions entry. Its reflective UsageStatsManager observer and
+# PackageManager suspend access is allowlisted via hidden-api-whitelisted-app in
+# sysconfig-modern-apps.xml. Shipped as presigned android_app_import (ModernAppsScreenTime)
+# and collected by collect-apks.sh.
+
+# NOTE on parental controls: Modern Apps Parental Controls (com.vayunmathur.parentalcontrols)
+# is the system supervision app (bedtime + app limits). It is pinned via config_systemSupervision
+# in the frameworks/base overlay (RRO), which makes it the default holder of the SYSTEM_SUPERVISION
+# role and qualifies it for the SUPERVISION role - the role grant supplies MANAGE_SUPERVISION and
+# MANAGE_APP_OPS_MODES at runtime. It is NOT a priv-app, so it has no privapp-permissions entry
+# (an entry for a non-priv-app is boot-fatal under ro.control_privapp_permissions=enforce). Its
+# reflective access to the UsageStatsManager limit-observer methods is allowlisted via
+# hidden-api-whitelisted-app in sysconfig-modern-apps.xml. Shipped like every other app as a
+# presigned android_app_import (ModernAppsParentalControls) and collected by collect-apks.sh.
+
 # 4. Privileged-permission allowlist so Files (priv-app) may hold MANAGE_DOCUMENTS,
 #    NetworkLocation (priv-app) may hold INSTALL_LOCATION_PROVIDER / LOCATION_HARDWARE /
 #    MODIFY_PHONE_STATE / UPDATE_DEVICE_STATS, Euicc (priv-app, the eSIM LPA) may hold

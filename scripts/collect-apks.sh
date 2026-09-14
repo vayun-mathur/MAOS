@@ -21,6 +21,7 @@ SRC="${1:?usage: collect-apks.sh <path to Modern-Apps repo, its distribution_apk
 DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/prebuilts"
 mkdir -p "$DEST"
 
+
 # The app list is the one in build-maos.sh, parsed rather than duplicated. These two
 # arrays drifted apart once already (22 vs 18), and the symptom was a Soong failure about
 # a missing prebuilt rather than anything pointing back at this script.
@@ -28,6 +29,7 @@ BUILD_MAOS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build-maos.sh"
 [[ -f "$BUILD_MAOS" ]] || { echo "ERROR: cannot find $BUILD_MAOS to read the app list" >&2; exit 1; }
 mapfile -t APPS < <(sed -n 's/^APPS=(\(.*\))$/\1/p' "$BUILD_MAOS" | tr ' ' '\n' | grep -v '^$')
 [[ "${#APPS[@]}" -gt 0 ]] || { echo "ERROR: could not parse APPS=(...) from $BUILD_MAOS" >&2; exit 1; }
+
 
 find_apk() {
   local app="$1"

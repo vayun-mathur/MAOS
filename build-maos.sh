@@ -99,7 +99,7 @@ BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
 MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
-APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation findfamily share cast setupwizard logviewer updater)
+APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation findfamily share cast setupwizard logviewer updater parentalcontrols screentime)
 
 # ---- Derived / optional-env config ----
 # ONE shared, device-independent key set (see the "Signing keys" note above).

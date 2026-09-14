@@ -9,7 +9,9 @@ a clean, cohesive set of everyday apps built to work together.
 
 Flash MAOS straight from your browser with the WebUSB installer:
 
+
 **→ https://ma.vayunmathur.com/os/install**
+
 
 You'll need a supported Pixel and a Chromium-based desktop browser (Chrome, Edge). No
 command-line tools required. Once installed, MAOS keeps itself up to date automatically
@@ -44,6 +46,9 @@ app installed from an app store simply can't:
 - **Speech** — provides **offline** voice typing (speech-to-text) and text-to-speech to
   every app on the device.
 - **Keyboard** — is available on the **lock screen** and during first-time setup.
+- **Parental Controls** — bedtime, downtime, school time, app limits and a device-wide
+  daily limit, enforced on-device behind a parent PIN with bonus time grants.
+- **Screen Time** — your own dashboard, per-app timers, focus mode and overnight wind-down.
 
 The remaining apps (Camera, Photos, PDF, Contacts, Calculator, Clock, Calendar, Music,
 App Store, Web) are simply the built-in defaults — the same apps you'd get from the store.

@@ -22,7 +22,19 @@
     <allow-in-data-usage-save package="com.vayunmathur.networklocation" />
     <allow-unthrottled-location package="com.vayunmathur.networklocation" />
 
+
     <backup-transport-whitelisted-service
         service="com.vayunmathur.backup/.service.ConfigurableBackupTransportService" />
     <allow-in-power-save package="com.vayunmathur.backup" />
+
+    <!-- Parental Controls (com.vayunmathur.parentalcontrols) reaches the @SystemApi
+         UsageStatsManager app-limit observer methods reflectively. It ships presigned
+         (not platform-signed) but as a /product app it takes the isSystemApp() branch of
+         ApplicationInfo.isAllowedToUseHiddenApis(), where this whitelist entry disables
+         hidden-API enforcement. Without it the registration lookups return null and
+         app limits silently never arm. Narrower than android:usesNonSdkApi and inert for
+         a non-system install of the same APK. -->
+    <hidden-api-whitelisted-app package="com.vayunmathur.parentalcontrols" />
+    <hidden-api-whitelisted-app package="com.vayunmathur.screentime" />
+
 </config>

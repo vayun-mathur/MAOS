@@ -361,10 +361,24 @@ android_app_import {
         "Provision",
         "SetupWizard2",
     ],
+
+// ParentalControls is the system supervision app (bedtime + app limits). It holds the
+// SYSTEM_SUPERVISION role via the config_systemSupervision pin in MaosFrameworkResRRO,
+// which grants MANAGE_SUPERVISION and MANAGE_APP_OPS_MODES at runtime. It is NOT privileged:
+// a privapp-permissions entry for a non-priv-app is boot-fatal under
+// ro.control_privapp_permissions=enforce. Its reflective UsageStatsManager observer access
+// is allowlisted via hidden-api-whitelisted-app in sysconfig-modern-apps.xml.
+android_app_import {
+    name: "ModernAppsParentalControls",
+    apk: "prebuilts/parentalcontrols-release.apk",
+    presigned: true,
+    product_specific: true,
+
     dex_preopt: {
         enabled: false,
     },
 }
+
 
 // Updater is PRIVILEGED: it holds REBOOT, ACCESS_CACHE_FILESYSTEM and ALLOCATE_AGGRESSIVE, and
 // it drives android.os.UpdateEngine to write an OTA payload into the inactive A/B slot. All
@@ -390,6 +404,20 @@ android_app_import {
     overrides: [
         "Updater",
     ],
+
+// ScreenTime is the self-managed wellbeing app (dashboard, timers, focus, wind-down). It
+// holds the SYSTEM_WELLBEING role via the config_systemWellbeing pin in MaosFrameworkResRRO,
+// which grants SUSPEND_APPS, SYSTEM_APPLICATION_OVERLAY and OBSERVE_APP_USAGE at runtime. It
+// is NOT privileged: a privapp-permissions entry for a non-priv-app is boot-fatal under
+// ro.control_privapp_permissions=enforce. Its reflective UsageStatsManager observer and
+// PackageManager suspend access is allowlisted via hidden-api-whitelisted-app in
+// sysconfig-modern-apps.xml.
+android_app_import {
+    name: "ModernAppsScreenTime",
+    apk: "prebuilts/screentime-release.apk",
+    presigned: true,
+    product_specific: true,
+
     dex_preopt: {
         enabled: false,
     },

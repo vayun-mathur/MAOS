@@ -58,6 +58,7 @@
          framework default-transport pin (a "package/service" component); Backup holds the
          signature|privileged BACKUP permission (allowlisted in
          privapp-permissions-modern-apps.xml) so the BackupManagerService will bind it. -->
+
     <string name="config_backup_transport" translatable="false">com.vayunmathur.backup/.service.ConfigurableBackupTransportService</string>
 
     <!-- Automotive projection role -> Modern Apps Cast.
@@ -89,4 +90,20 @@
          Precedent: config_defaultSms above works the same way - the SMS role auto-grants its
          SMS/Phone/Contacts runtime permissions. -->
     <string name="config_systemAutomotiveProjection" translatable="false">com.vayunmathur.cast</string>
+
+<!-- System supervision app -> Modern Apps Parental Controls. Upstream defaults to empty,
+         in which case Settings hides the Parental controls entry (TopLevelSupervisionPreferenceController
+         reports UNSUPPORTED_ON_DEVICE) and the platform never binds SupervisionAppService. The pin is
+         the default holder of the SYSTEM_SUPERVISION role (see roles.xml defaultHolders) and the
+         qualifier for the SUPERVISION role (SupervisionRoleBehavior), granting MANAGE_SUPERVISION /
+         MANAGE_APP_OPS_MODES at runtime. No privapp-permissions entry: not a priv-app. -->
+    <string name="config_systemSupervision" translatable="false">com.vayunmathur.parentalcontrols</string>
+
+<!-- System wellbeing app -> Modern Apps Screen Time. Upstream defaults to empty, in
+         which case Settings shows no Digital Wellbeing entry and no role holder exists to
+         grant SUSPEND_APPS / SYSTEM_APPLICATION_OVERLAY / OBSERVE_APP_USAGE. The pin is the
+         default holder of the SYSTEM_WELLBEING role (see roles.xml defaultHolders). No
+         privapp-permissions entry: not a priv-app. -->
+    <string name="config_systemWellbeing" translatable="false">com.vayunmathur.screentime</string>
+
 </resources>

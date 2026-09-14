@@ -63,6 +63,8 @@ index 2a4602d43b..9008973800 100644
 +    ModernAppsSetupWizard \
 +    ModernAppsLogViewer \
 +    ModernAppsUpdater \
++    ModernAppsParentalControls \
++    ModernAppsScreenTime \
      preinstalled-packages-platform-handheld-product.xml \
      SettingsIntelligence \
 -    SpeechServices \

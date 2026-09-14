@@ -32,6 +32,8 @@ repo.)
 | Communicate | `com.vayunmathur.communicate` | AOSP Dialer **and** Messaging (default dialer + SMS app) |
 | Euicc | `com.vayunmathur.euicc` | Google's eSIM LPA **EuiccGoogle** (system LPA; Pixel `EuiccSupportPixel` backend kept — see below) |
 | Backup | `com.vayunmathur.backup` | **Seedvault** (`com.stevesoltys.seedvault`) **and** the GrapheneOS contacts backup transport (`app.grapheneos.backup.contacts`) — system app-data backup transport; see below |
+| Parental Controls | `com.vayunmathur.parentalcontrols` | n/a (new; AOSP has no supervision app) — system supervision app: bedtime + app limits via the SYSTEM_SUPERVISION role (pinned by `config_systemSupervision`) |
+| Screen Time | `com.vayunmathur.screentime` | n/a (new; AOSP has no wellbeing app) — self-managed screen time: dashboard, timers, focus, wind-down via the SYSTEM_WELLBEING role (pinned by `config_systemWellbeing`) |
 
 ## Layout
 
