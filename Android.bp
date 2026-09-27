@@ -422,3 +422,26 @@ android_app_import {
         enabled: false,
     },
 }
+
+// Emergency is PRIVILEGED: it replaces AOSP EmergencyInfo (module EmergencyInfo,
+// removed from telephony_system_ext.mk via platform_build.patch) and answers the same
+// platform contract: the EMERGENCY_ASSISTANCE view, the EDIT_EMERGENCY_INFO (+ legacy
+// EDIT_MEDICAL_INFO) editor, the Settings ia.emergency injection, the LAUNCH_EMERGENCY
+// SOS alias for SystemUI, and the EmergencyNumberUtils gesture provider. The gesture
+// authority is rewired in frameworks_base.patch and the Settings package pins in
+// settings.patch. Its signature|privileged perms (CALL_PRIVILEGED / MANAGE_USERS /
+// READ_PRIVILEGED_PHONE_STATE / SCHEDULE_EXACT_ALARM /
+// START_ACTIVITIES_FROM_BACKGROUND / WRITE_SECURE_SETTINGS) are allowlisted in
+// privapp-permissions-modern-apps.xml. Wireless emergency alerts
+// (CellBroadcastReceiver) are deliberately NOT replaced and keep shipping stock.
+android_app_import {
+    name: "ModernAppsEmergency",
+    apk: "prebuilts/emergency-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}

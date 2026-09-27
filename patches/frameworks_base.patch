@@ -706,3 +706,20 @@ index e6fba2fadd1e..94a93f0e83f5 100644
              boolean hasInternetPerm = mContext.checkCallingPermission(
                      android.Manifest.permission.INTERNET) == PERMISSION_GRANTED;
              if (hasInternetPerm) {
+diff --git a/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java b/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java
+--- a/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java
++++ b/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java
+@@ -46,9 +46,12 @@
+ public class EmergencyNumberUtils {
+     private static final String TAG = "EmergencyNumberUtils";
+ 
++    // MAOS: Modern Apps Emergency (com.vayunmathur.emergency) owns the
++    // gesture provider, so SettingsLib must call its authority. The
++    // call() method names are unchanged.
+     public static final Uri EMERGENCY_NUMBER_OVERRIDE_AUTHORITY = new Uri.Builder().scheme(
+             ContentResolver.SCHEME_CONTENT)
+-            .authority("com.android.emergency.gesture")
++            .authority("com.vayunmathur.emergency.gesture")
+             .build();
+     public static final String METHOD_NAME_GET_EMERGENCY_NUMBER_OVERRIDE =
+             "GET_EMERGENCY_NUMBER_OVERRIDE";

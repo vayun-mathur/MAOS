@@ -357,3 +357,30 @@ index 4b34ea66db5..d4c383cc0d8 100644
 +            Uri.parse("content://com.vayunmathur.networklocation.status/databases")
      }
  }
+diff --git a/res/values/config.xml b/res/values/config.xml
+--- a/res/values/config.xml
++++ b/res/values/config.xml
+@@ -300,9 +300,13 @@
+         com.android.contacts
+     </string>
+ 
++    <!-- MAOS: Modern Apps Emergency replaces AOSP EmergencyInfo.
++         EmergencyActionContentProvider only takes the SOS call from this
++         package, and the preference controllers resolve the edit intent
++         against it. -->
+     <!-- AOSP Emergency app package name -->
+     <string name="config_aosp_emergency_package_name" translatable="false">
+-        com.android.emergency
++        com.vayunmathur.emergency
+     </string>
+ 
+     <!-- AOSP Emergency app intent action -->
+@@ -312,7 +316,7 @@
+ 
+     <!-- Emergency app package name -->
+     <string name="config_emergency_package_name" translatable="false">
+-        com.android.emergency
++        com.vayunmathur.emergency
+     </string>
+ 
+     <!-- Emergency app intent action -->

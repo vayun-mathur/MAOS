@@ -99,7 +99,7 @@ BUILD="$TAG"
 MANIFEST_URL="https://github.com/GrapheneOS/platform_manifest.git"
 MAOS_GH="https://github.com/vayun-mathur/"     # overlay repo remote (for the local manifest)
 MODERN_APPS_GH="vayun-mathur/Modern-Apps"      # source of the prebuilt APKs
-APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation findfamily share cast setupwizard logviewer updater parentalcontrols screentime)
+APPS=(web camera pdf contacts calculator clock files photos appstore keyboard speech calendar music communicate euicc backup networklocation findfamily share cast setupwizard logviewer updater parentalcontrols screentime emergency)
 
 # ---- Derived / optional-env config ----
 # ONE shared, device-independent key set (see the "Signing keys" note above).
@@ -257,6 +257,7 @@ apply_maos_patches() {
                 "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
                 "frameworks/libs/systemui:frameworks_libs_systemui.patch" \
                 "build/release:build_release.patch" \
+                "script:script.patch" \
                 "packages/apps/Settings:settings.patch" \
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
                 "external/roboto-fonts:roboto_fonts.patch" \
@@ -369,6 +370,7 @@ phase_overlay() {
         -e '\bContacts\b' -e '\bDeskClock\b' -e 'Calculator' -e 'Gallery2' -e 'DocumentsUI' \
         -e '\bDialer\b' -e '\bMessaging\b' -e '\bEuiccGoogle\b' \
         -e '\bSeedvault\b' -e '\bContactsBackup\b' \
+        -e '\bEmergencyInfo\b' \
         build/ device/ vendor/ | grep -i 'PRODUCT_PACKAGES' || true
     warn "Confirm the names above match the filter-out list in vendor/modern-apps/modern_apps.mk."
 
@@ -434,11 +436,15 @@ phase_build() {
     log "Building MAOS for $DEVICE (tag $TAG, build $BUILD)"
     cd "$TREE"; source build/envsetup.sh
     export OFFICIAL_BUILD=true
+    # Build variant for lunch <device>-cur-<variant>. Default userdebug while
+    # bootloop-bisecting (adbd as root from init,Disabled-verity-tolerant logging);
+    # set MAOS_BUILD_VARIANT=user for production/shippable release builds.
+    VARIANT="${MAOS_BUILD_VARIANT:-userdebug}"
     # Build in the DEFAULT out/. soong's siso/product config is anchored to it (a custom
     # OUT_DIR breaks '@config//main.star' loading during bootstrap), so builds run one at a
-    # time. rm -rf for a clean build (GrapheneOS does the same between devices).
-    rm -rf out
-    lunch "${DEVICE}-cur-user"
+    # time. No rm -rf here: builds are incremental and reuse out/; wipe it manually
+    # when you want a clean build (GrapheneOS does rm -rf between devices).
+    lunch "${DEVICE}-cur-${VARIANT}"
     # Pixel 6 (Tensor G1: bluejay/raven/oriole) has no separate vendor_kernel_boot image;
     # every device since the Pixel 6a does. Building vendorkernelbootimage for a Pixel 6 fails.
     local boot_targets="vendorbootimage vendorkernelbootimage"
@@ -472,6 +478,9 @@ phase_release() {
     # empty. Predefine it so decrypt-keys runs non-interactively and takes the plaintext path
     # instead of trying to decrypt an already-plaintext key (openssl "asn1 wrong tag" error).
     export password=""
+    # MAOS_SKIP_OTA=1 skips the OTA zip for faster flash-test releases
+    # (see script.patch). Publish path always builds the OTA.
+    if [[ -n "${MAOS_SKIP_OTA:-}" ]]; then export SKIP_OTA=1; fi
     script/generate-release.sh "$DEVICE" "$BUILD"
     log "Release at releases/$BUILD/release-$DEVICE-$BUILD"
 }

@@ -1,0 +1,75 @@
+diff --git a/generate-release.sh b/generate-release.sh
+index 736dfd1..2524ed6 100755
+--- a/generate-release.sh
++++ b/generate-release.sh
+@@ -6,6 +6,30 @@ source "$(dirname ${BASH_SOURCE[0]})/common.sh"
+ 
+ [[ $# -eq 2 ]] || user_error "expected two arguments: DEVICE BUILD_NUMBER"
+ 
++# MAOS: progress reporting. progress_bar TOTAL PATTERN CMD... runs CMD, counts output
++# lines matching PATTERN, and redraws a single [####----] N/TOTAL line on stderr while
++# passing all output through (nothing hidden).
++progress_bar() {
++    local total="$1" pattern="$2"; shift 2
++    "$@" 2>&1 | awk -v total="$total" -v pat="$pattern" '
++        { print > "/dev/stderr"; fflush("/dev/stderr") }
++        $0 ~ pat {
++            n++; pct = int(50 * n / total); if (pct > 50) pct = 50;
++            bar = sprintf("%*s", pct, ""); gsub(/ /, "#", bar);
++            pad = sprintf("%*s", 50 - pct, ""); gsub(/ /, "-", pad);
++            printf "\r  [MAOS] [%s%s] %d/%d", bar, pad, n, total > "/dev/stderr";
++        }
++        END { printf "\n" > "/dev/stderr" }'
++}
++count_signables() {
++    unzip -l "$1" 2>/dev/null | grep -cE "\.(apk|apex)$"
++}
++
++# MAOS: stage logging + optional OTA skip. SKIP_OTA=1 skips ota_from_target_files +
++# generate-metadata (saves ~15-20 min) for local flash-test builds; the install/factory
++# images are unaffected. Default (unset/empty) builds everything as upstream.
++stage() { echo ""; echo "===== [generate-release] STAGE $1/4: $2 ($(date -u +%H:%M:%S)) ====="; }
++
+ chrt -b -p 0 $$
+ 
+ DEVICE=$1
+@@ -73,7 +97,10 @@ fi
+ AVB_PKMD="$KEY_DIR/avb_pkmd.bin"
+ AVB_ALGORITHM=SHA256_RSA4096
+ 
+-sign_target_files_apks -o -d "$KEY_DIR" --avb_vbmeta_key "$KEY_DIR/avb.pem" --avb_vbmeta_algorithm $AVB_ALGORITHM \
++stage 1 "sign target_files (APK+APEX, RSA-4096)"
++_sign_total=$(count_signables "$TARGET_FILES_INPUT")
++echo "  [MAOS] signing ~$_sign_total APK/APEX files..."
++progress_bar "$_sign_total" "^    signing:" sign_target_files_apks -o -d "$KEY_DIR" --avb_vbmeta_key "$KEY_DIR/avb.pem" --avb_vbmeta_algorithm $AVB_ALGORITHM \
+     --extra_apks com.android.adbd.apex="$KEY_DIR/releasekey" \
+     --extra_apex_payload_key com.android.adbd.apex="$KEY_DIR/avb.pem" \
+     --extra_apks AdServicesApk.apk="$KEY_DIR/releasekey" \
+@@ -179,10 +206,16 @@ sign_target_files_apks -o -d "$KEY_DIR" --avb_vbmeta_key "$KEY_DIR/avb.pem" --av
+     --extra_apex_payload_key com.google.pixel.camera.hal.apex="$KEY_DIR/avb.pem" \
+     $TARGET_FILES_INPUT $TARGET_FILES
+ 
+-ota_from_target_files -k "$KEY_DIR/releasekey" $OTA_ARGS $TARGET_FILES \
+-    $DEVICE-ota_update-$BUILD_NUMBER.zip
+-script/generate-metadata $DEVICE-ota_update-$BUILD_NUMBER.zip
++if [[ -n "${SKIP_OTA:-}" ]]; then
++    stage 2 "OTA SKIPPED (SKIP_OTA set) - no ota_update zip, no metadata"
++else
++    stage 2 "full OTA (block diff, slowest single step)"
++    ota_from_target_files -k "$KEY_DIR/releasekey" $OTA_ARGS $TARGET_FILES \
++        $DEVICE-ota_update-$BUILD_NUMBER.zip
++    script/generate-metadata $DEVICE-ota_update-$BUILD_NUMBER.zip
++fi
+ 
++stage 3 "device images (per-partition + super)"
+ img_from_target_files $TARGET_FILES $DEVICE-img-$BUILD_NUMBER.zip
+ 
+ source device/common/generate-factory-images-common.sh
+@@ -195,6 +228,7 @@ fi
+ 
+ # Second arg to optimize-factory-image is the name of outer zip directory.
+ # Output zip name defaults to <outer zip dir name>.zip
++stage 4 "factory + install zips (super split for flashing)"
+ fastboot -S $MAX_DOWNLOAD_SIZE optimize-factory-image $DEVICE-factory-$BUILD_NUMBER.zip $DEVICE-install-$BUILD_NUMBER
+ 
+ if [[ -f "$KEY_DIR/id_ed25519" ]]; then

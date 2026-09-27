@@ -37,4 +37,9 @@
     <hidden-api-whitelisted-app package="com.vayunmathur.parentalcontrols" />
     <hidden-api-whitelisted-app package="com.vayunmathur.screentime" />
 
+    <!-- Emergency (com.vayunmathur.emergency) replaces AOSP EmergencyInfo. The SOS
+         countdown runs as a foreground service off an exact alarm; exempt it from Doze
+         like stock does so the countdown is not killed while the screen is off. -->
+    <allow-in-power-save package="com.vayunmathur.emergency" />
+
 </config>

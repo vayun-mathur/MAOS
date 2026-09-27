@@ -122,4 +122,21 @@
         <permission name="android.permission.ALLOCATE_AGGRESSIVE"/>
     </privapp-permissions>
 
+    <!-- Emergency replaces AOSP EmergencyInfo (com.android.emergency). Same six
+         signature|privileged perms stock allowlists in
+         frameworks/base/data/etc/com.android.emergency.xml: the CALL_PRIVILEGED guard
+         on the gesture provider, owner identity (MANAGE_USERS), the privileged half
+         of emergency-number lookup (READ_PRIVILEGED_PHONE_STATE), the exact SOS
+         countdown alarm (SCHEDULE_EXACT_ALARM), firing the call from the background
+         alarm (START_ACTIVITIES_FROM_BACKGROUND), and persisting the SOS gesture
+         toggles (WRITE_SECURE_SETTINGS). -->
+    <privapp-permissions package="com.vayunmathur.emergency">
+        <permission name="android.permission.CALL_PRIVILEGED"/>
+        <permission name="android.permission.MANAGE_USERS"/>
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE"/>
+        <permission name="android.permission.SCHEDULE_EXACT_ALARM"/>
+        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
+        <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
+    </privapp-permissions>
+
 </permissions>

@@ -87,6 +87,21 @@ PRODUCT_SOONG_NAMESPACES += vendor/modern-apps
 # (Module names are the GrapheneOS build names — re-confirm on your synced tree if a build surprises
 # you, per the note on the removal list above.)
 
+# NOTE on emergency: Modern Apps Emergency (com.vayunmathur.emergency) is a priv-app
+# that replaces AOSP EmergencyInfo (module EmergencyInfo, removed from
+# telephony_system_ext.mk via platform_build.patch). It answers the same platform
+# actions (EMERGENCY_ASSISTANCE, EDIT_EMERGENCY_INFO + legacy EDIT_MEDICAL_INFO), the
+# Settings ia.emergency injection, and the SystemUI SOS gesture via a LAUNCH_EMERGENCY
+# alias (config_preferredEmergencySosPackage is empty, so no SystemUI patch is needed).
+# Settings finds it through the package pins rewired in settings.patch, and the SOS
+# gesture state flows through the gesture authority rewired in frameworks_base.patch.
+# Its signature|privileged perms (CALL_PRIVILEGED / MANAGE_USERS /
+# READ_PRIVILEGED_PHONE_STATE / SCHEDULE_EXACT_ALARM / START_ACTIVITIES_FROM_BACKGROUND
+# / WRITE_SECURE_SETTINGS) are allowlisted in privapp-permissions-modern-apps.xml, and
+# it is exempt from Doze in sysconfig-modern-apps.xml so the SOS countdown survives idle.
+# Wireless emergency alerts (CellBroadcastReceiver) are deliberately NOT replaced and
+# keep shipping stock.
+
 # 3. framework-res config
 
 # 3. framework-res config (default browser, documents UI, speech recognition service, and the

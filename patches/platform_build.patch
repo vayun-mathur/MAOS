@@ -123,3 +123,15 @@ index aa70f46797..0705511932 100644
 -    Dialer \
      ImsServiceEntitlement \
      preinstalled-packages-platform-telephony-product.xml
+diff --git a/target/product/telephony_system_ext.mk b/target/product/telephony_system_ext.mk
+--- a/target/product/telephony_system_ext.mk
++++ b/target/product/telephony_system_ext.mk
+@@ -20,7 +20,7 @@
+ # /system_ext packages
+ PRODUCT_PACKAGES += \
+     CarrierConfig \
+-    EmergencyInfo \
++    ModernAppsEmergency \
+     preinstalled-packages-telephony-system-ext.xml \
+     preinstalled-packages-gsi-system-ext.xml \
+ 
