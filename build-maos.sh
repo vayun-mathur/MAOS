@@ -254,6 +254,7 @@ apply_maos_patches() {
     local spec repo patch
     for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
                 "frameworks/base:frameworks_base.patch" \
+                "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
                 "frameworks/libs/systemui:frameworks_libs_systemui.patch" \
                 "build/release:build_release.patch" \
                 "packages/apps/Settings:settings.patch" \

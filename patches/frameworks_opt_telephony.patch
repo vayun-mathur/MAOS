@@ -1,0 +1,20 @@
+diff --git a/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java b/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java
+index 66ac2cbaa1..e892890fe1 100644
+--- a/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java
++++ b/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java
+@@ -361,6 +361,15 @@ public class UiccCarrierPrivilegeRules extends Handler {
+                 return accessStatus;
+             }
+         }
++        // MAOS: grant carrier privileges to the bundled Communicate app
++        // (com.vayunmathur.communicate) regardless of UICC access rules, so
++        // single-registration RCS works on carriers whose profiles carry no
++        // rules (e.g. Jibe-backed MVNOs). Real UICC grants still take
++        // precedence - this only fires when they say NO_ACCESS.
++        if (packageInfo != null
++                && "com.vayunmathur.communicate".equals(packageInfo.packageName)) {
++            return TelephonyManager.CARRIER_PRIVILEGE_STATUS_HAS_ACCESS;
++        }
+         return TelephonyManager.CARRIER_PRIVILEGE_STATUS_NO_ACCESS;
+     }
+ 
