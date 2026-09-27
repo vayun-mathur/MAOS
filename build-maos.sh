@@ -257,6 +257,7 @@ apply_maos_patches() {
                 "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
                 "frameworks/libs/systemui:frameworks_libs_systemui.patch" \
                 "build/release:build_release.patch" \
+                "system/sepolicy:system_sepolicy.patch" \
                 "script:script.patch" \
                 "packages/apps/Settings:settings.patch" \
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
