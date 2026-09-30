@@ -21,10 +21,10 @@ index c54d58ddf6..fe09fa2969 100644
      preinstalled-packages-platform-aosp-product.xml \
      ThemePicker \
 diff --git a/target/product/handheld_product.mk b/target/product/handheld_product.mk
-index 2a4602d43b..9008973800 100644
+index 2a4602d43b..2efb6cd911 100644
 --- a/target/product/handheld_product.mk
 +++ b/target/product/handheld_product.mk
-@@ -22,25 +22,36 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/media_product.mk)
+@@ -22,25 +22,39 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/media_product.mk)
  
  # /product packages
  PRODUCT_PACKAGES += \
@@ -54,6 +54,7 @@ index 2a4602d43b..9008973800 100644
 +    ModernAppsCalendar \
 +    ModernAppsMusic \
 +    ModernAppsCommunicate \
++    ModernAppsAuto \
 +    ModernAppsCast \
 +    ModernAppsFindFamily \
 +    ModernAppsShare \
@@ -65,6 +66,8 @@ index 2a4602d43b..9008973800 100644
 +    ModernAppsUpdater \
 +    ModernAppsParentalControls \
 +    ModernAppsScreenTime \
++    ModernAppsHealth \
++    ModernAppsEmergency \
      preinstalled-packages-platform-handheld-product.xml \
      SettingsIntelligence \
 -    SpeechServices \
@@ -124,6 +127,7 @@ index aa70f46797..0705511932 100644
      ImsServiceEntitlement \
      preinstalled-packages-platform-telephony-product.xml
 diff --git a/target/product/telephony_system_ext.mk b/target/product/telephony_system_ext.mk
+index 342020565c..1bf7cf5a35 100644
 --- a/target/product/telephony_system_ext.mk
 +++ b/target/product/telephony_system_ext.mk
 @@ -20,7 +20,7 @@
