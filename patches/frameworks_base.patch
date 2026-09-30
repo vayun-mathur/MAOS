@@ -244,7 +244,7 @@ index b6fa05f754ac..182b9cbdced3 100644
      }
  }
 diff --git a/core/res/res/values/config_ext.xml b/core/res/res/values/config_ext.xml
-index 9f66d22bca1a..6dd6906f4e34 100644
+index 9f66d22bca1a..1775a9e65919 100644
 --- a/core/res/res/values/config_ext.xml
 +++ b/core/res/res/values/config_ext.xml
 @@ -38,7 +38,13 @@
@@ -262,7 +262,7 @@ index 9f66d22bca1a..6dd6906f4e34 100644
      <java-symbol type="string" name="config_first_party_app_source_package_name" />
  
      <!-- Certificate digests for trusted apps that will be allowed to obtain the knownSigner
-@@ -51,4 +51,14 @@
+@@ -51,4 +57,14 @@
      </string-array>
      <java-symbol type="array" name="read_additional_security_state_known_signers" />
  
@@ -277,7 +277,6 @@ index 9f66d22bca1a..6dd6906f4e34 100644
 +    <java-symbol type="string" name="config_companionDeviceAppStreaming" />
 +
  </resources>
-
 diff --git a/data/fonts/fallback_order.json b/data/fonts/fallback_order.json
 index 2fc3f3e3fc5b..3cac8625cdb5 100644
 --- a/data/fonts/fallback_order.json
@@ -803,20 +802,3 @@ index e6fba2fadd1e..94a93f0e83f5 100644
              boolean hasInternetPerm = mContext.checkCallingPermission(
                      android.Manifest.permission.INTERNET) == PERMISSION_GRANTED;
              if (hasInternetPerm) {
-diff --git a/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java b/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java
---- a/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java
-+++ b/packages/SettingsLib/EmergencyNumber/src/com/android/settingslib/emergencynumber/EmergencyNumberUtils.java
-@@ -46,9 +46,12 @@
- public class EmergencyNumberUtils {
-     private static final String TAG = "EmergencyNumberUtils";
- 
-+    // MAOS: Modern Apps Emergency (com.vayunmathur.emergency) owns the
-+    // gesture provider, so SettingsLib must call its authority. The
-+    // call() method names are unchanged.
-     public static final Uri EMERGENCY_NUMBER_OVERRIDE_AUTHORITY = new Uri.Builder().scheme(
-             ContentResolver.SCHEME_CONTENT)
--            .authority("com.android.emergency.gesture")
-+            .authority("com.vayunmathur.emergency.gesture")
-             .build();
-     public static final String METHOD_NAME_GET_EMERGENCY_NUMBER_OVERRIDE =
-             "GET_EMERGENCY_NUMBER_OVERRIDE";

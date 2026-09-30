@@ -11,6 +11,70 @@ index d4e5e0e8670..6ea7e2e8713 100644
      <uses-permission android:name="android.permission.CONTROL_SIM_AUTO_PIN_MANAGEMENT" />
      <uses-permission android:name="android.permission.MANAGE_COMPUTER_CONTROL_CONSENT" />
  
+diff --git a/res/drawable/ic_homepage_screen_time.xml b/res/drawable/ic_homepage_screen_time.xml
+new file mode 100644
+index 00000000000..6c2eb9eee03
+--- /dev/null
++++ b/res/drawable/ic_homepage_screen_time.xml
+@@ -0,0 +1,33 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++  Copyright (C) 2026 The Android Open Source Project
++
++  Licensed under the Apache License, Version 2.0 (the "License");
++  you may not use this file except in compliance with the License.
++  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++  -->
++
++<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
++
++    <item>
++        <com.android.settingslib.widget.AdaptiveIconShapeDrawable
++            android:width="@dimen/dashboard_tile_image_size"
++            android:height="@dimen/dashboard_tile_image_size"
++            android:color="@color/homepage_supervision_background" />
++    </item>
++
++    <item
++        android:width="@dimen/dashboard_tile_foreground_image_size"
++        android:height="@dimen/dashboard_tile_foreground_image_size"
++        android:start="@dimen/dashboard_tile_foreground_image_inset"
++        android:top="@dimen/dashboard_tile_foreground_image_inset"
++        android:drawable="@drawable/ic_settings_screen_time_expressive" />
++</layer-list>
+diff --git a/res/drawable/ic_settings_screen_time_expressive.xml b/res/drawable/ic_settings_screen_time_expressive.xml
+new file mode 100644
+index 00000000000..8103a8b868e
+--- /dev/null
++++ b/res/drawable/ic_settings_screen_time_expressive.xml
+@@ -0,0 +1,19 @@
++<!--
++  Copyright (C) 2026 The Android Open Source Project
++
++  Licensed under the Apache License, Version 2.0 (the "License");
++  you may not use this file except in compliance with the License.
++  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++  -->
++<com.android.settings.widget.TintDrawable
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:drawable="@drawable/ic_timelapse_shape"
++    android:tint="@color/homepage_supervision_foreground" />
 diff --git a/res/values-en-rAU/strings.xml b/res/values-en-rAU/strings.xml
 index c181c5bc2b2..225af58eee0 100644
 --- a/res/values-en-rAU/strings.xml
@@ -135,10 +199,37 @@ index 59348a1fc82..42111bf22a0 100644
      <string name="aep_hmalloc">Hardened memory allocator</string>
      <string name="aep_hmalloc_footer">
 diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
-index 18de9b0a68d..11762c05793 100644
+index 18de9b0a68d..2802c605ed4 100644
 --- a/res/values/strings_ext.xml
 +++ b/res/values/strings_ext.xml
-@@ -196,7 +196,7 @@ There are HTTP, HTTPS, DNS, DNS-over-TLS and DNS-over-HTTPS connectivity checks.
+@@ -52,26 +52,6 @@
+     <string name="supl_disabled">Off</string>
+     <string name="supl_disabled_summary">Will make acquiring location lock significantly slower, especially if PSDS is turned off too</string>
+ 
+-    <string name="g_euicc_lpa_title">eSIM support</string>
+-    <string name="g_euicc_lpa_enable_dialog_msg">
+-A device restart is required to enable this setting.
+-    </string>
+-    <string name="g_euicc_lpa_disable_dialog_title">Warning</string>
+-    <string name="g_euicc_lpa_disable_dialog_msg">
+-"Turning off eSIM support will break the following functionality:
+-
+-• adding new eSIMs
+-• turning existing eSIMs on or off
+-• removing eSIMs, including from the lock screen (e.g. when eSIM is locked with a forgotten PIN)
+-• wiping eSIMs during factory reset
+-
+-Device will be automatically restarted."
+-    </string>
+-    <string name="g_euicc_lpa_restart_button">Restart</string>
+-    <string name="g_euicc_lpa_proceed_button">Proceed</string>
+-    <string name="sim_action_esim_support_disabled_title">Can\'t turn off eSIM</string>
+-    <string name="sim_action_esim_support_disabled_text">eSIM support is turned off. Enable eSIM support to disable the eSIM.</string>
+-
+     <string name="remote_provisioning_title">Attestation key provisioning</string>
+     <string name="remote_provisioning_enabled_grapheneos_proxy">GrapheneOS proxy</string>
+     <string name="remote_provisioning_enabled_google_server">Google server</string>
+@@ -196,7 +176,7 @@ There are HTTP, HTTPS, DNS, DNS-over-TLS and DNS-over-HTTPS connectivity checks.
      <string name="duress_pwd_pref_title">Duress password</string>
      <string name="duress_pwd_description">"Duress password can be entered instead of the user password in any place that asks for it, such as the lock screen of any user and any user or work profile password prompt.
  
@@ -147,7 +238,7 @@ index 18de9b0a68d..11762c05793 100644
  
  Duress PIN works the same way duress password does."</string>
      <string name="duress_pwd_enter_pin">Enter duress PIN</string>
-@@ -226,7 +226,7 @@ Duress PIN works the same way duress password does."</string>
+@@ -226,7 +206,7 @@ Duress PIN works the same way duress password does."</string>
      <string name="alt_touchscreen_mode_confirm_button">Confirm</string>
  
      <string name="app_play_integrity_api">Play Integrity API</string>
@@ -156,7 +247,7 @@ index 18de9b0a68d..11762c05793 100644
      <string name="app_play_integrity_contact_app_developer">Contact app developer</string>
      <string name="app_play_integrity_show_usage_notifications">Show usage notifications</string>
      <string name="app_play_integrity_block_usage_attempts">Block usage attempts</string>
-@@ -238,6 +238,13 @@ Duress PIN works the same way duress password does."</string>
+@@ -238,6 +218,13 @@ Duress PIN works the same way duress password does."</string>
      <string name="app_play_integrity_see_all_apps">Show apps that used the Play Integrity API</string>
  
      <string name="network_location_title">Network location</string>
@@ -189,6 +280,25 @@ index e33f3a5eace..32d14f99642 100644
 -            settings:controller="com.android.settings.location.LocationServicesGeocoderPreferenceController" />
 -
  </PreferenceScreen>
+diff --git a/res/xml/network_provider_internet.xml b/res/xml/network_provider_internet.xml
+index 0ed7956c448..c62308062f3 100644
+--- a/res/xml/network_provider_internet.xml
++++ b/res/xml/network_provider_internet.xml
+@@ -56,14 +56,6 @@
+         settings:useAdminDisabledSummary="true"
+         settings:controller="com.android.settings.network.MobileNetworkSummaryController" />
+ 
+-    <com.android.settingslib.RestrictedSwitchPreference
+-        android:key="google_euicc_lpa"
+-        android:title="@string/g_euicc_lpa_title"
+-        android:icon="@drawable/ic_sim_card"
+-        android:order="-14"
+-        settings:controller="com.android.settings.network.GoogleEuiccLpaController"
+-        settings:userRestriction="no_config_mobile_networks"/>
+-
+     <com.android.settingslib.RestrictedSwitchPreference
+         android:key="airplane_mode_on"
+         android:title="@string/airplane_mode"
 diff --git a/res/xml/top_level_settings.xml b/res/xml/top_level_settings.xml
 index 5235673651a..c7d295632fc 100644
 --- a/res/xml/top_level_settings.xml
@@ -209,7 +319,7 @@ index 5235673651a..c7d295632fc 100644
              android:key="top_level_supervision"
              android:title="@string/supervision_settings_title"
 diff --git a/res/xml/top_level_settings_expressive.xml b/res/xml/top_level_settings_expressive.xml
-index dc7afc722c7..dd7f118e303 100644
+index dc7afc722c7..0127cdfea53 100644
 --- a/res/xml/top_level_settings_expressive.xml
 +++ b/res/xml/top_level_settings_expressive.xml
 @@ -226,6 +226,14 @@
@@ -220,7 +330,7 @@ index dc7afc722c7..dd7f118e303 100644
 +            android:key="top_level_screen_time"
 +            android:title="Screen Time"
 +            android:summary="App usage, timers, focus and wind down"
-+            android:icon="@drawable/ic_timelapse"
++            android:icon="@drawable/ic_homepage_screen_time"
 +            android:order="4"
 +            settings:controller="com.android.settings.supervision.TopLevelScreenTimePreferenceController"/>
 +
@@ -228,7 +338,7 @@ index dc7afc722c7..dd7f118e303 100644
              android:key="top_level_supervision"
              android:title="@string/supervision_settings_title"
 diff --git a/res/xml/top_level_settings_expressive_desktop.xml b/res/xml/top_level_settings_expressive_desktop.xml
-index 16335e2de93..e125b031a73 100644
+index 16335e2de93..b604deff246 100644
 --- a/res/xml/top_level_settings_expressive_desktop.xml
 +++ b/res/xml/top_level_settings_expressive_desktop.xml
 @@ -221,6 +221,14 @@
@@ -239,7 +349,7 @@ index 16335e2de93..e125b031a73 100644
 +            android:key="top_level_screen_time"
 +            android:title="Screen Time"
 +            android:summary="App usage, timers, focus and wind down"
-+            android:icon="@drawable/ic_timelapse"
++            android:icon="@drawable/ic_homepage_screen_time"
 +            android:order="4"
 +            settings:controller="com.android.settings.supervision.TopLevelScreenTimePreferenceController"/>
 +
@@ -414,33 +524,196 @@ index 4b34ea66db5..d4c383cc0d8 100644
 +            Uri.parse("content://com.vayunmathur.networklocation.status/databases")
      }
  }
-diff --git a/res/values/config.xml b/res/values/config.xml
---- a/res/values/config.xml
-+++ b/res/values/config.xml
-@@ -300,9 +300,13 @@
-         com.android.contacts
-     </string>
+diff --git a/src/com/android/settings/network/GoogleEuiccLpaController.java b/src/com/android/settings/network/GoogleEuiccLpaController.java
+deleted file mode 100644
+index d697c3b97f1..00000000000
+--- a/src/com/android/settings/network/GoogleEuiccLpaController.java
++++ /dev/null
+@@ -1,108 +0,0 @@
+-package com.android.settings.network;
+-
+-import android.Manifest;
+-import android.app.AlertDialog;
+-import android.content.Context;
+-import android.content.pm.PackageManager;
+-import android.ext.PackageId;
+-import android.os.PowerManager;
+-import android.os.UserHandle;
+-import android.permission.PermissionManager;
+-
+-import com.android.settings.R;
+-import com.android.settings.ext.AbstractTogglePrefController;
+-import com.android.settings.ext.ExtSettingControllerHelper;
+-
+-import static java.util.Objects.requireNonNull;
+-
+-public class GoogleEuiccLpaController extends AbstractTogglePrefController {
+-    private static final String PKG_NAME = PackageId.G_EUICC_LPA_NAME;
+-
+-    private final PackageManager packageManager;
+-    private final boolean isPresent;
+-
+-    public GoogleEuiccLpaController(Context context, String key) {
+-        super(context, key);
+-        packageManager = context.getPackageManager();
+-
+-        boolean isPresent = false;
+-        try {
+-            var ai = packageManager.getApplicationInfo(PKG_NAME, 0);
+-            isPresent = ai.isSystemApp();
+-        } catch (PackageManager.NameNotFoundException ignored) {}
+-
+-        this.isPresent = isPresent;
+-    }
+-
+-    @Override
+-    public boolean isChecked() {
+-        try {
+-            return isPresent && packageManager.getApplicationInfo(PKG_NAME, 0).enabled;
+-        } catch (PackageManager.NameNotFoundException e) {
+-            return false;
+-        }
+-    }
+-
+-    @Override
+-    public int getAvailabilityStatus() {
+-        if (!isPresent) {
+-            return UNSUPPORTED_ON_DEVICE;
+-        }
+-        return ExtSettingControllerHelper.getGlobalSettingAvailability(mContext);
+-    }
+-    
+-    private void setEnabled(boolean isEnabled) {
+-        String pkg = PKG_NAME;
+-
+-        if (isEnabled) {
+-            var permManager = mContext.getSystemService(PermissionManager.class);
+-            UserHandle user = mContext.getUser();
+-
+-            String perm = Manifest.permission.CAMERA;
+-            permManager.revokeRuntimePermission(pkg, perm, user, null);
+-            // Previously, Camera permission was auto-granted with the FLAG_PERMISSION_SYSTEM_FIXED,
+-            // which made it unchangeable by the user.
+-            // Removing FLAG_PERMISSION_USER_FIXED is needed to make sure that the app is always
+-            // able to show a permission request dialog after being enabled
+-            int permFlagsToRemove = PackageManager.FLAG_PERMISSION_SYSTEM_FIXED
+-                    | PackageManager.FLAG_PERMISSION_USER_FIXED;
+-            permManager.updatePermissionFlags(pkg, perm, permFlagsToRemove, 0, user);
+-        }
+-
+-        var powerManager = requireNonNull(mContext.getSystemService(PowerManager.class));
+-
+-        int ces = isEnabled ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED :
+-                              PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+-        packageManager.setApplicationEnabledSetting(pkg, ces, 0);
+-
+-        // Reboot is required in both cases:
+-        // - OS code doesn't expect LPA to become unavailable at runtime and starts to poll for it
+-        // with a high frequency
+-        // - EuiccGoogle performs initialization in response to "(locked) boot completed" broadcasts
+-        // - also, if current boot count is 1 (i.e. if this is the first boot), EuiccGoogle expects to
+-        // be interacted with by Google's SetupWizard. Boot count will be at least 2 after reboot.
+-        powerManager.reboot(null);
+-    }
+-
+-    @Override
+-    public boolean setChecked(boolean isChecked) {
+-        var b = new AlertDialog.Builder(mContext);
+-
+-        int msg;
+-        int btnText;
+-        if (isChecked) {
+-            msg = R.string.g_euicc_lpa_enable_dialog_msg;
+-            btnText = R.string.g_euicc_lpa_restart_button;
+-        } else {
+-            b.setTitle(R.string.g_euicc_lpa_disable_dialog_title);
+-            msg = R.string.g_euicc_lpa_disable_dialog_msg;
+-            btnText = R.string.g_euicc_lpa_proceed_button;
+-        }
+-
+-        b.setMessage(msg);
+-        b.setPositiveButton(btnText, (d, btn) -> setEnabled(isChecked));
+-        b.show();
+-
+-        return false;
+-    }
+-}
+diff --git a/src/com/android/settings/network/telephony/ToggleSubscriptionDialogActivity.java b/src/com/android/settings/network/telephony/ToggleSubscriptionDialogActivity.java
+index 7c70d9165e7..a81b2b4edd8 100644
+--- a/src/com/android/settings/network/telephony/ToggleSubscriptionDialogActivity.java
++++ b/src/com/android/settings/network/telephony/ToggleSubscriptionDialogActivity.java
+@@ -18,8 +18,6 @@ package com.android.settings.network.telephony;
  
-+    <!-- MAOS: Modern Apps Emergency replaces AOSP EmergencyInfo.
-+         EmergencyActionContentProvider only takes the SOS call from this
-+         package, and the preference controllers resolve the edit intent
-+         against it. -->
-     <!-- AOSP Emergency app package name -->
-     <string name="config_aosp_emergency_package_name" translatable="false">
--        com.android.emergency
-+        com.vayunmathur.emergency
-     </string>
+ import android.content.Context;
+ import android.content.Intent;
+-import android.content.pm.PackageManager;
+-import android.ext.PackageId;
+ import android.os.Bundle;
+ import android.os.UserManager;
+ import android.telephony.SubscriptionInfo;
+@@ -123,14 +121,6 @@ public class ToggleSubscriptionDialogActivity extends SubscriptionActionDialogAc
+                 == View.LAYOUT_DIRECTION_RTL;
+         Log.i(TAG, "isMultipleEnabledProfilesSupported():" + isMultipleEnabledProfilesSupported());
  
-     <!-- AOSP Emergency app intent action -->
-@@ -312,7 +316,7 @@
+-        if (shouldDisallowDisablingEsim()) {
+-            Log.i(TAG, "Cannot disable eSIM while eSIM support is disabled.");
+-            showErrorDialog(
+-                    getString(R.string.sim_action_esim_support_disabled_title),
+-                    getString(R.string.sim_action_esim_support_disabled_text));
+-            return;
+-        }
+-
+         if (savedInstanceState == null) {
+             if (mEnable) {
+                 showEnableSubDialog();
+@@ -608,47 +598,4 @@ public class ToggleSubscriptionDialogActivity extends SubscriptionActionDialogAc
+                 cardInfo -> cardInfo.isMultipleEnabledProfilesSupported());
+     }
  
-     <!-- Emergency app package name -->
-     <string name="config_emergency_package_name" translatable="false">
--        com.android.emergency
-+        com.vayunmathur.emergency
-     </string>
- 
-     <!-- Emergency app intent action -->
+-    private boolean shouldDisallowDisablingEsim() {
+-        if (mEnable || mSubInfo == null) {
+-            return false;
+-        }
+-        final boolean isActiveSub =
+-                mSubInfo.getSimSlotIndex() != SubscriptionManager.INVALID_SIM_SLOT_INDEX;
+-        final boolean isEuiccSub = isEuiccSubscription(mSubInfo);
+-        final boolean isEsimSupportEnabled = isEsimSupportEnabled();
+-        Log.d(TAG, "shouldDisallowDisablingEsim: isActive=" + isActiveSub
+-                + ", isEuiccSub=" + isEuiccSub
+-                + ", isEmbedded=" + mSubInfo.isEmbedded()
+-                + ", cardId=" + mSubInfo.getCardId()
+-                + ", isEsimSupportEnabled=" + isEsimSupportEnabled);
+-        return isActiveSub && isEuiccSub && !isEsimSupportEnabled;
+-    }
+-
+-    private boolean isEuiccSubscription(SubscriptionInfo subInfo) {
+-        /* subInfo doesn't contain accurate eSIM profile info before eUICC LPA is
+-         * enabled for the first time, but it should be valid afterward.
+-         */
+-        if (subInfo.isEmbedded()) {
+-            return true;
+-        }
+-        final int cardId = subInfo.getCardId();
+-        final List<UiccCardInfo> cardsInfo = mTelMgr.getUiccCardsInfo();
+-        if (cardId > TelephonyManager.UNSUPPORTED_CARD_ID) {
+-            if (cardsInfo.stream().anyMatch(cardInfo ->
+-                    cardInfo != null && cardInfo.getCardId() == cardId && cardInfo.isEuicc())) {
+-                return true;
+-            }
+-        }
+-        return false;
+-    }
+-
+-    private boolean isEsimSupportEnabled() {
+-        try {
+-            return getPackageManager()
+-                    .getApplicationInfo(PackageId.G_EUICC_LPA_NAME, PackageManager.MATCH_SYSTEM_ONLY)
+-                    .enabled;
+-        } catch (PackageManager.NameNotFoundException e) {
+-            return true;
+-        }
+-    }
+ }
 diff --git a/src/com/android/settings/supervision/SupervisionDashboardActivity.kt b/src/com/android/settings/supervision/SupervisionDashboardActivity.kt
 index cbc52e60a8a..1b5bd0e884e 100644
 --- a/src/com/android/settings/supervision/SupervisionDashboardActivity.kt
