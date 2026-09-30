@@ -1,3 +1,33 @@
+diff --git a/src/java/com/android/internal/telephony/CarrierPrivilegesTracker.java b/src/java/com/android/internal/telephony/CarrierPrivilegesTracker.java
+index b1f6a0c623..25b5d71a48 100644
+--- a/src/java/com/android/internal/telephony/CarrierPrivilegesTracker.java
++++ b/src/java/com/android/internal/telephony/CarrierPrivilegesTracker.java
+@@ -829,6 +829,12 @@ public class CarrierPrivilegesTracker extends Handler {
+ 
+     private boolean isPackageMaybePrivileged(
+             @NonNull String pkgName, @NonNull Set<Integer> hashHashes) {
++        // MAOS: the bundled Communicate app is treated as carrier-privileged
++        // regardless of UICC/carrier-config rules (e.g. Jibe-backed MVNO profiles
++        // carry no rules). Skips the cert-hash pre-filter below.
++        if ("com.vayunmathur.communicate".equals(pkgName)) {
++            return true;
++        }
+         for (Integer hashHash : hashHashes) {
+             // Non-null (whether empty or not) test override rule will ignore the UICC and CC rules
+             if (mTestOverrideRules != null) {
+@@ -860,6 +866,12 @@ public class CarrierPrivilegesTracker extends Handler {
+      * carrier config, from test overrides or from certificates stored on the SIM.
+      */
+     private int getPackagePrivilegedStatus(@NonNull String pkgName, @NonNull Set<byte[]> certs) {
++        // MAOS: companion to the isPackageMaybePrivileged grant above. SIM-equivalent
++        // status keeps this package eligible as the carrier *service* (IMS socket bind)
++        // as well as privileged (SIP delegate, GBA, UCE).
++        if ("com.vayunmathur.communicate".equals(pkgName)) {
++            return PACKAGE_PRIVILEGED_FROM_SIM;
++        }
+         // Double-nested for loops, but each collection should contain at most 2 elements in nearly
+         // every case.
+         // TODO(b/184382310) find a way to speed this up
 diff --git a/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java b/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java
 index 66ac2cbaa1..e892890fe1 100644
 --- a/src/java/com/android/internal/telephony/uicc/UiccCarrierPrivilegeRules.java
