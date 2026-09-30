@@ -423,29 +423,6 @@ android_app_import {
     },
 }
 
-// Emergency is PRIVILEGED: it replaces AOSP EmergencyInfo (module EmergencyInfo,
-// removed from telephony_system_ext.mk via platform_build.patch) and answers the same
-// platform contract: the EMERGENCY_ASSISTANCE view, the EDIT_EMERGENCY_INFO (+ legacy
-// EDIT_MEDICAL_INFO) editor, the Settings ia.emergency injection, the LAUNCH_EMERGENCY
-// SOS alias for SystemUI, and the EmergencyNumberUtils gesture provider. The gesture
-// authority is rewired in frameworks_base.patch and the Settings package pins in
-// settings.patch. Its signature|privileged perms (CALL_PRIVILEGED / MANAGE_USERS /
-// READ_PRIVILEGED_PHONE_STATE / SCHEDULE_EXACT_ALARM /
-// START_ACTIVITIES_FROM_BACKGROUND / WRITE_SECURE_SETTINGS) are allowlisted in
-// privapp-permissions-modern-apps.xml. Wireless emergency alerts
-// (CellBroadcastReceiver) are deliberately NOT replaced and keep shipping stock.
-android_app_import {
-    name: "ModernAppsEmergency",
-    apk: "prebuilts/emergency-release.apk",
-    presigned: true,
-    preprocessed: true,
-    privileged: true,
-    product_specific: true,
-    dex_preopt: {
-        enabled: false,
-    },
-}
-
 // Auto is PRIVILEGED: it is the SYSTEM_AUTOMOTIVE_PROJECTION role holder (pinned via
 // config_systemAutomotiveProjection in MaosFrameworkResRRO) and exercises signature|privileged
 // operations (MANAGE_USB, MODIFY_AUDIO_ROUTING, CALL_PRIVILEGED, CONTROL_INCALL_EXPERIENCE
@@ -530,14 +507,13 @@ android_app_import {
 }
 
 // Emergency is the emergency-info + SOS app. It REPLACES AOSP's EmergencyInfo
-// (com.android.emergency) via the `overrides` below, and becomes the
-// android.app.role.EMERGENCY holder automatically: EmergencyRoleBehavior has no
-// config_defaultEmergency pin - it grants the role to the sole preinstalled package with an
+// (com.android.emergency): platform_build.patch swaps EmergencyInfo out of
+// telephony_system_ext.mk, and the `overrides` below covers the case where both
+// ever ship together. It becomes the android.app.role.EMERGENCY holder
+// automatically: EmergencyRoleBehavior has no config_defaultEmergency pin - it grants
+// the role to the sole preinstalled package with an
 // android.telephony.action.EMERGENCY_ASSISTANCE activity, which is this app once EmergencyInfo
-// is gone (our ViewInfoActivity answers that action). EmergencyInfo is deliberately LEFT listed
-// in build/make/target/product/telephony_system_ext.mk as the fallback for this app going
-// missing, the same way SetupWizard2/Updater are handled above; `overrides` only applies while
-// this module is installed.
+// is gone (our ViewInfoActivity answers that action).
 //
 // PRIVILEGED: it declares signature|privileged perms - CALL_PRIVILEGED (place the emergency
 // call), WRITE_SECURE_SETTINGS (the gesture provider EMERGENCY_GESTURE_* writes),
