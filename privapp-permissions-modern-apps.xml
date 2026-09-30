@@ -43,6 +43,7 @@
         <permission name="android.permission.BACKUP" />
         <permission name="android.permission.WRITE_SECURE_SETTINGS" />
     </privapp-permissions>
+    
     <!-- Cast is PRIVILEGED: it is a remote display provider, which is what puts its receivers in
          Settings' Cast page. RemoteDisplayProviderWatcher.verifyServiceTrusted only trusts a
          provider whose app holds REMOTE_DISPLAY_PROVIDER (signature|privileged); without it the
@@ -92,6 +93,44 @@
          ACCESS_WIFI_STATE (normal) and app.seamlessupdate.client.OPEN_SECURITY_PREVIEW_SETTINGS
          (declared by the updater, not the platform) are in the app manifest and correctly not
          allowlisted here, matching upstream. -->
+    
+    <!-- Modern Apps Auto (Android Auto sender, com.vayunmathur.auto) is PRIVILEGED:
+         it exercises signature|privileged operations no role can grant: MANAGE_USB
+         (AOAP accessory handling), MODIFY_AUDIO_ROUTING (head-unit sinks), power/user
+         management around projection sessions, privileged phone-state reads for call
+         templates, and the CDM/Bluetooth-privileged + incall-experience pieces of the
+         wireless/call paths.
+
+         ONLY signature|privileged permissions are listed here. Everything the
+         SYSTEM_AUTOMOTIVE_PROJECTION role grants (microphone/location/nearby-devices/
+         notifications sets, telephony, ADD_TRUSTED_DISPLAY / CREATE_VIRTUAL_DEVICE /
+         CAPTURE_SECURE_VIDEO_OUTPUT family, companion-device association) arrives via
+         the role pin (config_systemAutomotiveProjection in MaosFrameworkResRRO) and is
+         deliberately absent: role grants in an allowlist are a boot failure under
+         ro.control_privapp_permissions=enforce, not a belt-and-braces extra.
+
+         The package attribute must byte-match the installed package (auto/build.gradle.kts
+         applicationId com.vayunmathur.auto) for the same reason. -->
+    <privapp-permissions package="com.vayunmathur.auto">
+        <permission name="android.permission.MANAGE_USB" />
+        <permission name="android.permission.MODIFY_AUDIO_ROUTING" />
+        <permission name="android.permission.TETHER_PRIVILEGED" />
+        <permission name="android.permission.CALL_PRIVILEGED" />
+        <permission name="android.permission.POWER_SAVER" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+        <permission name="android.permission.CHANGE_COMPONENT_ENABLED_STATE" />
+        <permission name="android.permission.MANAGE_USERS" />
+        <permission name="android.permission.BLUETOOTH_PRIVILEGED" />
+        <permission name="android.permission.CONTROL_INCALL_EXPERIENCE" />
+        <permission name="android.permission.MODIFY_PHONE_STATE" />
+        <permission name="android.permission.LOCAL_MAC_ADDRESS" />
+        <permission name="android.permission.ENTER_CAR_MODE_PRIORITIZED" />
+        <permission name="android.permission.REQUEST_COMPANION_SELF_MANAGED" />
+        <permission name="android.permission.COMPANION_APPROVE_WIFI_CONNECTIONS" />
+        <permission name="android.permission.BIND_INCALL_SERVICE" />
+        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND" />
+    </privapp-permissions>
+
     <privapp-permissions package="com.vayunmathur.setupwizard">
         <permission name="android.permission.CHANGE_CONFIGURATION" />
         <permission name="android.permission.MANAGE_USER_OEM_UNLOCK_STATE" />
@@ -122,21 +161,17 @@
         <permission name="android.permission.ALLOCATE_AGGRESSIVE"/>
     </privapp-permissions>
 
-    <!-- Emergency replaces AOSP EmergencyInfo (com.android.emergency). Same six
-         signature|privileged perms stock allowlists in
-         frameworks/base/data/etc/com.android.emergency.xml: the CALL_PRIVILEGED guard
-         on the gesture provider, owner identity (MANAGE_USERS), the privileged half
-         of emergency-number lookup (READ_PRIVILEGED_PHONE_STATE), the exact SOS
-         countdown alarm (SCHEDULE_EXACT_ALARM), firing the call from the background
-         alarm (START_ACTIVITIES_FROM_BACKGROUND), and persisting the SOS gesture
-         toggles (WRITE_SECURE_SETTINGS). -->
+    <!-- Emergency (com.vayunmathur.emergency) is the EMERGENCY role holder and replaces AOSP's
+         EmergencyInfo. It needs these signature|privileged perms: CALL_PRIVILEGED places the
+         emergency call, WRITE_SECURE_SETTINGS lets the gesture provider persist the
+         EMERGENCY_GESTURE_* Settings.Secure keys, READ_PRIVILEGED_PHONE_STATE is the privileged
+         half of the emergency-number lookup, and MANAGE_USERS reads the owner name/photo for the
+         card. All degrade gracefully if absent, but the app is privileged so they are granted. -->
     <privapp-permissions package="com.vayunmathur.emergency">
-        <permission name="android.permission.CALL_PRIVILEGED"/>
-        <permission name="android.permission.MANAGE_USERS"/>
-        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE"/>
-        <permission name="android.permission.SCHEDULE_EXACT_ALARM"/>
-        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND"/>
-        <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
+        <permission name="android.permission.CALL_PRIVILEGED" />
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+        <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
+        <permission name="android.permission.MANAGE_USERS" />
     </privapp-permissions>
 
 </permissions>

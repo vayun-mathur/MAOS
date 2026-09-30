@@ -49,4 +49,17 @@
     <exception package="com.vayunmathur.files">
         <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
     </exception>
+    <!-- Emergency (com.vayunmathur.emergency) is the EMERGENCY role holder / stock EmergencyInfo
+         replacement. These are default-granted and fixed="true" (non-revocable) so the card shows
+         allergies, current medications and emergency contacts to a first responder with no manual
+         setup and no way to accidentally turn them off. The two health.* reads are the Personal
+         Health Record permissions for allergies and medications; a foreground read by the view
+         activity is sufficient (see the app's HealthConnectMedical). -->
+    <exception package="com.vayunmathur.emergency">
+        <permission name="android.permission.health.READ_MEDICAL_DATA_ALLERGIES_INTOLERANCES" fixed="true" />
+        <permission name="android.permission.health.READ_MEDICAL_DATA_MEDICATIONS" fixed="true" />
+        <permission name="android.permission.READ_CONTACTS" fixed="true" />
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="true" />
+        <permission name="android.permission.READ_PHONE_STATE" fixed="true" />
+    </exception>
 </exceptions>
