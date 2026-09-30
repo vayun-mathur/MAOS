@@ -361,6 +361,10 @@ android_app_import {
         "Provision",
         "SetupWizard2",
     ],
+    dex_preopt: {
+        enabled: false,
+    },
+}
 
 // ParentalControls is the system supervision app (bedtime + app limits). It holds the
 // SYSTEM_SUPERVISION role via the config_systemSupervision pin in MaosFrameworkResRRO,
@@ -404,6 +408,10 @@ android_app_import {
     overrides: [
         "Updater",
     ],
+    dex_preopt: {
+        enabled: false,
+    },
+}
 
 // ScreenTime is the self-managed wellbeing app (dashboard, timers, focus, wind-down). It
 // holds the SYSTEM_WELLBEING role via the config_systemWellbeing pin in MaosFrameworkResRRO,
