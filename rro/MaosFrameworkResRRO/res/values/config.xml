@@ -61,6 +61,16 @@
 
     <string name="config_backup_transport" translatable="false">com.vayunmathur.backup/.service.ConfigurableBackupTransportService</string>
 
+                    <!-- System gallery role -> Modern Apps Photos. AOSP's default names com.android.gallery3d,
+         which MAOS does not ship, so this role was simply unheld.
+
+         The visible payoff is the two app-ops the role sets to allowed,
+         android:write_media_images and android:write_media_video: those are what let a gallery
+         edit and delete media WITHOUT a per-file consent dialog. The role also grants
+         READ_MEDIA_AUDIO and START_FOREGROUND_SERVICES_FROM_BACKGROUND, and
+         SystemGalleryRoleBehavior grants the photo/video permissions and ACCESS_MEDIA_LOCATION
+         in code, overriding the user's choice, which the write_media app-ops override
+         anyway. -->
     <!-- Automotive projection role -> Modern Apps Cast.
 
          This is the ONLY route by which cast can hold ADD_TRUSTED_DISPLAY, which is
@@ -80,30 +90,126 @@
          RECEIVE_SENSITIVE_NOTIFICATIONS and CAPTURE_SECURE_VIDEO_OUTPUT. Not "made grantable" -
          granted. This was weighed against platform-signing the app and chosen deliberately.
 
-         The role name is not a borrowed one: MA Cast is intended to grow automotive projection
-         support, so this is the correct role slightly ahead of the feature.
+         The role name is not a borrowed one: MA Auto IS the automotive projection
+         sender, so this is its role outright. MA Cast previously held this pin solely
+         for ADD_TRUSTED_DISPLAY; it now holds COMPANION_DEVICE_APP_STREAMING
+         (non-exclusive, same `virtual_device` set), so the exclusive automotive role
+         is free for Auto.
 
          exclusive="true", so nothing else in MAOS may hold it. systemOnly="true" is satisfied
-         because cast is preinstalled. config_systemAutomotiveProjection ships EMPTY in AOSP, so
-         there is no existing holder to displace.
+         because auto is preinstalled as a privileged prebuilt (ModernAppsAuto).
+         config_systemAutomotiveProjection ships EMPTY in AOSP, so there is no existing
+         holder to displace.
 
          Precedent: config_defaultSms above works the same way - the SMS role auto-grants its
          SMS/Phone/Contacts runtime permissions. -->
-    <string name="config_systemAutomotiveProjection" translatable="false">com.vayunmathur.cast</string>
+    <string name="config_systemAutomotiveProjection" translatable="false">com.vayunmathur.auto</string>
 
-<!-- System supervision app -> Modern Apps Parental Controls. Upstream defaults to empty,
-         in which case Settings hides the Parental controls entry (TopLevelSupervisionPreferenceController
-         reports UNSUPPORTED_ON_DEVICE) and the platform never binds SupervisionAppService. The pin is
-         the default holder of the SYSTEM_SUPERVISION role (see roles.xml defaultHolders) and the
-         qualifier for the SUPERVISION role (SupervisionRoleBehavior), granting MANAGE_SUPERVISION /
-         MANAGE_APP_OPS_MODES at runtime. No privapp-permissions entry: not a priv-app. -->
+    <!-- Companion-device app-streaming role -> Modern Apps Cast.
+
+         Cast previously held SYSTEM_AUTOMOTIVE_PROJECTION solely for ADD_TRUSTED_DISPLAY
+         (see above). COMPANION_DEVICE_APP_STREAMING carries the same `virtual_device` set
+         plus notifications, RECORD_AUDIO and (on 36+) the sensitive-notification app-op,
+         and is exclusive="false", so Cast keeps its trusted virtual display without
+         blocking Auto from the automotive role. The role has no `defaultHolders` in AOSP;
+         it is pinned here and the defaultHolders attribute is added by
+         patches/permission_roles.patch (packages/modules/Permission). -->
+    <string name="config_companionDeviceAppStreaming" translatable="false">com.vayunmathur.cast</string>
+
+    <!-- Supervision (parental controls) role -> Modern Apps Parental Controls.
+
+         This pin is the ONLY reason Settings > Parental controls exists on MAOS. The framework
+         (android.app.supervision, SupervisionService) and the entire Settings UI
+         (com/android/settings/supervision: dashboard, PIN and recovery, bedtime schedules, app
+         limits, web content filters, app store filters) already ship in this tree, and the
+         gating flag android.app.supervision.flags.enable_supervision_settings_screen is on.
+         What was missing is the role holder. config_systemSupervision ships EMPTY in AOSP and
+         Google fills it with a GMS component; with nothing answering the supervision messenger
+         bind action, SupervisionHelper.hasNecessarySupervisionComponent fails and
+         TopLevelSupervisionPreferenceController reports UNSUPPORTED_ON_DEVICE, hiding the entry
+         outright. That is why parental controls looked removed rather than merely switched off.
+
+         WHAT THIS COSTS, stated plainly. SYSTEM_SUPERVISION is static, exclusive, systemOnly
+         and visible="false", and holding it AUTO-GRANTS a large set: ACCESS_INSTANT_APPS,
+         KILL_UID, MANAGE_APP_OPS_MODES, MANAGE_DEFAULT_APPLICATIONS, SUSPEND_APPS,
+         SYSTEM_APPLICATION_OVERLAY, MANAGE_PROFILE_AND_DEVICE_OWNERS, MANAGE_SUPERVISION and
+         roughly twenty MANAGE_DEVICE_POLICY_* permissions (apps control, lock and lock
+         credentials, keyguard, factory reset, location, camera, runtime permissions, safe boot,
+         time, users, package state, debugging features and more). That breadth is inherent to
+         what a supervision app IS, since it is the app a parent uses to suspend apps and lock a
+         device, but it is a role grant rather than a permission the user was asked about, so it
+         is recorded here at the pin.
+
+         Parental Controls declares no permissions of its own and has no launcher icon: it exists to
+         answer the bind and to forward the install-app action to Settings' own enable flow.
+         systemOnly="true" is satisfied by being preinstalled under /product. It is deliberately
+         NOT in privapp-permissions-modern-apps.xml, since these are signature|role rather than
+         signature|privileged and a mismatched entry there is boot-fatal. -->
     <string name="config_systemSupervision" translatable="false">com.vayunmathur.parentalcontrols</string>
 
-<!-- System wellbeing app -> Modern Apps Screen Time. Upstream defaults to empty, in
+    <!-- System wellbeing app -> Modern Apps Screen Time. Upstream defaults to empty, in
          which case Settings shows no Digital Wellbeing entry and no role holder exists to
          grant SUSPEND_APPS / SYSTEM_APPLICATION_OVERLAY / OBSERVE_APP_USAGE. The pin is the
          default holder of the SYSTEM_WELLBEING role (see roles.xml defaultHolders). No
          privapp-permissions entry: not a priv-app. -->
     <string name="config_systemWellbeing" translatable="false">com.vayunmathur.screentime</string>
 
+    <string name="config_systemGallery" translatable="false">com.vayunmathur.photos</string>
+
+    <!-- System speech recognizer role -> Modern Apps Speech.
+
+         This is a DIFFERENT MECHANISM from config_defaultSpeechRecognitionService above and the
+         two are easy to confuse. That one names the service the framework binds; this one makes
+         Speech hold the role, which is what grants the role's permissions. Both are needed.
+
+         config_systemSpeechRecognizer ships empty in AOSP. The role grants RECORD_AUDIO and
+         UPDATE_APP_OPS_STATS, so the recognizer holds the microphone without a prompt.
+         Qualification needs a service answering android.speech.RecognitionService, which
+         Speech's WhisperRecognitionService already declares. This is a second route to
+         RECORD_AUDIO alongside the fixed="false" grant in default-permissions-modern-apps.xml.
+         The two are harmless together, and that entry is deliberately kept: a role that fails
+         to qualify does so silently, and the default-permissions grant is what keeps voice
+         input working if that ever happens. -->
+    <string name="config_systemSpeechRecognizer" translatable="false">com.vayunmathur.speech</string>
+
+    <!-- System contacts role -> Modern Apps Contacts. AOSP's default names
+         com.android.contacts, which MAOS does not ship, so this role was unheld. It grants
+         ACCESS_RCS_USER_CAPABILITY_EXCHANGE and SET_DEFAULT_ACCOUNT_FOR_CONTACTS. -->
+    <string name="config_systemContacts" translatable="false">com.vayunmathur.contacts</string>
+
+    <!-- External-display resolution picker: stop filtering out modes that are not 60 Hz.
+
+         Settings' ResolutionPreferenceFragment.isAllowedMode drops every mode outside
+         60 +/- 1 Hz when this is true, keeping only the one already in use. That filter exists
+         to hold a physically-connected panel in sync with the internal display; a MA Cast
+         virtual display is not driven by the same clock and has nothing to synchronise with,
+         so the rule only removes real choices. With it on, a cast desktop offering
+         3840x2160, 1920x1080 and 1280x720 showed a single entry as soon as any of them
+         settled below 60 - which a 4K mode does whenever the phone's encoder cannot sustain
+         60 fps at that size.
+
+         AOSP's own default is false (core/res/res/values/config.xml); it is the Pixel device
+         overlay that turns it on, and this puts it back. -->
+    <bool name="config_refreshRateSynchronizationEnabled">false</bool>
+
+    <!-- External displays: no artificial size or refresh ceiling.
+
+         The Pixel product overlay caps external displays at 3440x1600 at 61 Hz - an ultrawide
+         monitor, which is a sensible bound for what the phone drives over DisplayPort and a
+         meaningless one for a display that exists only as a surface handed to an encoder. The
+         cap is enforced twice: DisplayModeDirector.DisplayObserver votes against modes above
+         it, and Settings' resolution picker filters them out of the list.
+
+         The symptom was that a 4K cast desktop offered exactly one 4K entry. Every 3840x2160
+         mode was rejected with "height is above the allowed limit", and the survivor was only
+         there because the picker always re-adds the display's active mode. 1920x1080 and
+         1280x720 fit under the cap, which is why they alone listed all their rates.
+
+         Zero on all three is AOSP's own default (core/res/res/values/config.xml) and disables
+         the limit entirely - DisplayObserver.isExternalDisplayLimitModeEnabled requires all
+         three to be positive. The trade is that a genuinely-attached monitor is no longer held
+         to what the phone's DisplayPort output was tuned for either. -->
+    <integer name="config_externalDisplayPeakWidth">0</integer>
+    <integer name="config_externalDisplayPeakHeight">0</integer>
+    <integer name="config_externalDisplayPeakRefreshRate">0</integer>
 </resources>

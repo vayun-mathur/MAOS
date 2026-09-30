@@ -27,16 +27,29 @@
         service="com.vayunmathur.backup/.service.ConfigurableBackupTransportService" />
     <allow-in-power-save package="com.vayunmathur.backup" />
 
-    <!-- Parental Controls (com.vayunmathur.parentalcontrols) reaches the @SystemApi
-         UsageStatsManager app-limit observer methods reflectively. It ships presigned
-         (not platform-signed) but as a /product app it takes the isSystemApp() branch of
-         ApplicationInfo.isAllowedToUseHiddenApis(), where this whitelist entry disables
-         hidden-API enforcement. Without it the registration lookups return null and
-         app limits silently never arm. Narrower than android:usesNonSdkApi and inert for
-         a non-system install of the same APK. -->
+    <!-- Cast reaches VirtualDisplayConfig.Builder.setSupportedModes() and setUniqueId() by
+         reflection: the first declares the TV's resolutions on the cast display so Android's
+         external-display resolution picker offers them, the second gives the display a stable
+         unique id. Both are @SystemApi, so hidden-API enforcement blocks the reflection for a
+         presigned (non-platform-signed) app and the modes never reach the picker. Exempt the
+         package. ALLOW_HIDDENAPI_WHITELISTING is granted to the product partition
+         (SystemConfig.java), so this is honoured from /product/etc/sysconfig. -->
+    <hidden-api-whitelisted-app package="com.vayunmathur.cast" />
+
+    <!-- Parental Controls reaches UsageStatsManager.registerAppUsageLimitObserver and its unregister
+         counterpart by reflection. Both are @SystemApi members of an ordinary public class, so a
+         compileOnly stub is the wrong shape - it would shadow the real UsageStatsManager for
+         every other caller in the app - and reflection is what the repo uses for that case (see
+         logviewer's HiddenFrameworkApi). Hidden-API enforcement blocks that for a presigned,
+         non-platform-signed app, exactly as it does for cast above.
+
+         Only the reflection needs this. The SupervisionManager and SupervisionAppService calls
+         are direct, through library/supervision-stubs, and link without an exemption.
+
+         UsageStatsService still applies its own permission check on the other side; it passes
+         only because we hold the supervision role. The exemption buys visibility, not privilege. -->
     <hidden-api-whitelisted-app package="com.vayunmathur.parentalcontrols" />
     <hidden-api-whitelisted-app package="com.vayunmathur.screentime" />
-
     <!-- Emergency (com.vayunmathur.emergency) replaces AOSP EmergencyInfo. The SOS
          countdown runs as a foreground service off an exact alarm; exempt it from Doze
          like stock does so the countdown is not killed while the screen is off. -->

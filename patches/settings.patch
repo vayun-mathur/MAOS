@@ -189,6 +189,63 @@ index e33f3a5eace..32d14f99642 100644
 -            settings:controller="com.android.settings.location.LocationServicesGeocoderPreferenceController" />
 -
  </PreferenceScreen>
+diff --git a/res/xml/top_level_settings.xml b/res/xml/top_level_settings.xml
+index 5235673651a..c7d295632fc 100644
+--- a/res/xml/top_level_settings.xml
++++ b/res/xml/top_level_settings.xml
+@@ -231,6 +231,14 @@
+             settings:highlightableMenuKey="@string/menu_key_accounts_and_backup"
+             settings:controller="com.android.settings.backup.TopLevelAccountsAndBackupEntryPreferenceController"/>
+ 
++        <com.android.settings.widget.HomepagePreference
++            android:key="top_level_screen_time"
++            android:title="Screen Time"
++            android:summary="App usage, timers, focus and wind down"
++            android:icon="@drawable/ic_timelapse"
++            android:order="4"
++            settings:controller="com.android.settings.supervision.TopLevelScreenTimePreferenceController"/>
++
+         <com.android.settings.widget.HomepagePreference
+             android:key="top_level_supervision"
+             android:title="@string/supervision_settings_title"
+diff --git a/res/xml/top_level_settings_expressive.xml b/res/xml/top_level_settings_expressive.xml
+index dc7afc722c7..dd7f118e303 100644
+--- a/res/xml/top_level_settings_expressive.xml
++++ b/res/xml/top_level_settings_expressive.xml
+@@ -226,6 +226,14 @@
+             settings:highlightableMenuKey="@string/menu_key_accounts_and_backup"
+             settings:controller="com.android.settings.backup.TopLevelAccountsAndBackupEntryPreferenceController"/>
+ 
++        <com.android.settings.widget.HomepagePreference
++            android:key="top_level_screen_time"
++            android:title="Screen Time"
++            android:summary="App usage, timers, focus and wind down"
++            android:icon="@drawable/ic_timelapse"
++            android:order="4"
++            settings:controller="com.android.settings.supervision.TopLevelScreenTimePreferenceController"/>
++
+         <com.android.settings.widget.HomepagePreference
+             android:key="top_level_supervision"
+             android:title="@string/supervision_settings_title"
+diff --git a/res/xml/top_level_settings_expressive_desktop.xml b/res/xml/top_level_settings_expressive_desktop.xml
+index 16335e2de93..e125b031a73 100644
+--- a/res/xml/top_level_settings_expressive_desktop.xml
++++ b/res/xml/top_level_settings_expressive_desktop.xml
+@@ -221,6 +221,14 @@
+             settings:highlightableMenuKey="@string/menu_key_accounts_and_backup"
+             settings:controller="com.android.settings.backup.TopLevelAccountsAndBackupEntryPreferenceController"/>
+ 
++        <com.android.settings.widget.HomepagePreference
++            android:key="top_level_screen_time"
++            android:title="Screen Time"
++            android:summary="App usage, timers, focus and wind down"
++            android:icon="@drawable/ic_timelapse"
++            android:order="4"
++            settings:controller="com.android.settings.supervision.TopLevelScreenTimePreferenceController"/>
++
+         <com.android.settings.widget.HomepagePreference
+             android:key="top_level_supervision"
+             android:title="@string/supervision_settings_title"
 diff --git a/src/com/android/settings/location/LocationServicesGeocoderPreferenceController.kt b/src/com/android/settings/location/LocationServicesGeocoderPreferenceController.kt
 deleted file mode 100644
 index 2951671fd99..00000000000
@@ -384,3 +441,80 @@ diff --git a/res/values/config.xml b/res/values/config.xml
      </string>
  
      <!-- Emergency app intent action -->
+diff --git a/src/com/android/settings/supervision/SupervisionDashboardActivity.kt b/src/com/android/settings/supervision/SupervisionDashboardActivity.kt
+index cbc52e60a8a..1b5bd0e884e 100644
+--- a/src/com/android/settings/supervision/SupervisionDashboardActivity.kt
++++ b/src/com/android/settings/supervision/SupervisionDashboardActivity.kt
+@@ -42,6 +42,19 @@ class SupervisionDashboardActivity :
+ 
+     override fun onResume() {
+         super.onResume()
++        // MAOS: the AOSP supervision dashboard is replaced by the Modern Apps Parental Controls
++        // app; redirect any entry (search, embedding, direct launch) into it and finish.
++        run {
++            val maosRedirect =
++                Intent("com.vayunmathur.parentalcontrols.action.DASHBOARD")
++                    .setPackage("com.vayunmathur.parentalcontrols")
++                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
++            if (packageManager.queryIntentActivities(maosRedirect, 0).isNotEmpty()) {
++                startActivity(maosRedirect)
++                finish()
++                return
++            }
++        }
+ 
+         if (!Flags.enableSupervisionSettingsUiUpdates() && shouldRedirectToSupervisionApp()) {
+             val redirectIntent = getSupervisionAppIntent()
+diff --git a/src/com/android/settings/supervision/TopLevelSupervisionPreferenceController.kt b/src/com/android/settings/supervision/TopLevelSupervisionPreferenceController.kt
+index c689a201ec0..14b2bbdba72 100644
+--- a/src/com/android/settings/supervision/TopLevelSupervisionPreferenceController.kt
++++ b/src/com/android/settings/supervision/TopLevelSupervisionPreferenceController.kt
+@@ -44,8 +44,11 @@ class TopLevelSupervisionPreferenceController(context: Context, key: String) :
+ 
+     override fun handlePreferenceTreeClick(preference: Preference): Boolean {
+         if (preference.key == preferenceKey) {
+-            val intent = Intent(mContext, SupervisionDashboardActivity::class.java)
+-            intent.putExtra(EXTRA_IS_SECOND_LAYER_PAGE, true)
++            // MAOS: open the Modern Apps Parental Controls app instead of the AOSP dashboard.
++            val intent =
++                Intent("com.vayunmathur.parentalcontrols.action.DASHBOARD")
++                    .setPackage("com.vayunmathur.parentalcontrols")
++                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+             mContext.startActivity(intent)
+             return true
+         }
+@@ -69,3 +72,34 @@ class TopLevelSupervisionPreferenceController(context: Context, key: String) :
+         return AVAILABLE
+     }
+ }
++
++
++/**
++ * MAOS: top-level "Screen Time" entry that opens the Modern Apps Screen Time app.
++ *
++ * Lives in this tracked file (rather than a new source file) so settings.patch stays a set of
++ * edits to existing files and re-applies cleanly after repo sync. The Screen Time app has no
++ * launcher icon, so this is its entry point; shown only when it answers its dashboard action.
++ */
++class TopLevelScreenTimePreferenceController(context: Context, key: String) :
++    BasePreferenceController(context, key) {
++
++    override fun getAvailabilityStatus(): Int =
++        if (mContext.packageManager.queryIntentActivities(dashboardIntent(), 0).isNotEmpty()) {
++            AVAILABLE
++        } else {
++            UNSUPPORTED_ON_DEVICE
++        }
++
++    override fun handlePreferenceTreeClick(preference: Preference): Boolean {
++        if (preference.key == preferenceKey) {
++            mContext.startActivity(dashboardIntent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
++            return true
++        }
++        return super.handlePreferenceTreeClick(preference)
++    }
++
++    private fun dashboardIntent(): Intent =
++        Intent("com.vayunmathur.screentime.action.DASHBOARD")
++            .setPackage("com.vayunmathur.screentime")
++}

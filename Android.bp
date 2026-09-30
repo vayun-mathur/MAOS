@@ -445,3 +445,117 @@ android_app_import {
         enabled: false,
     },
 }
+
+// Auto is PRIVILEGED: it is the SYSTEM_AUTOMOTIVE_PROJECTION role holder (pinned via
+// config_systemAutomotiveProjection in MaosFrameworkResRRO) and exercises signature|privileged
+// operations (MANAGE_USB, MODIFY_AUDIO_ROUTING, CALL_PRIVILEGED, CONTROL_INCALL_EXPERIENCE
+// and friends, allowlisted in privapp-permissions-modern-apps.xml). It ships its GAL
+// credential in assets; the leaf expires 2026-12-09 and must be re-extracted per release
+// (auto/docs/HANDOFF.md section 7 runbook).
+//
+// NOTE: the prebuilt (prebuilts/auto-release.apk) is staged by scripts/collect-apks.sh
+// from the Modern-Apps release; until it exists the Soong module dangles and the build
+// fails on the missing APK. Stage it before building.
+android_app_import {
+    name: "ModernAppsAuto",
+    apk: "prebuilts/auto-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// ParentalControls is the SYSTEM_SUPERVISION role holder - the piece AOSP leaves empty and Google
+// fills with a GMS component. The framework (android.app.supervision, SupervisionService) and
+// the entire Settings UI (com/android/settings/supervision) already ship in this tree, and the
+// gating flag android.app.supervision.flags.enable_supervision_settings_screen is on. What was
+// missing is a package answering the supervision messenger bind action, resolved through
+// config_systemSupervision: with no holder, TopLevelSupervisionPreferenceController reports
+// UNSUPPORTED_ON_DEVICE and Settings > Parental controls does not exist at all - which is why
+// MAOS looked like it had no parental controls rather than merely unconfigured ones.
+//
+// NOT privileged, and deliberately absent from privapp-permissions-modern-apps.xml. It declares
+// only role-granted permissions in its manifest; everything it holds arrives with the role, which is
+// `signature|role` rather than `signature|privileged`, so an allowlist entry would be both
+// wrong and boot-fatal under ro.control_privapp_permissions=enforce. The role's
+// systemOnly="true" is satisfied by being preinstalled under /product. The pin, and the full
+// list of what holding the role auto-grants, are recorded at the pin itself in
+// rro/MaosFrameworkResRRO/res/values/config.xml.
+android_app_import {
+    name: "ModernAppsParentalControls",
+    apk: "prebuilts/parentalcontrols-release.apk",
+    presigned: true,
+    preprocessed: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// ScreenTime is the self-managed wellbeing app (dashboard, timers, focus, wind-down). It
+// holds the SYSTEM_WELLBEING role via the config_systemWellbeing pin in MaosFrameworkResRRO,
+// which grants SUSPEND_APPS, SYSTEM_APPLICATION_OVERLAY and OBSERVE_APP_USAGE at runtime. It
+// is NOT privileged: a privapp-permissions entry for a non-priv-app is boot-fatal under
+// ro.control_privapp_permissions=enforce. Its reflective UsageStatsManager observer and
+// PackageManager suspend access is allowlisted via hidden-api-whitelisted-app in
+// sysconfig-modern-apps.xml.
+android_app_import {
+    name: "ModernAppsScreenTime",
+    apk: "prebuilts/screentime-release.apk",
+    presigned: true,
+    preprocessed: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Health is an ordinary user app (metrics, medications, vaccinations): it replaces nothing
+// GrapheneOS ships and holds no signature|privileged permission, so it is not `privileged:
+// true` and needs no privapp-permissions entry. Preinstalled only so a fresh device has it;
+// everything it uses (Health Connect, notifications) is user-granted at runtime, exactly as
+// from a store install.
+android_app_import {
+    name: "ModernAppsHealth",
+    apk: "prebuilts/health-release.apk",
+    presigned: true,
+    preprocessed: true,
+    product_specific: true,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Emergency is the emergency-info + SOS app. It REPLACES AOSP's EmergencyInfo
+// (com.android.emergency) via the `overrides` below, and becomes the
+// android.app.role.EMERGENCY holder automatically: EmergencyRoleBehavior has no
+// config_defaultEmergency pin - it grants the role to the sole preinstalled package with an
+// android.telephony.action.EMERGENCY_ASSISTANCE activity, which is this app once EmergencyInfo
+// is gone (our ViewInfoActivity answers that action). EmergencyInfo is deliberately LEFT listed
+// in build/make/target/product/telephony_system_ext.mk as the fallback for this app going
+// missing, the same way SetupWizard2/Updater are handled above; `overrides` only applies while
+// this module is installed.
+//
+// PRIVILEGED: it declares signature|privileged perms - CALL_PRIVILEGED (place the emergency
+// call), WRITE_SECURE_SETTINGS (the gesture provider EMERGENCY_GESTURE_* writes),
+// READ_PRIVILEGED_PHONE_STATE (emergency-number lookup) and MANAGE_USERS (owner card) -
+// allowlisted in privapp-permissions-modern-apps.xml. Its Health Connect medical reads and
+// contacts access are default-granted (fixed) in default-permissions-modern-apps.xml so an
+// emergency needs no manual permission setup.
+android_app_import {
+    name: "ModernAppsEmergency",
+    apk: "prebuilts/emergency-release.apk",
+    presigned: true,
+    preprocessed: true,
+    privileged: true,
+    product_specific: true,
+    overrides: [
+        "EmergencyInfo",
+    ],
+    dex_preopt: {
+        enabled: false,
+    },
+}

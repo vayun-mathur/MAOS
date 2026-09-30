@@ -1,3 +1,15 @@
+diff --git a/aconfig/cp2a/android.app.supervision.flags/enable_supervision_package_usage_apis_flag_values.textproto b/aconfig/cp2a/android.app.supervision.flags/enable_supervision_package_usage_apis_flag_values.textproto
+new file mode 100644
+index 000000000..b64f4cfaa
+--- /dev/null
++++ b/aconfig/cp2a/android.app.supervision.flags/enable_supervision_package_usage_apis_flag_values.textproto
+@@ -0,0 +1,6 @@
++flag_value {
++  package: "android.app.supervision.flags"
++  name: "enable_supervision_package_usage_apis"
++  state: ENABLED
++  permission: READ_ONLY
++}
 diff --git a/aconfig/trunk_staging/com.android.server.display.feature.flags/virtual_displays_support_desktop_mode_flag_values.textproto b/aconfig/trunk_staging/com.android.server.display.feature.flags/virtual_displays_support_desktop_mode_flag_values.textproto
 new file mode 100755
 index 000000000..8ecd4b885

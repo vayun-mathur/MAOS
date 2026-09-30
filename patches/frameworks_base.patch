@@ -262,6 +262,22 @@ index 9f66d22bca1a..6dd6906f4e34 100644
      <java-symbol type="string" name="config_first_party_app_source_package_name" />
  
      <!-- Certificate digests for trusted apps that will be allowed to obtain the knownSigner
+@@ -51,4 +51,14 @@
+     </string-array>
+     <java-symbol type="array" name="read_additional_security_state_known_signers" />
+ 
++    <!-- Companion-device app-streaming role default holder -> Modern Apps Cast.
++         COMPANION_DEVICE_APP_STREAMING has no `defaultHolders` in AOSP (the role is
++         normally filled from server state), so without this pin and the
++         `defaultHolders` attribute added by patches/permission_roles.patch the role
++         stays empty and Cast loses the `virtual_device` set it previously drew from
++         SYSTEM_AUTOMOTIVE_PROJECTION (see the automotive pin in MaosFrameworkResRRO).
++         Empty default keeps AOSP behavior on devices without the overlay. -->
++    <string name="config_companionDeviceAppStreaming" translatable="false"></string>
++    <java-symbol type="string" name="config_companionDeviceAppStreaming" />
++
+ </resources>
+
 diff --git a/data/fonts/fallback_order.json b/data/fonts/fallback_order.json
 index 2fc3f3e3fc5b..3cac8625cdb5 100644
 --- a/data/fonts/fallback_order.json
@@ -503,7 +519,7 @@ index ad113a2513f3..be7aa912a7a2 100644
  
          mLogicalDisplays.put(displayId, display);
 diff --git a/services/core/java/com/android/server/display/VirtualDisplayAdapter.java b/services/core/java/com/android/server/display/VirtualDisplayAdapter.java
-index 0d4ae75b428f..55006db8a39b 100644
+index 0d4ae75b428f..c41786777ce3 100644
 --- a/services/core/java/com/android/server/display/VirtualDisplayAdapter.java
 +++ b/services/core/java/com/android/server/display/VirtualDisplayAdapter.java
 @@ -20,6 +20,7 @@ import static android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_ALLOW
@@ -514,8 +530,11 @@ index 0d4ae75b428f..55006db8a39b 100644
  import static android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_DESTROY_CONTENT_ON_REMOVAL;
  import static android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_DEVICE_DISPLAY_GROUP;
  import static android.hardware.display.DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_DISPLAY_GROUP;
-@@ -69,6 +70,8 @@ import com.android.server.display.feature.flags.Flags;
+@@ -67,8 +68,11 @@ import com.android.server.display.brightness.BrightnessUtils;
+ import com.android.server.display.feature.DisplayManagerFlags;
+ import com.android.server.display.feature.flags.Flags;
  import com.android.server.display.utils.DebugTransactionDetails;
++import com.android.settingslib.display.DisplayDensityConfiguration;
  
  import java.io.PrintWriter;
 +import java.util.ArrayList;
@@ -523,7 +542,23 @@ index 0d4ae75b428f..55006db8a39b 100644
  import java.util.concurrent.atomic.AtomicInteger;
  
  /**
-@@ -366,6 +369,15 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+@@ -338,6 +342,15 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+ 
+         private static final float REFRESH_RATE = 60.0f;
+ 
++        /**
++         * How far apart two refresh rates may be and still name the same mode.
++         *
++         * A rate reaches us having been through a float on the wire and a panel that
++         * reports 59.94006, so exact equality is not something to depend on. Small enough
++         * that 59.94 and 60 - separate modes on a real television - never match.
++         */
++        private static final float MODE_RATE_TOLERANCE = 0.2f;
++
+         private final IBinder mAppToken;
+         private final int mOwnerUid;
+         final String mOwnerPackageName;
+@@ -366,6 +379,15 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
          private float mCurrentBrightness;
          private final IBrightnessListener mBrightnessListener;
          private final boolean mHasUniqueId;
@@ -539,27 +574,33 @@ index 0d4ae75b428f..55006db8a39b 100644
  
          public VirtualDisplayDevice(IBinder displayToken, IBinder appToken,
                  int ownerUid, String ownerPackageName, Surface surface, int flags,
-@@ -386,7 +398,13 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+@@ -386,7 +408,19 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
              mDimBrightness = virtualDisplayConfig.getDimBrightness();
              mCurrentBrightness = PowerManager.BRIGHTNESS_INVALID;
              mBrightnessListener = virtualDisplayConfig.getBrightnessListener();
 -            mMode = createMode(mWidth, mHeight, getRefreshRate());
 +            for (Display.Mode declared : virtualDisplayConfig.getSupportedModes()) {
 +                if (declared.getPhysicalWidth() > 0 && declared.getPhysicalHeight() > 0) {
++                    // The owner's own rate for this mode, because a sink can offer its largest
++                    // mode more slowly than its smaller ones and the picker shows the rate next
++                    // to the size. Falls back to the display's rate for an owner that declared
++                    // sizes but no rates.
++                    float refreshRate = declared.getRefreshRate() > 0
++                            ? declared.getRefreshRate() : getRefreshRate();
 +                    mDeclaredModes.add(createMode(declared.getPhysicalWidth(),
-+                            declared.getPhysicalHeight(), getRefreshRate()));
++                            declared.getPhysicalHeight(), refreshRate));
 +                }
 +            }
-+            mMode = modeForLocked(mWidth, mHeight);
++            mMode = modeForLocked(mWidth, mHeight, getRefreshRate());
              mSurface = surface;
              mFlags = flags;
              mCallback = callback;
-@@ -580,13 +598,70 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+@@ -580,13 +614,126 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
                  sendTraversalRequestLocked();
                  mWidth = width;
                  mHeight = height;
 -                mMode = createMode(width, height, getRefreshRate());
-+                mMode = modeForLocked(width, height);
++                mMode = modeForLocked(width, height, mMode.getRefreshRate());
                  mDensityDpi = densityDpi;
                  mInfo = null;
                  mPendingChanges |= PENDING_RESIZE;
@@ -567,20 +608,58 @@ index 0d4ae75b428f..55006db8a39b 100644
          }
  
 +        /**
-+         * The declared mode of this size, or a fresh one when the size was never declared.
++         * The declared mode of this size and rate, or a fresh one when it was never declared.
 +         *
 +         * Keeps ids stable across a resize: a display that was created from a declared list must
 +         * keep reporting those same ids in {@code supportedModes}, or the current mode stops
 +         * matching anything in the list Settings is showing.
++         *
++         * The rate is part of the question because a sink offers the same resolution several
++         * times over - a television lists 3840x2160 at eight rates - so matching on size alone
++         * returns whichever of them happens to come first and silently discards the choice.
++         * The nearest rate wins rather than an exact match, because the caller's rate has
++         * usually been round-tripped through a float and 59.94006 is 59.94.
 +         */
-+        private Display.Mode modeForLocked(int width, int height) {
++        private Display.Mode modeForLocked(int width, int height, float refreshRate) {
++            Display.Mode best = null;
 +            for (Display.Mode declared : mDeclaredModes) {
-+                if (declared.getPhysicalWidth() == width
-+                        && declared.getPhysicalHeight() == height) {
-+                    return declared;
++                if (declared.getPhysicalWidth() != width
++                        || declared.getPhysicalHeight() != height) {
++                    continue;
++                }
++                if (best == null
++                        || Math.abs(declared.getRefreshRate() - refreshRate)
++                                < Math.abs(best.getRefreshRate() - refreshRate)) {
++                    best = declared;
 +                }
 +            }
-+            return createMode(width, height, getRefreshRate());
++            return best != null ? best : createMode(width, height, refreshRate);
++        }
++
++        /**
++         * Move to a mode the owner declared, size, rate and all.
++         *
++         * Separate from {@link #resizeLocked} because a rate-only change - 1920x1080 at 60 to
++         * 1920x1080 at 24 - is not a resize, and {@code resizeLocked} returns early when the
++         * size and density are unchanged. That early return is correct for what it is for, and
++         * would have made half of every declared mode list unreachable.
++         */
++        private void applyDeclaredModeLocked(Display.Mode mode) {
++            final int width = mode.getPhysicalWidth();
++            final int height = mode.getPhysicalHeight();
++            final int densityDpi = densityForLocked(mode);
++            if (mWidth == width && mHeight == height && mDensityDpi == densityDpi
++                    && mMode.getModeId() == mode.getModeId()) {
++                return;
++            }
++            sendDisplayDeviceEventLocked(this, DISPLAY_DEVICE_EVENT_CHANGED);
++            sendTraversalRequestLocked();
++            mWidth = width;
++            mHeight = height;
++            mMode = mode;
++            mDensityDpi = densityDpi;
++            mInfo = null;
++            mPendingChanges |= PENDING_RESIZE;
 +        }
 +
 +        @Override
@@ -592,18 +671,15 @@ index 0d4ae75b428f..55006db8a39b 100644
 +            }
 +            if (mode == null) {
 +                // Back to the default, which is the largest thing the owner said the sink can do.
-+                Display.Mode largest = defaultModeLocked();
-+                resizeLocked(largest.getPhysicalWidth(), largest.getPhysicalHeight(), mDensityDpi);
++                applyDeclaredModeLocked(defaultModeLocked());
 +                return true;
 +            }
 +            for (Display.Mode declared : mDeclaredModes) {
 +                if (declared.getPhysicalWidth() == mode.getPhysicalWidth()
-+                        && declared.getPhysicalHeight() == mode.getPhysicalHeight()) {
-+                    // Density is deliberately left alone. It was chosen for the sink rather than
-+                    // derived from the frame, and rescaling it here would resize every element on
-+                    // screen as a side effect of a resolution change.
-+                    resizeLocked(declared.getPhysicalWidth(), declared.getPhysicalHeight(),
-+                            mDensityDpi);
++                        && declared.getPhysicalHeight() == mode.getPhysicalHeight()
++                        && Math.abs(declared.getRefreshRate() - mode.getRefreshRate())
++                                <= MODE_RATE_TOLERANCE) {
++                    applyDeclaredModeLocked(declared);
 +                    return true;
 +                }
 +            }
@@ -611,12 +687,33 @@ index 0d4ae75b428f..55006db8a39b 100644
 +            return false;
 +        }
 +
++        /**
++         * The density to compose a declared mode at.
++         *
++         * A resolution the owner declared describes a real external sink, so it gets the density
++         * the platform gives any other external display of that size:
++         * {@code calculateBaseDensity} with no physical dimensions, which is the same arithmetic
++         * the owner used to pick the density the display was created at. Deriving it here rather
++         * than carrying {@code mDensityDpi} across the switch is what keeps the dp workspace the
++         * same size at every resolution - otherwise dropping from 4K to 1080p would halve it and
++         * every element on screen would double.
++         */
++        private int densityForLocked(Display.Mode mode) {
++            return DisplayDensityConfiguration.calculateBaseDensity(0f, 0f,
++                    mode.getPhysicalWidth(), mode.getPhysicalHeight());
++        }
++
 +        /** The largest declared mode, which is what a display with a sink should default to. */
 +        private Display.Mode defaultModeLocked() {
 +            Display.Mode best = mDeclaredModes.get(0);
 +            for (Display.Mode candidate : mDeclaredModes) {
 +                long area = (long) candidate.getPhysicalWidth() * candidate.getPhysicalHeight();
-+                if (area > (long) best.getPhysicalWidth() * best.getPhysicalHeight()) {
++                long bestArea = (long) best.getPhysicalWidth() * best.getPhysicalHeight();
++                // Fastest among the largest, since a resolution is declared several times
++                // over at different rates and the default should be the best of them.
++                if (area > bestArea
++                        || (area == bestArea
++                                && candidate.getRefreshRate() > best.getRefreshRate())) {
 +                    best = candidate;
 +                }
 +            }
@@ -626,7 +723,7 @@ index 0d4ae75b428f..55006db8a39b 100644
          public void stopLocked() {
              Slog.d(TAG, "Virtual Display: stopping device " + mName);
              setSurfaceLocked(null);
-@@ -602,6 +677,7 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+@@ -602,6 +749,7 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
              pw.println("mDisplayIdToMirror=" + mDisplayIdToMirror);
              pw.println("mWindowManagerMirroring=" + mIsWindowManagerMirroring);
              pw.println("mRequestedRefreshRate=" + mRequestedRefreshRate);
@@ -634,7 +731,7 @@ index 0d4ae75b428f..55006db8a39b 100644
          }
  
          @Override
-@@ -614,8 +690,11 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+@@ -614,8 +762,11 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
                  mInfo.height = mHeight;
                  mInfo.modeId = mMode.getModeId();
                  mInfo.renderFrameRate = mMode.getRefreshRate();
@@ -648,7 +745,7 @@ index 0d4ae75b428f..55006db8a39b 100644
                  mInfo.densityDpi = mDensityDpi;
                  mInfo.xDpi = mDensityDpi;
                  mInfo.yDpi = mDensityDpi;
-@@ -631,6 +710,12 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
+@@ -631,6 +782,12 @@ public class VirtualDisplayAdapter extends DisplayAdapter {
                  if ((mFlags & VIRTUAL_DISPLAY_FLAG_ALLOWS_CONTENT_MODE_SWITCH) != 0) {
                      mInfo.flags |= DisplayDeviceInfo.FLAG_ALLOWS_CONTENT_MODE_SWITCH;
                  }
