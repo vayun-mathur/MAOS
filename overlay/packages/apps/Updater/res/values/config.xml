@@ -15,5 +15,5 @@
 -->
 <resources>
     <!-- Common GrapheneOS name is "url"; adjust to match your source if different. -->
-    <string name="url" translatable="false">https://ota.ma.vayunmathur.com</string>
+    <string name="url" translatable="false">https://ota.maproj.org</string>
 </resources>

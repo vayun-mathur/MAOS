@@ -90,7 +90,7 @@ fi
 
 # ---- Hardcoded config ----
 TREE="$HOME/maos"                              # AOSP checkout (ext4; never /mnt/c)
-R2_BUCKET="maos"                               # R2 bucket / ota.ma.vayunmathur.com
+R2_BUCKET="maos"                               # R2 bucket / ota.maproj.org
 # BUILD starts as the tag, but the build number for a run is pinned by pin_build_number
 # (today's UTC date + "00", or $MAOS_BUILD_NUMBER) and exported as BUILD_NUMBER so every
 # parallel build shares it; resolve_build_number recovers it for standalone release/publish.
@@ -395,9 +395,9 @@ phase_overlay() {
         log "MAOS inherit already present in $mk"
     fi
 
-    log "Pointing the Updater at ota.ma.vayunmathur.com"
+    log "Pointing the Updater at ota.maproj.org"
     local cfg="packages/apps/Updater/res/values/config.xml"
-    [[ -f "$cfg" ]] && sed -i 's#https://releases.grapheneos.org#https://ota.ma.vayunmathur.com#g' "$cfg" \
+    [[ -f "$cfg" ]] && sed -i 's#https://releases.grapheneos.org#https://ota.maproj.org#g' "$cfg" \
         || warn "Updater config.xml not found; set the URL manually if OFFICIAL_BUILD is used."
 }
 
@@ -517,7 +517,7 @@ phase_publish() {
         -d "$DEVICE" -b "$BUILD" -f "$rel/$DEVICE-install-$BUILD.zip" \
         || warn "prepare-factory.sh failed — see its output. For a factory-zip fallback pass -P \
 plan.json mirroring flash-all (incl. flashing avb_custom_key before lock)."
-    log "Done. OTA: https://ota.ma.vayunmathur.com/$DEVICE-$OTA_CHANNEL"
+    log "Done. OTA: https://ota.maproj.org/$DEVICE-$OTA_CHANNEL"
 }
 
 # ---- Dispatch ----

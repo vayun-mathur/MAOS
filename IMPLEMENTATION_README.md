@@ -51,7 +51,7 @@ scripts/collect-apks.sh              # copies Modern-Apps release APKs into preb
 keys/generate-keys.sh                # generates the OS key set (offline; never committed)
 ota/                                 # build-ota.sh + publish-ota.sh (+ README)
 installer/                           # prepare-factory.sh + sparse_split.py for the web installer
-updater/                             # how to point the Updater at ota.ma.vayunmathur.com
+updater/                             # how to point the Updater at ota.maproj.org
 docs/BUILD_RUNBOOK.md                # end-to-end Linux build/sign/OTA/publish
 local_manifest.xml                    # adds this repo to the GrapheneOS tree
 ```
@@ -119,7 +119,7 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
 ## OTA
 
 MAOS uses the standard A/B OTA flow (`update_engine`) with updates served from
-**`https://ota.ma.vayunmathur.com`**, a **Cloudflare R2 bucket** exposed via a custom
+**`https://ota.maproj.org`**, a **Cloudflare R2 bucket** exposed via a custom
 domain. The build host uploads signed OTA zips + channel metadata straight to R2
 (`ota/publish-ota.sh`), and devices download directly from R2 — no GitHub Release and no
 server proxy, since the payloads are multi-GB. Build/publish scripts are in

@@ -2,10 +2,10 @@
 #
 # publish-ota.sh — upload OTA artifacts to Cloudflare R2.
 #
-# `ota.ma.vayunmathur.com` is an R2 bucket served directly via a Cloudflare custom
+# `ota.maproj.org` is an R2 bucket served directly via a Cloudflare custom
 # domain, so devices download straight from R2 — there is no GitHub Release and no
 # server proxy in the loop. An object stored at key `<file>` is served at
-# `https://ota.ma.vayunmathur.com/<file>`, which is exactly what the Updater polls.
+# `https://ota.maproj.org/<file>`, which is exactly what the Updater polls.
 #
 # Upload order matters: the signed zips go up FIRST and the channel-metadata pointer
 # goes up LAST, so a device polling mid-publish never sees metadata referencing a zip
@@ -97,4 +97,4 @@ for m in "${METAS[@]}"; do
     put "$m" "$(basename "$m")" "text/plain; charset=utf-8" "no-store, must-revalidate"
 done
 
-echo ">> done. Served at https://ota.ma.vayunmathur.com/<file>"
+echo ">> done. Served at https://ota.maproj.org/<file>"

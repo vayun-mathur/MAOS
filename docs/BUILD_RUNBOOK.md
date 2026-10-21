@@ -64,7 +64,7 @@ git clone https://github.com/vayun-mathur/MAOS.git ~/MAOS   # prompts for GitHub
 Needed only for the `publish` phase.
 
 1. Create an R2 bucket (e.g. `maos-ota`).
-2. R2 → Settings → **Custom Domains** → attach `ota.ma.vayunmathur.com` (Cloudflare issues TLS).
+2. R2 → Settings → **Custom Domains** → attach `ota.maproj.org` (Cloudflare issues TLS).
 3. R2 → Manage API Tokens → create a token with **Object Read & Write** on the bucket.
 4. Add a bucket **CORS policy** so the installer page (`ma.vayunmathur.com`) can fetch images:
    ```json
@@ -136,7 +136,7 @@ How the keys are handled each run: the encrypted keystore is decrypted **only in
 disk in the clear.
 
 When `publish` finishes, the OTA is live at
-`https://ota.ma.vayunmathur.com/cheetah-<channel>` and the web installer can flash the build
+`https://ota.maproj.org/cheetah-<channel>` and the web installer can flash the build
 from `https://ma.vayunmathur.com/os/install`.
 
 ---

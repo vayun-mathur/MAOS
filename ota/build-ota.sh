@@ -72,7 +72,7 @@ if [[ -n "$PREV_TF" ]]; then
 fi
 
 # Channel metadata polled by the Updater at
-#   https://ota.ma.vayunmathur.com/$DEVICE-$CHANNEL
+#   https://ota.maproj.org/$DEVICE-$CHANNEL
 # Format: "BUILD TIMESTAMP CHANNEL". Keep this in sync with what your Updater fork
 # parses (see updater/README.md).
 META="$OUTDIR/$DEVICE-$CHANNEL"

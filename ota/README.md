@@ -11,7 +11,7 @@ signed target-files ──build-ota.sh──▶ full + incremental OTA zips + ch
         │                               publish-ota.sh ──▶ Cloudflare R2 bucket
         │                                                          │
         ▼                                                          ▼
-  (kept for next                              ota.ma.vayunmathur.com  (R2 custom domain,
+  (kept for next                              ota.maproj.org  (R2 custom domain,
    incremental)                               serves objects directly)
                                                                    │
                                                                    ▼
@@ -23,12 +23,12 @@ signed target-files ──build-ota.sh──▶ full + incremental OTA zips + ch
   file. Signed with your `releasekey`.
 - **`publish-ota.sh`** uploads those to a **Cloudflare R2** bucket (S3-compatible, via the
   `aws` CLI). Zips go up first; the channel-metadata pointer goes up last.
-- **`ota.ma.vayunmathur.com`** is that R2 bucket exposed via a Cloudflare custom domain, so
-  an object keyed `<file>` is served at `https://ota.ma.vayunmathur.com/<file>`. Devices
+- **`ota.maproj.org`** is that R2 bucket exposed via a Cloudflare custom domain, so
+  an object keyed `<file>` is served at `https://ota.maproj.org/<file>`. Devices
   download straight from R2 — **no GitHub Release and no `location_share_server` proxy are
   involved** (R2 handles the multi-GB payloads that GitHub Releases / the server's disk
   can't).
-- The **Updater** app polls `https://ota.ma.vayunmathur.com/<device>-<channel>` then
+- The **Updater** app polls `https://ota.maproj.org/<device>-<channel>` then
   downloads the referenced zip (see `../updater/README.md`).
 
 ## Credentials (never commit)
@@ -50,7 +50,7 @@ on the target bucket.
 ## Cloudflare setup (one-time)
 
 1. Create the R2 bucket (e.g. `maos-ota`).
-2. Attach the custom domain `ota.ma.vayunmathur.com` to it (R2 → Settings → Custom Domains).
+2. Attach the custom domain `ota.maproj.org` to it (R2 → Settings → Custom Domains).
    Cloudflare provisions TLS automatically.
 3. The object `Cache-Control` headers set by `publish-ota.sh` (immutable zips, `no-store`
    metadata) are honored by Cloudflare's cache. If you add a Cache Rule, make sure it does

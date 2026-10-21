@@ -12,7 +12,7 @@ flashes the MAOS factory image — no `adb`/`fastboot` tools or command line nee
 | `MAOS/installer/prepare-factory.sh` | Build-host script: turns a release image into a `manifest.json` + per-partition images and uploads them to R2. For the **install zip** (preferred) it translates GrapheneOS's `script.txt` verbatim; for a legacy **factory zip** it builds a best-effort/`-P` plan and splits oversized images into sparse chunks. |
 | `MAOS/installer/script_to_manifest.py` | Translates an install zip's `script.txt` (GrapheneOS's verified flash sequence) into ordered manifest steps. |
 | `MAOS/installer/sparse_split.py` | Splits a raw image into multiple Android sparse images, each under the device's max-download-size (legacy factory-zip path only). |
-| R2 (`ota.ma.vayunmathur.com/factory/<device>/…`) | Hosts the manifest + images; the browser streams them directly. |
+| R2 (`ota.maproj.org/factory/<device>/…`) | Hosts the manifest + images; the browser streams them directly. |
 
 ## Flow
 
@@ -114,7 +114,7 @@ into multiple flash steps to the same partition.
 ## Required: R2 CORS
 
 The installer page is served from `ma.vayunmathur.com` but fetches the manifest + images
-from `ota.ma.vayunmathur.com` (R2) — a cross-origin request. **The R2 bucket must send CORS
+from `ota.maproj.org` (R2) — a cross-origin request. **The R2 bucket must send CORS
 headers allowing `https://ma.vayunmathur.com`**, or the browser blocks the downloads. In the
 R2 bucket settings, add a CORS policy like:
 

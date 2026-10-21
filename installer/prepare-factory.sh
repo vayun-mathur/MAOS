@@ -4,7 +4,7 @@
 # a manifest.json flash plan plus per-partition images, uploaded to R2.
 #
 # The web installer (ma.vayunmathur.com/os/install) fetches
-#   https://ota.ma.vayunmathur.com/factory/<device>/latest/manifest.json
+#   https://ota.maproj.org/factory/<device>/latest/manifest.json
 # and flashes each step, streaming the referenced images from the same directory.
 #
 # ── Two input modes ────────────────────────────────────────────────────────────────────
@@ -222,4 +222,4 @@ for dest in "factory/$DEVICE/$BUILD" "factory/$DEVICE/latest"; do
         --cache-control "no-store, must-revalidate" --only-show-errors
 done
 
-echo ">> done. Installer will read https://ota.ma.vayunmathur.com/factory/$DEVICE/latest/manifest.json"
+echo ">> done. Installer will read https://ota.maproj.org/factory/$DEVICE/latest/manifest.json"

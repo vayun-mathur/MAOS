@@ -20,7 +20,7 @@ MAOS_CHANNEL ?= stable
 PRODUCT_PRODUCT_PROPERTIES += \
     ro.maos.version=$(MAOS_VERSION) \
     ro.maos.channel=$(MAOS_CHANNEL) \
-    ro.maos.ota.server=https://ota.ma.vayunmathur.com
+    ro.maos.ota.server=https://ota.maproj.org
 
 # Do NOT set ro.build.tags=test-keys — we sign with our own release keys, so this must
 # remain release-keys (handled by the release signing step, not here).
