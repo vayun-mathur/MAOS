@@ -802,3 +802,47 @@ index e6fba2fadd1e..94a93f0e83f5 100644
              boolean hasInternetPerm = mContext.checkCallingPermission(
                      android.Manifest.permission.INTERNET) == PERMISSION_GRANTED;
              if (hasInternetPerm) {
+diff --git a/services/core/java/com/android/server/wm/WindowManagerService.java b/services/core/java/com/android/server/wm/WindowManagerService.java
+index b50c541b8329..05cc079120a7 100644
+--- a/services/core/java/com/android/server/wm/WindowManagerService.java
++++ b/services/core/java/com/android/server/wm/WindowManagerService.java
+@@ -11157,8 +11157,9 @@ public class WindowManagerService extends IWindowManager.Stub
+     /**
+      * Must be called when a screenshot is taken via hardware chord.
+      *
+-     * Notifies all registered visible activities that have registered for screencapture callback,
+-     * Returns a list of visible apps component names.
++     * MAOS: screenshot-detection callbacks are disabled. This never notifies any
++     * registered activity and always returns an empty list. Taking screenshots
++     * themselves is unaffected.
+      */
+     @Override
+     public List<ComponentName> notifyScreenshotListeners(int displayId) {
+@@ -11167,23 +11168,10 @@ public class WindowManagerService extends IWindowManager.Stub
+                 "notifyScreenshotListeners()")) {
+             throw new SecurityException("Requires STATUS_BAR_SERVICE permission");
+         }
+-        synchronized (mGlobalLock) {
+-            final DisplayContent displayContent = mRoot.getDisplayContent(displayId);
+-            if (displayContent == null) {
+-                return new ArrayList<>();
+-            }
+-            ArraySet<ComponentName> notifiedApps = new ArraySet<>();
+-            displayContent.forAllActivities(
+-                    (ar) -> {
+-                        if (!notifiedApps.contains(ar.mActivityComponent) && ar.isVisible()
+-                                && ar.isRegisteredForScreenCaptureCallback()) {
+-                            ar.reportScreenCaptured();
+-                            notifiedApps.add(ar.mActivityComponent);
+-                        }
+-                    },
+-                    true /* traverseTopToBottom */);
+-            return List.copyOf(notifiedApps);
+-        }
++        // MAOS: Android 14 screenshot-detection callbacks must never fire. Apps may
++        // still register observers, but they are never dispatched to, and SysUI shows
++        // no detection notice (it only shows one for a non-empty result).
++        return new ArrayList<>();
+     }
+ 
+     @EnforcePermission(android.Manifest.permission.MANAGE_DISPLAYS)
