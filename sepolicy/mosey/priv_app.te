@@ -1,0 +1,12 @@
+# MAOS: Modern Apps Share (com.vayunmathur.share, a presigned priv-app, so domain priv_app)
+# drives Google's Mosey AWDL daemon for AirDrop in place of Google's own Mosey app, which
+# adevtool excludes. These mirror the client allows Google grants mosey_app in the extracted
+# system_ext policy: find IMoseyService, and make binder calls to the daemon (which only
+# transfers back, so the reply direction is all it needs).
+#
+# Included only on devices whose adevtool output ships mosey_server and defines these types;
+# see the SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS lines added by patches/adevtool.patch.
+allow priv_app mosey_service:service_manager find;
+allow priv_app mosey_server:binder { call transfer };
+allow mosey_server priv_app:binder transfer;
+allow priv_app mosey_server:fd use;

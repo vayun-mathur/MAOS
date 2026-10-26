@@ -1,3 +1,15 @@
+diff --git a/vendor-skels/google_devices/akita/BoardConfig.mk b/vendor-skels/google_devices/akita/BoardConfig.mk
+index 1b21941e5..b1babc554 100644
+--- a/vendor-skels/google_devices/akita/BoardConfig.mk
++++ b/vendor-skels/google_devices/akita/BoardConfig.mk
+@@ -74,6 +74,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/akita/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/akita/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/akita/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/akita/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/akita/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/akita/akita.mk b/vendor-skels/google_devices/akita/akita.mk
 index d81ccef5b..d7ec08bc9 100644
 --- a/vendor-skels/google_devices/akita/akita.mk
@@ -11,6 +23,18 @@ index d81ccef5b..d7ec08bc9 100644
      EuiccSupportPixel-P23 \
      EuiccSupportPixelPermissions \
      OemRilHookService \
+diff --git a/vendor-skels/google_devices/blazer/BoardConfig.mk b/vendor-skels/google_devices/blazer/BoardConfig.mk
+index 9469a1b43..c076099f5 100644
+--- a/vendor-skels/google_devices/blazer/BoardConfig.mk
++++ b/vendor-skels/google_devices/blazer/BoardConfig.mk
+@@ -86,6 +86,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/blazer/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/blazer/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/blazer/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/blazer/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/blazer/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/blazer/blazer.mk b/vendor-skels/google_devices/blazer/blazer.mk
 index a72a5650b..5c6411530 100644
 --- a/vendor-skels/google_devices/blazer/blazer.mk
@@ -37,6 +61,18 @@ index cc36d92b6..58c6f0812 100644
      EuiccSupportPixel \
      EuiccSupportPixelPermissions \
      HbmSVManager \
+diff --git a/vendor-skels/google_devices/caiman/BoardConfig.mk b/vendor-skels/google_devices/caiman/BoardConfig.mk
+index 0b6a4a2b0..83d659b24 100644
+--- a/vendor-skels/google_devices/caiman/BoardConfig.mk
++++ b/vendor-skels/google_devices/caiman/BoardConfig.mk
+@@ -75,6 +75,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/caiman/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/caiman/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/caiman/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/caiman/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/caiman/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/caiman/caiman.mk b/vendor-skels/google_devices/caiman/caiman.mk
 index a4e971eb2..ec3ab63fe 100644
 --- a/vendor-skels/google_devices/caiman/caiman.mk
@@ -63,6 +99,18 @@ index e0a7c32ff..51d9b6675 100644
      EuiccSupportPixel \
      EuiccSupportPixelPermissions \
      HbmSVManager \
+diff --git a/vendor-skels/google_devices/comet/BoardConfig.mk b/vendor-skels/google_devices/comet/BoardConfig.mk
+index d4b2b93b7..cfe26b27b 100644
+--- a/vendor-skels/google_devices/comet/BoardConfig.mk
++++ b/vendor-skels/google_devices/comet/BoardConfig.mk
+@@ -75,6 +75,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/comet/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/comet/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/comet/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/comet/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/comet/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/comet/comet.mk b/vendor-skels/google_devices/comet/comet.mk
 index 3caac251e..363abfdc0 100644
 --- a/vendor-skels/google_devices/comet/comet.mk
@@ -89,6 +137,18 @@ index 3c808dc59..237f3fd8e 100644
      EuiccSupportPixel \
      EuiccSupportPixelPermissions \
      HbmSVManager \
+diff --git a/vendor-skels/google_devices/frankel/BoardConfig.mk b/vendor-skels/google_devices/frankel/BoardConfig.mk
+index 692d1c2c4..a4bc9048b 100644
+--- a/vendor-skels/google_devices/frankel/BoardConfig.mk
++++ b/vendor-skels/google_devices/frankel/BoardConfig.mk
+@@ -87,6 +87,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/frankel/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/frankel/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/frankel/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/frankel/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/frankel/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/frankel/frankel.mk b/vendor-skels/google_devices/frankel/frankel.mk
 index caab39760..651dd850c 100644
 --- a/vendor-skels/google_devices/frankel/frankel.mk
@@ -115,6 +175,18 @@ index 8094ff978..20ff8d47d 100644
      EuiccSupportPixel-P23 \
      EuiccSupportPixelPermissions \
      OemRilHookService \
+diff --git a/vendor-skels/google_devices/komodo/BoardConfig.mk b/vendor-skels/google_devices/komodo/BoardConfig.mk
+index e69337705..af45b54cb 100644
+--- a/vendor-skels/google_devices/komodo/BoardConfig.mk
++++ b/vendor-skels/google_devices/komodo/BoardConfig.mk
+@@ -75,6 +75,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/komodo/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/komodo/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/komodo/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/komodo/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/komodo/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/komodo/komodo.mk b/vendor-skels/google_devices/komodo/komodo.mk
 index 30ce39a98..17ec484f0 100644
 --- a/vendor-skels/google_devices/komodo/komodo.mk
@@ -141,6 +213,18 @@ index d765bc351..076223174 100644
      EuiccSupportPixel \
      EuiccSupportPixelPermissions \
      HbmSVManager \
+diff --git a/vendor-skels/google_devices/mustang/BoardConfig.mk b/vendor-skels/google_devices/mustang/BoardConfig.mk
+index 9cca38fba..08dde8367 100644
+--- a/vendor-skels/google_devices/mustang/BoardConfig.mk
++++ b/vendor-skels/google_devices/mustang/BoardConfig.mk
+@@ -86,6 +86,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/mustang/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/mustang/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/mustang/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/mustang/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/mustang/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/mustang/mustang.mk b/vendor-skels/google_devices/mustang/mustang.mk
 index 4f44cdbaf..2348377e3 100644
 --- a/vendor-skels/google_devices/mustang/mustang.mk
@@ -180,6 +264,18 @@ index d8c8b4ac3..80c560494 100644
      EuiccSupportPixel \
      EuiccSupportPixelPermissions \
      HbmSVManager \
+diff --git a/vendor-skels/google_devices/rango/BoardConfig.mk b/vendor-skels/google_devices/rango/BoardConfig.mk
+index 7347598a5..5c337433d 100644
+--- a/vendor-skels/google_devices/rango/BoardConfig.mk
++++ b/vendor-skels/google_devices/rango/BoardConfig.mk
+@@ -86,6 +86,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/rango/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/rango/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/rango/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/rango/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/rango/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/rango/rango.mk b/vendor-skels/google_devices/rango/rango.mk
 index 79da5d0fd..bc07df294 100644
 --- a/vendor-skels/google_devices/rango/rango.mk
@@ -219,6 +315,18 @@ index 311cac53b..f866d3136 100644
      EuiccSupportPixel-P23 \
      EuiccSupportPixelPermissions \
      OemRilHookService \
+diff --git a/vendor-skels/google_devices/stallion/BoardConfig.mk b/vendor-skels/google_devices/stallion/BoardConfig.mk
+index e282e85af..5faab3f30 100644
+--- a/vendor-skels/google_devices/stallion/BoardConfig.mk
++++ b/vendor-skels/google_devices/stallion/BoardConfig.mk
+@@ -68,6 +68,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/stallion/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/stallion/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/stallion/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/stallion/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/stallion/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/stallion/stallion.mk b/vendor-skels/google_devices/stallion/stallion.mk
 index 7875f23fe..e67f2fa50 100644
 --- a/vendor-skels/google_devices/stallion/stallion.mk
@@ -232,6 +340,18 @@ index 7875f23fe..e67f2fa50 100644
      EuiccSupportPixel-P23 \
      EuiccSupportPixelPermissions \
      OemRilHookService \
+diff --git a/vendor-skels/google_devices/tegu/BoardConfig.mk b/vendor-skels/google_devices/tegu/BoardConfig.mk
+index 9baa2afff..1de8a3efb 100644
+--- a/vendor-skels/google_devices/tegu/BoardConfig.mk
++++ b/vendor-skels/google_devices/tegu/BoardConfig.mk
+@@ -68,6 +68,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/tegu/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/tegu/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/tegu/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/tegu/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/tegu/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/tegu/tegu.mk b/vendor-skels/google_devices/tegu/tegu.mk
 index 21b538b72..85448456b 100644
 --- a/vendor-skels/google_devices/tegu/tegu.mk
@@ -245,6 +365,18 @@ index 21b538b72..85448456b 100644
      EuiccSupportPixel-P23 \
      EuiccSupportPixelPermissions \
      OemRilHookService \
+diff --git a/vendor-skels/google_devices/tokay/BoardConfig.mk b/vendor-skels/google_devices/tokay/BoardConfig.mk
+index ecd83910c..a9ed67f7e 100644
+--- a/vendor-skels/google_devices/tokay/BoardConfig.mk
++++ b/vendor-skels/google_devices/tokay/BoardConfig.mk
+@@ -75,6 +75,7 @@ AB_OTA_PARTITIONS += \
+ TARGET_BOARD_INFO_FILE := vendor/google_devices/tokay/firmware/android-info.txt
+ 
+ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/tokay/sepolicy/system_ext/private
++SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += vendor/modern-apps/sepolicy/mosey
+ PRODUCT_PRIVATE_SEPOLICY_DIRS += vendor/google_devices/tokay/sepolicy/product/private
+ BOARD_VENDOR_SEPOLICY_DIRS += vendor/google_devices/tokay/sepolicy/vendor
+ SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += vendor/google_devices/tokay/sepolicy/system_ext/public
 diff --git a/vendor-skels/google_devices/tokay/tokay.mk b/vendor-skels/google_devices/tokay/tokay.mk
 index 67eac4ffa..e52a53917 100644
 --- a/vendor-skels/google_devices/tokay/tokay.mk
