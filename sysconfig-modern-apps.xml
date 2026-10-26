@@ -50,6 +50,13 @@
          only because we hold the supervision role. The exemption buys visibility, not privilege. -->
     <hidden-api-whitelisted-app package="com.vayunmathur.parentalcontrols" />
     <hidden-api-whitelisted-app package="com.vayunmathur.screentime" />
+
+    <!-- Share reaches the Mosey (AWDL) HAL for AirDrop through hidden framework members:
+         ServiceManager.isDeclared / waitForDeclaredService to find IMoseyService, and the hidden
+         LinkProperties / LinkAddress / RouteInfo / NetworkCapabilities.Builder members needed to
+         publish `mosey0`. Like cast above, a presigned app needs this exemption for the reflection
+         to resolve; the framework still enforces the permissions behind each call. -->
+    <hidden-api-whitelisted-app package="com.vayunmathur.share" />
     <!-- Emergency (com.vayunmathur.emergency) replaces AOSP EmergencyInfo. The SOS
          countdown runs as a foreground service off an exact alarm; exempt it from Doze
          like stock does so the countdown is not killed while the screen is off. -->

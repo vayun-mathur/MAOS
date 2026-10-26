@@ -28,6 +28,15 @@
     <!-- Euicc is the system eSIM LPA (declares EuiccService). Managing embedded subscriptions
          and driving the eUICC over a telephony logical channel requires these signature|privileged
          perms. Replaces Google's EuiccGoogle LPA; the EuiccSupportPixel hardware backend is kept. -->
+    <!-- Share drives Google's Mosey (AWDL) HAL for AirDrop and publishes its `mosey0` interface
+         as an app-specific network (ConnectivityService accepts CREATE_APP_SPECIFIC_NETWORK in place
+         of NETWORK_FACTORY, which is signature|role). Binding sockets and mDNS to that restricted
+         network needs CONNECTIVITY_USE_RESTRICTED_NETWORKS. -->
+    <privapp-permissions package="com.vayunmathur.share">
+        <permission name="android.permission.CREATE_APP_SPECIFIC_NETWORK" />
+        <permission name="android.permission.CONNECTIVITY_USE_RESTRICTED_NETWORKS" />
+    </privapp-permissions>
+
     <privapp-permissions package="com.vayunmathur.euicc">
         <permission name="android.permission.WRITE_EMBEDDED_SUBSCRIPTIONS" />
         <permission name="android.permission.MODIFY_PHONE_STATE" />

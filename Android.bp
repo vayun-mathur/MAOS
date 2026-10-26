@@ -220,11 +220,17 @@ android_app_import {
     },
 }
 
+// Share is PRIVILEGED for AirDrop over Google's Mosey (AWDL) HAL: publishing the `mosey0`
+// interface as a network needs CREATE_APP_SPECIFIC_NETWORK, and binding sockets/mDNS to that
+// restricted network needs CONNECTIVITY_USE_RESTRICTED_NETWORKS. Both are signature|privileged
+// and allowlisted in privapp-permissions-modern-apps.xml. Without a Mosey HAL on the device the
+// app falls back to AirDrop over the Wi-Fi LAN and these permissions go unused.
 android_app_import {
     name: "ModernAppsShare",
     apk: "prebuilts/share-release.apk",
     presigned: true,
     preprocessed: true,
+    privileged: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
