@@ -846,3 +846,48 @@ index b50c541b8329..05cc079120a7 100644
      }
  
      @EnforcePermission(android.Manifest.permission.MANAGE_DISPLAYS)
+diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
+--- a/core/res/AndroidManifest.xml
++++ b/core/res/AndroidManifest.xml
+@@ -9210,6 +9210,13 @@
+                 android:protectionLevel="internal|role|installer"
+                 android:permissionFlags="allowedInPrivateComputeCore" />
+
++    <!-- MAOS: apps declaring this permission have all sensor permission requests
++         (BODY_SENSORS, BODY_SENSORS_BACKGROUND, ACTIVITY_RECOGNITION,
++         HIGH_SAMPLING_RATE_SENSORS) removed at parse time. Applied to MA system
++         apps and MA apps, which must never access body sensors. -->
++    <permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT"
++                android:protectionLevel="normal" />
++
+     <!-- @SystemApi Permission that protects the {@link Intent#ACTION_REVIEW_ACCESSIBILITY_SERVICES}
+          intent.
+          @hide -->
+diff --git a/core/java/android/content/pm/PackageParser.java b/core/java/android/content/pm/PackageParser.java
+--- a/core/java/android/content/pm/PackageParser.java
++++ b/core/java/android/content/pm/PackageParser.java
+@@ -2465,8 +2465,24 @@
+                 if (!pkg.requestedPermissions.contains(perm)) {
+                     pkg.requestedPermissions.add(perm);
+                     pkg.implicitPermissions.add(perm);
+                 }
+             }
+         }
+
++        // MAOS: SENSORS_OPTOUT removes sensor permission requests entirely (not just
++        // the grant) for apps declaring com.vayunmathur.permission.SENSORS_OPTOUT.
++        // Applied to MA system apps and MA apps, which must never access body sensors.
++        // Audit (Nov 2026): no stock system app requests these today, so this is
++        // enforcement for present and future requests alike.
++        if (pkg.requestedPermissions.contains("com.vayunmathur.permission.SENSORS_OPTOUT")) {
++            pkg.requestedPermissions.remove("android.permission.BODY_SENSORS");
++            pkg.requestedPermissions.remove("android.permission.BODY_SENSORS_BACKGROUND");
++            pkg.requestedPermissions.remove("android.permission.ACTIVITY_RECOGNITION");
++            pkg.requestedPermissions.remove("android.permission.HIGH_SAMPLING_RATE_SENSORS");
++            pkg.implicitPermissions.remove("android.permission.BODY_SENSORS");
++            pkg.implicitPermissions.remove("android.permission.BODY_SENSORS_BACKGROUND");
++            pkg.implicitPermissions.remove("android.permission.ACTIVITY_RECOGNITION");
++            pkg.implicitPermissions.remove("android.permission.HIGH_SAMPLING_RATE_SENSORS");
++        }
++
+         if (supportsSmallScreens < 0 || (supportsSmallScreens > 0

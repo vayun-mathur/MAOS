@@ -12,10 +12,10 @@
   stock apps we replace.
 -->
 <manifest>
-  <remote name="maos-github" fetch="https://github.com/vayun-mathur/" />
+  <remote name="maos" fetch="https://git.maproj.org/" />
 
   <!-- The overlay repo (this repo) lands at vendor/modern-apps. -->
-  <project path="vendor/modern-apps" name="MAOS" remote="maos-github" revision="main" />
+  <project path="vendor/modern-apps" name="MAOS.git" remote="maos" revision="main" />
 
   <!--
     OPTIONAL: remove the SOURCE of the stock apps we replace. Not required — modern_apps.mk
