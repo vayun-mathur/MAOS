@@ -1,8 +1,8 @@
 diff --git a/core/api/system-current.txt b/core/api/system-current.txt
-index a21a30f5b415..38bce179e9fc 100644
+index c0df87a641bb..390330ac9916 100644
 --- a/core/api/system-current.txt
 +++ b/core/api/system-current.txt
-@@ -6710,6 +6710,7 @@ package android.hardware.display {
+@@ -6714,6 +6714,7 @@ package android.hardware.display {
      method @RequiresPermission(android.Manifest.permission.CONFIGURE_DISPLAY_BRIGHTNESS) public void setBrightnessConfigurationForDisplay(@NonNull android.hardware.display.BrightnessConfiguration, @NonNull String);
      method @Deprecated @RequiresPermission(android.Manifest.permission.CONTROL_DISPLAY_SATURATION) public void setSaturationLevel(float);
      field @FlaggedApi("com.android.server.display.feature.flags.virtual_displays_support_desktop_mode") public static final int VIRTUAL_DISPLAY_FLAG_ALLOWS_CONTENT_MODE_SWITCH = 131072; // 0x20000
@@ -10,7 +10,7 @@ index a21a30f5b415..38bce179e9fc 100644
      field public static final int VIRTUAL_DISPLAY_FLAG_ROTATES_WITH_CONTENT = 128; // 0x80
      field public static final int VIRTUAL_DISPLAY_FLAG_STEAL_TOP_FOCUS_DISABLED = 65536; // 0x10000
      field public static final int VIRTUAL_DISPLAY_FLAG_TRUSTED = 1024; // 0x400
-@@ -6717,6 +6718,7 @@ package android.hardware.display {
+@@ -6721,6 +6722,7 @@ package android.hardware.display {
  
    public final class VirtualDisplayConfig implements android.os.Parcelable {
      method @Nullable public android.view.DisplayCutout getDisplayCutout();
@@ -18,7 +18,7 @@ index a21a30f5b415..38bce179e9fc 100644
      method @FlaggedApi("com.android.server.display.feature.flags.virtual_displays_support_desktop_mode") @Nullable public String getUniqueId();
      method public boolean isHomeSupported();
      method @FlaggedApi("com.android.window.flags.vdm_force_app_universal_resizable_api") public boolean isIgnoreActivitySizeRestrictions();
-@@ -6726,6 +6728,7 @@ package android.hardware.display {
+@@ -6730,6 +6732,7 @@ package android.hardware.display {
      method @NonNull public android.hardware.display.VirtualDisplayConfig.Builder setDisplayCutout(@Nullable android.view.DisplayCutout);
      method @NonNull public android.hardware.display.VirtualDisplayConfig.Builder setHomeSupported(boolean);
      method @FlaggedApi("com.android.window.flags.vdm_force_app_universal_resizable_api") @NonNull public android.hardware.display.VirtualDisplayConfig.Builder setIgnoreActivitySizeRestrictions(boolean);
@@ -264,10 +264,10 @@ index 699072c44a87..3c82843e396a 100644
          }
  
 diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
-index fa2c3f0534c0..7ea81f0bca58 100644
+index d49a48f8d11b..12604625656a 100644
 --- a/core/res/AndroidManifest.xml
 +++ b/core/res/AndroidManifest.xml
-@@ -9210,6 +9210,17 @@
+@@ -9211,6 +9211,17 @@
                  android:protectionLevel="internal|role|installer"
                  android:permissionFlags="allowedInPrivateComputeCore" />
  
@@ -286,7 +286,7 @@ index fa2c3f0534c0..7ea81f0bca58 100644
           intent.
           @hide -->
 diff --git a/core/res/res/values/config_ext.xml b/core/res/res/values/config_ext.xml
-index 9f66d22bca1a..1775a9e65919 100644
+index bd323af7a017..95333ce32764 100644
 --- a/core/res/res/values/config_ext.xml
 +++ b/core/res/res/values/config_ext.xml
 @@ -38,7 +38,13 @@
@@ -304,9 +304,9 @@ index 9f66d22bca1a..1775a9e65919 100644
      <java-symbol type="string" name="config_first_party_app_source_package_name" />
  
      <!-- Certificate digests for trusted apps that will be allowed to obtain the knownSigner
-@@ -51,4 +57,14 @@
-     </string-array>
-     <java-symbol type="array" name="read_additional_security_state_known_signers" />
+@@ -58,4 +64,14 @@
+     <bool name="setting_default_allow_clipboard_read">true</bool>
+     <java-symbol type="bool" name="setting_default_allow_clipboard_read" />
  
 +    <!-- Companion-device app-streaming role default holder -> Modern Apps Cast.
 +         COMPANION_DEVICE_APP_STREAMING has no `defaultHolders` in AOSP (the role is
@@ -1231,10 +1231,10 @@ index 8ab2dbda2d02..02c72145bd70 100644
                  // a failsafe: should never happen
                  Slog.d(TAG, "AMS is null");
 diff --git a/services/core/java/com/android/server/wm/WindowManagerService.java b/services/core/java/com/android/server/wm/WindowManagerService.java
-index b50c541b8329..05cc079120a7 100644
+index ea99d989a5aa..cdfc24304576 100644
 --- a/services/core/java/com/android/server/wm/WindowManagerService.java
 +++ b/services/core/java/com/android/server/wm/WindowManagerService.java
-@@ -11157,8 +11157,9 @@ public class WindowManagerService extends IWindowManager.Stub
+@@ -11168,8 +11168,9 @@ public class WindowManagerService extends IWindowManager.Stub
      /**
       * Must be called when a screenshot is taken via hardware chord.
       *
@@ -1246,7 +1246,7 @@ index b50c541b8329..05cc079120a7 100644
       */
      @Override
      public List<ComponentName> notifyScreenshotListeners(int displayId) {
-@@ -11167,23 +11168,10 @@ public class WindowManagerService extends IWindowManager.Stub
+@@ -11178,23 +11179,10 @@ public class WindowManagerService extends IWindowManager.Stub
                  "notifyScreenshotListeners()")) {
              throw new SecurityException("Requires STATUS_BAR_SERVICE permission");
          }

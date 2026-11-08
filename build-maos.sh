@@ -10,7 +10,7 @@
 #
 #   ./build-maos.sh all                         # full pipeline (cheetah)
 #   ./build-maos.sh sync                         # just one phase
-#   ./build-maos.sh -d panther -t 2026080500 all # override device/tag via flags
+#   ./build-maos.sh -d panther -t 2026110700 all # override device/tag via flags
 #   ./build-maos.sh -d all all                   # build EVERY supported Pixel
 #   ./build-maos.sh -d cheetah,panther build     # a comma-separated subset
 #
@@ -19,7 +19,7 @@
 #                 - a single codename (e.g. cheetah)
 #                 - "all" to build every supported Pixel (see ALL_DEVICES)
 #                 - a comma-separated subset (e.g. cheetah,panther)
-#   -t TAG       GrapheneOS base tag             (default: 2026080500)
+#   -t TAG       GrapheneOS base tag             (default: 2026110700)
 #   -c CHANNEL   OTA channel to publish          (default: stable; stable|beta|testing)
 #   phases: deps sync vendor overlay keys build release publish all
 #
@@ -61,7 +61,7 @@ set -euo pipefail
 
 # ---- Parameters (flags) ----
 DEVICE="cheetah"
-TAG="2026080500"
+TAG="2026110700"
 OTA_CHANNEL="stable"
 while getopts "d:t:c:h" _opt; do
     case "$_opt" in
