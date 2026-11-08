@@ -894,9 +894,10 @@ diff --git a/services/core/java/com/android/server/pm/permission/SpecialRuntimeP
 
          if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
 +            // MAOS: SENSORS_OPTOUT withholds the GrapheneOS Sensors permission
-+            // from the fresh-install auto-grant, so declaring apps install with
-+            // Sensors denied (user-grantable per-app in Settings). The marker is
-+            // protectionLevel normal, hence granted by install time.
++            // from the fresh-install auto-grant as a failsafe. Declaring apps
++            // never receive the implicit OTHER_SENSORS request at parse time,
++            // so there is nothing for the user to grant, not even via Settings.
++            // The marker is protectionLevel normal, hence granted by install time.
 +            if (ctx.getPackageManager().checkPermission(
 +                    "com.vayunmathur.permission.SENSORS_OPTOUT", packageName)
 +                    == PackageManager.PERMISSION_GRANTED) {
