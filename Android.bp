@@ -108,6 +108,7 @@ android_app_import {
     apk: "prebuilts/appstore-release.apk",
     presigned: true,
     preprocessed: true,
+    privileged: true,
     product_specific: true,
     dex_preopt: {
         enabled: false,
