@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index dd719ce..e37c890 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -28,6 +28,8 @@
+     <uses-permission android:name="android.permission.USE_COMPANION_TRANSPORTS" />
+     <!-- go/keep-sorted end -->
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:name=".CrossDeviceSyncApplication"
+         android:persistent="true"

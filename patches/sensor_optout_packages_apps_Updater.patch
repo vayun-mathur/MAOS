@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index f1122ec..0a37c9a 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -28,6 +28,8 @@
+         android:name="app.seamlessupdate.client.OPEN_SECURITY_PREVIEW_SETTINGS"
+         android:protectionLevel="internal|setup" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/app_name"
+             android:name=".UpdaterApplication"
+             android:icon="@mipmap/ic_launcher"

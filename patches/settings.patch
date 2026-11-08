@@ -1,8 +1,8 @@
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index d4e5e0e8670..6ea7e2e8713 100644
+index d4e5e0e8670..e65049446df 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -150,7 +150,7 @@
+@@ -150,10 +150,13 @@
      <uses-permission android:name="android.permission.SATELLITE_COMMUNICATION" />
      <uses-permission android:name="android.permission.READ_SYSTEM_GRAMMATICAL_GENDER" />
      <uses-permission android:name="android.permission.MANAGE_COMPANION_DEVICES" />
@@ -11,70 +11,12 @@ index d4e5e0e8670..6ea7e2e8713 100644
      <uses-permission android:name="android.permission.CONTROL_SIM_AUTO_PIN_MANAGEMENT" />
      <uses-permission android:name="android.permission.MANAGE_COMPUTER_CONTROL_CONSENT" />
  
-diff --git a/res/drawable/ic_homepage_screen_time.xml b/res/drawable/ic_homepage_screen_time.xml
-new file mode 100644
-index 00000000000..6c2eb9eee03
---- /dev/null
-+++ b/res/drawable/ic_homepage_screen_time.xml
-@@ -0,0 +1,33 @@
-+<?xml version="1.0" encoding="utf-8"?>
-+<!--
-+  Copyright (C) 2026 The Android Open Source Project
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
 +
-+  Licensed under the Apache License, Version 2.0 (the "License");
-+  you may not use this file except in compliance with the License.
-+  You may obtain a copy of the License at
-+
-+       http://www.apache.org/licenses/LICENSE-2.0
-+
-+  Unless required by applicable law or agreed to in writing, software
-+  distributed under the License is distributed on an "AS IS" BASIS,
-+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+  See the License for the specific language governing permissions and
-+  limitations under the License.
-+  -->
-+
-+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-+
-+    <item>
-+        <com.android.settingslib.widget.AdaptiveIconShapeDrawable
-+            android:width="@dimen/dashboard_tile_image_size"
-+            android:height="@dimen/dashboard_tile_image_size"
-+            android:color="@color/homepage_supervision_background" />
-+    </item>
-+
-+    <item
-+        android:width="@dimen/dashboard_tile_foreground_image_size"
-+        android:height="@dimen/dashboard_tile_foreground_image_size"
-+        android:start="@dimen/dashboard_tile_foreground_image_inset"
-+        android:top="@dimen/dashboard_tile_foreground_image_inset"
-+        android:drawable="@drawable/ic_settings_screen_time_expressive" />
-+</layer-list>
-diff --git a/res/drawable/ic_settings_screen_time_expressive.xml b/res/drawable/ic_settings_screen_time_expressive.xml
-new file mode 100644
-index 00000000000..8103a8b868e
---- /dev/null
-+++ b/res/drawable/ic_settings_screen_time_expressive.xml
-@@ -0,0 +1,19 @@
-+<!--
-+  Copyright (C) 2026 The Android Open Source Project
-+
-+  Licensed under the Apache License, Version 2.0 (the "License");
-+  you may not use this file except in compliance with the License.
-+  You may obtain a copy of the License at
-+
-+       http://www.apache.org/licenses/LICENSE-2.0
-+
-+  Unless required by applicable law or agreed to in writing, software
-+  distributed under the License is distributed on an "AS IS" BASIS,
-+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-+  See the License for the specific language governing permissions and
-+  limitations under the License.
-+  -->
-+<com.android.settings.widget.TintDrawable
-+    xmlns:android="http://schemas.android.com/apk/res/android"
-+    android:drawable="@drawable/ic_timelapse_shape"
-+    android:tint="@color/homepage_supervision_foreground" />
+     <application
+             android:name=".SettingsApplication"
+             android:label="@string/settings_label"
 diff --git a/res/values-en-rAU/strings.xml b/res/values-en-rAU/strings.xml
 index c181c5bc2b2..225af58eee0 100644
 --- a/res/values-en-rAU/strings.xml
@@ -791,16 +733,67 @@ index c689a201ec0..14b2bbdba72 100644
 +        Intent("com.vayunmathur.screentime.action.DASHBOARD")
 +            .setPackage("com.vayunmathur.screentime")
 +}
-diff --git a/AndroidManifest.xml b/AndroidManifest.xml
---- a/AndroidManifest.xml
-+++ b/AndroidManifest.xml
-@@ -153,6 +153,9 @@
-     <uses-permission android:name="com.vayunmathur.logviewer.SHOW_LOGCAT" />
-     <uses-permission android:name="android.permission.CONTROL_SIM_AUTO_PIN_MANAGEMENT" />
-     <uses-permission android:name="android.permission.MANAGE_COMPUTER_CONTROL_CONSENT" />
- 
-+    <!-- MAOS: opt out of all body-sensor permission requests (removed at parse time). -->
-+    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+diff --git a/res/drawable/ic_homepage_screen_time.xml b/res/drawable/ic_homepage_screen_time.xml
+new file mode 100644
+index 00000000000..6c2eb9eee03
+--- /dev/null
++++ b/res/drawable/ic_homepage_screen_time.xml
+@@ -0,0 +1,33 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++  Copyright (C) 2026 The Android Open Source Project
 +
-     <application
-             android:name=".SettingsApplication"
++  Licensed under the Apache License, Version 2.0 (the "License");
++  you may not use this file except in compliance with the License.
++  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++  -->
++
++<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
++
++    <item>
++        <com.android.settingslib.widget.AdaptiveIconShapeDrawable
++            android:width="@dimen/dashboard_tile_image_size"
++            android:height="@dimen/dashboard_tile_image_size"
++            android:color="@color/homepage_supervision_background" />
++    </item>
++
++    <item
++        android:width="@dimen/dashboard_tile_foreground_image_size"
++        android:height="@dimen/dashboard_tile_foreground_image_size"
++        android:start="@dimen/dashboard_tile_foreground_image_inset"
++        android:top="@dimen/dashboard_tile_foreground_image_inset"
++        android:drawable="@drawable/ic_settings_screen_time_expressive" />
++</layer-list>
+diff --git a/res/drawable/ic_settings_screen_time_expressive.xml b/res/drawable/ic_settings_screen_time_expressive.xml
+new file mode 100644
+index 00000000000..8103a8b868e
+--- /dev/null
++++ b/res/drawable/ic_settings_screen_time_expressive.xml
+@@ -0,0 +1,19 @@
++<!--
++  Copyright (C) 2026 The Android Open Source Project
++
++  Licensed under the Apache License, Version 2.0 (the "License");
++  you may not use this file except in compliance with the License.
++  You may obtain a copy of the License at
++
++       http://www.apache.org/licenses/LICENSE-2.0
++
++  Unless required by applicable law or agreed to in writing, software
++  distributed under the License is distributed on an "AS IS" BASIS,
++  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++  See the License for the specific language governing permissions and
++  limitations under the License.
++  -->
++<com.android.settings.widget.TintDrawable
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:drawable="@drawable/ic_timelapse_shape"
++    android:tint="@color/homepage_supervision_foreground" />

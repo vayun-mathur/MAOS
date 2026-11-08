@@ -1,8 +1,8 @@
 diff --git a/AndroidManifest.xml b/AndroidManifest.xml
-index 676a024..1cb8642 100644
+index 676a024..3c2844c 100644
 --- a/AndroidManifest.xml
 +++ b/AndroidManifest.xml
-@@ -10,7 +10,7 @@
+@@ -10,10 +10,13 @@
      <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
    <!-- needed to be able to create TempServiceBinding to any package-->
      <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
@@ -11,16 +11,9 @@ index 676a024..1cb8642 100644
      <!-- needed for config fragments for updating permissions for Android Auto, etc. -->
      <uses-permission android:name="android.permission.UPDATE_AND_INVALIDATE_PERMISSION_STATE" />
  
-diff --git a/AndroidManifest.xml b/AndroidManifest.xml
---- a/AndroidManifest.xml
-+++ b/AndroidManifest.xml
-@@ -13,6 +13,9 @@
-     <uses-permission android:name="com.vayunmathur.logviewer.SHOW_ERROR_REPORT" />
-     <!-- needed for config fragments for updating permissions for Android Auto, etc. -->
-     <uses-permission android:name="android.permission.UPDATE_AND_INVALIDATE_PERMISSION_STATE" />
- 
-+    <!-- MAOS: opt out of all body-sensor permission requests (removed at parse time). -->
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
 +    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
 +
      <permission
          android:name="app.grapheneos.gmscompat.SHOW_UI"
+         android:protectionLevel="signature|privileged" />

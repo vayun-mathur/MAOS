@@ -1,0 +1,39 @@
+diff --git a/OsuLogin/AndroidManifest.xml b/OsuLogin/AndroidManifest.xml
+index c4db0c4864..94f38a62bb 100644
+--- a/OsuLogin/AndroidManifest.xml
++++ b/OsuLogin/AndroidManifest.xml
+@@ -22,6 +22,8 @@
+     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+     <uses-permission android:name="android.permission.INTERNET"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:networkSecurityConfig="@xml/network_security_config"
+         android:enabled="true"
+diff --git a/WifiDialog/AndroidManifest.xml b/WifiDialog/AndroidManifest.xml
+index cc6b44b7e3..d370cd4210 100644
+--- a/WifiDialog/AndroidManifest.xml
++++ b/WifiDialog/AndroidManifest.xml
+@@ -26,6 +26,8 @@
+         </intent>
+     </queries>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:enabled="true"
+         android:configChanges="keyboardHidden|orientation|screenSize"
+diff --git a/service/ServiceWifiResources/AndroidManifest.xml b/service/ServiceWifiResources/AndroidManifest.xml
+index 289b1df119..0084ff459e 100644
+--- a/service/ServiceWifiResources/AndroidManifest.xml
++++ b/service/ServiceWifiResources/AndroidManifest.xml
+@@ -29,6 +29,8 @@
+     <protected-broadcast android:name="com.android.server.wifi.ClientModeImpl.EXTRA_PENDING_CERT_SSID" />
+     <protected-broadcast android:name="com.android.server.wifi.scanner.WifiPnoScanStateMachine.SwPnoScanState.SW_PNO_UPPERBOUND_ALARM" />
+     <protected-broadcast android:name="com.android.server.wifi.scanner.WifiPnoScanStateMachine.SwPnoScanState.SW_PNO_ALARM" />
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/wifiResourcesAppLabel"
+         android:defaultToDeviceProtectedStorage="true"

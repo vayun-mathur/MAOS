@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 8edca71..0ebdc3f 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -20,6 +20,8 @@
+                 android:label="Permission to restart Iwlan"
+                 android:protectionLevel="signature|privileged" />
+ 
++  <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++  <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+   <application
+       android:directBootAware="true"
+       android:defaultToDeviceProtectedStorage="true">

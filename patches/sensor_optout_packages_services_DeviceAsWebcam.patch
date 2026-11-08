@@ -1,0 +1,13 @@
+diff --git a/impl/AndroidManifest.xml b/impl/AndroidManifest.xml
+index 9e6989c..19ceaaa 100644
+--- a/impl/AndroidManifest.xml
++++ b/impl/AndroidManifest.xml
+@@ -10,6 +10,8 @@
+     <uses-permission android:name="android.permission.CAMERA"/>
+     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+          android:label="@string/app_label">
+         <receiver android:name="com.android.deviceaswebcam.DeviceAsWebcamReceiverImpl"

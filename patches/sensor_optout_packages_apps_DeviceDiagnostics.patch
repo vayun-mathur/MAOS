@@ -1,0 +1,13 @@
+diff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml
+index d0caae6..c1a211d 100644
+--- a/app/src/main/AndroidManifest.xml
++++ b/app/src/main/AndroidManifest.xml
+@@ -19,6 +19,8 @@
+   <uses-permission android:name="android.permission.ENTER_TRADE_IN_MODE"/>
+   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+ 
++  <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++  <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+   <application
+       android:icon="@mipmap/ic_launcher"
+       android:label="@string/app_name"

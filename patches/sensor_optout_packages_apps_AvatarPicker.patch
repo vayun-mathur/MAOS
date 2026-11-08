@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index ea1c1d9..8d400a9 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -20,6 +20,8 @@
+ 
+   <uses-permission android:name="com.google.android.setupwizard.SETUP_COMPAT_SERVICE" />
+ 
++  <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++  <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+   <application
+       android:name=".AvatarPickerApp"
+       android:allowBackup="true"

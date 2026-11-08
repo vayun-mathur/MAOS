@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 88535bfa..c1b3b3b7 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -63,6 +63,8 @@
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+     <uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:process="android.process.media"
+                  android:label="@string/app_label"
+                  android:icon="@mipmap/ic_launcher_download"

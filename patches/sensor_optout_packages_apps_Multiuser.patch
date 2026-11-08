@@ -1,0 +1,26 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 318402a..4c774a8 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -22,6 +22,8 @@
+     <uses-permission android:name="android.permission.MANAGE_USERS"/>
+     <uses-permission android:name="android.permission.START_ANY_ACTIVITY"/>
+     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS"/>
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/multiuser_app_name"
+         android:theme="@style/Theme.MultiuserWidget"
+diff --git a/Stacks/AndroidManifest.xml b/Stacks/AndroidManifest.xml
+index 1866a23..3e480c8 100644
+--- a/Stacks/AndroidManifest.xml
++++ b/Stacks/AndroidManifest.xml
+@@ -17,6 +17,8 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:tools="http://schemas.android.com/tools"
+     package="com.android.multiuser.stacks">
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application>
+ 
+     </application>

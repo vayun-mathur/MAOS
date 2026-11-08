@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index bd61e9c..7b8a972 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -15,6 +15,8 @@
+ 
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.android.bookmarkprovider">
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/application_name"
+                  android:icon="@mipmap/ic_launcher_shortcut_browser_bookmark" >
+ 

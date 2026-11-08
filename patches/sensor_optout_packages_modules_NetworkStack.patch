@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index e91f2a52f..7e0bbef27 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -51,6 +51,8 @@
+     <uses-permission android:name="android.permission.MANAGE_LOW_POWER_STANDBY" />
+     <!-- ends here -->
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:extractNativeLibs="false"
+         android:persistent="true"

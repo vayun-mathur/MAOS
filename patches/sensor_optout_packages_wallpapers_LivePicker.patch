@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 09fde31..4296a33 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -31,6 +31,8 @@
+ 
+     <uses-sdk android:minSdkVersion="14"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/application_name"
+         android:icon="@mipmap/ic_launcher_live_wallpaper"

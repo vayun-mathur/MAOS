@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index cd03659..30ce62f 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -20,6 +20,8 @@
+      package="com.android.carrierconfig">
+ 
+     <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"/>
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowBackup="false"
+          android:directBootAware="true">
+         <service android:name=".DefaultCarrierConfigService"

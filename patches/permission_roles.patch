@@ -1,8 +1,21 @@
+diff --git a/PermissionController/AndroidManifest.xml b/PermissionController/AndroidManifest.xml
+index cfe6d6ff6b..50ceb7af7e 100644
+--- a/PermissionController/AndroidManifest.xml
++++ b/PermissionController/AndroidManifest.xml
+@@ -74,6 +74,8 @@
+     <uses-permission android:name="android.permission.READ_LOCATION_BYPASS_ALLOWLIST" />
+     <uses-permission android:name="android.permission.MANAGE_READ_SCREEN_CONTEXT_REQUEST" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name="com.android.permissioncontroller.PermissionControllerApplication"
+             android:label="@string/app_name"
+             android:icon="@drawable/ic_permission_controller_app_icon"
 diff --git a/PermissionController/res/xml/roles.xml b/PermissionController/res/xml/roles.xml
-index 0000000000..0000000001 100644
+index dadfd1bf3a..bcc93965c4 100644
 --- a/PermissionController/res/xml/roles.xml
 +++ b/PermissionController/res/xml/roles.xml
-@@ -1287,6 +1287,7 @@
+@@ -1286,6 +1286,7 @@
      <role
          name="android.app.role.COMPANION_DEVICE_APP_STREAMING"
          behavior="v33.CompanionDeviceAppStreamingRoleBehavior"
@@ -10,3 +23,16 @@ index 0000000000..0000000001 100644
          exclusive="false"
          exclusivity="none"
          minSdkVersion="33"
+diff --git a/SafetyCenter/Resources/AndroidManifest.xml b/SafetyCenter/Resources/AndroidManifest.xml
+index 8129ddb01c..452246f827 100644
+--- a/SafetyCenter/Resources/AndroidManifest.xml
++++ b/SafetyCenter/Resources/AndroidManifest.xml
+@@ -20,6 +20,8 @@
+           coreApp="true"
+           android:versionCode="330000000"
+           android:versionName="33 system image">
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/safetyCenterResourcesAppLabel"
+         android:defaultToDeviceProtectedStorage="true"

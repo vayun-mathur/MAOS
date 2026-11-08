@@ -1,0 +1,12 @@
+diff --git a/DeviceLockController/AndroidManifest.xml b/DeviceLockController/AndroidManifest.xml
+index 0261769d..5fe2280d 100644
+--- a/DeviceLockController/AndroidManifest.xml
++++ b/DeviceLockController/AndroidManifest.xml
+@@ -24,5 +24,7 @@
+     xmlns:tools="http://schemas.android.com/tools"
+     package="com.android.devicelockcontroller">
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name=".DeviceLockControllerApplication" />
+ </manifest>

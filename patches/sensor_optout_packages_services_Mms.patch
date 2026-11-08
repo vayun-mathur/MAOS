@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index e17509c..e565a59 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -33,6 +33,8 @@
+ 
+     <protected-broadcast android:name="android.settings.ENABLE_MMS_DATA_REQUEST"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="MmsService"
+                  android:process="com.android.phone"
+                  android:usesCleartextTraffic="true"

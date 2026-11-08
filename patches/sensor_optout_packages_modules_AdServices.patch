@@ -1,0 +1,26 @@
+diff --git a/adservices/apk/AndroidManifest.xml b/adservices/apk/AndroidManifest.xml
+index 87bb160ebc..f01144c5c1 100644
+--- a/adservices/apk/AndroidManifest.xml
++++ b/adservices/apk/AndroidManifest.xml
+@@ -149,6 +149,8 @@
+     <!-- Required for sending measurement events -->
+     <uses-permission android:name="android.permission.ondevicepersonalization.NOTIFY_MEASUREMENT_EVENT"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/app_label"
+         android:forceQueryable="true"
+diff --git a/sdksandbox/SdkSandbox/AndroidManifest.xml b/sdksandbox/SdkSandbox/AndroidManifest.xml
+index 228e014f39..2d963c8576 100644
+--- a/sdksandbox/SdkSandbox/AndroidManifest.xml
++++ b/sdksandbox/SdkSandbox/AndroidManifest.xml
+@@ -39,6 +39,8 @@
+     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" />
+     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+           android:usesNonSdkApi="false"
+           android:forceQueryable="true"

@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index e3f43a1..e5b4eb1 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -6,6 +6,8 @@
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+     <uses-permission android:name="com.android.voicemail.permission.READ_VOICEMAIL" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/app_label"
+         android:allowBackup="true"
+         android:backupAgent="CallLogBackupAgent"

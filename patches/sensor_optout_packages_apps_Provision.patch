@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index a589b5a..94ebe78 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -30,6 +30,8 @@
+     <!-- To factory reset if provisioning failed -->
+     <uses-permission android:name="android.permission.MASTER_CLEAR"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application>
+         <activity android:name="DefaultActivity"
+              android:excludeFromRecents="true"

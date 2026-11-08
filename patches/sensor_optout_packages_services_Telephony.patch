@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 40fd77c50..c8965cbac 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -201,6 +201,8 @@
+     <!-- Needed to send SMS/MMS over different transport by the Default Messaging App. -->
+     <uses-permission android:name="android.permission.BIND_ALTERNATIVE_MESSAGE_TRANSPORT_SERVICE"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name="PhoneApp"
+             android:persistent="true"
+             android:label="@string/phoneAppLabel"

@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index b55a50e..ee6dd11 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -26,6 +26,8 @@
+ 
+     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:process="com.android.phone"
+         android:persistent="true">

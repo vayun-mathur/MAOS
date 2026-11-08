@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index f8a512a..d4d65a9 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -6,6 +6,8 @@
+      android:versionName="1.0">
+ 
+     <uses-sdk android:minSdkVersion="3"/>
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/widget_name"
+          android:icon="@drawable/icon">
+         <receiver android:name=".ProtipWidget"

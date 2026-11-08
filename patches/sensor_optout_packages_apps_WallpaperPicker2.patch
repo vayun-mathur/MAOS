@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 603e26447..bfa7bf110 100755
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -61,6 +61,8 @@
+       </intent>
+   </queries>
+ 
++  <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++  <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+   <application
+       tools:replace="android:icon,android:name,android:appComponentFactory"
+       android:appComponentFactory="androidx.core.app.CoreComponentFactory"

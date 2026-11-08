@@ -1,0 +1,13 @@
+diff --git a/app/AndroidManifest.xml b/app/AndroidManifest.xml
+index 4499a29..079662d 100644
+--- a/app/AndroidManifest.xml
++++ b/app/AndroidManifest.xml
+@@ -20,6 +20,8 @@
+         <package android:name="com.google.android.gms" />
+     </queries>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/app_name"
+         android:allowBackup="false">

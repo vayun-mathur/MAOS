@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 9e3a75b..45ebe62 100755
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -5,6 +5,8 @@
+      android:sharedUserId="android.uid.se">
+     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL"/>
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name=".SEApplication"
+          android:label="SecureElementApplication"
+          android:persistent="true"

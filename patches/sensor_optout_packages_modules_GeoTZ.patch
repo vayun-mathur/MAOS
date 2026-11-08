@@ -1,0 +1,13 @@
+diff --git a/app/AndroidManifest.xml b/app/AndroidManifest.xml
+index f17d7f6..5f0526f 100644
+--- a/app/AndroidManifest.xml
++++ b/app/AndroidManifest.xml
+@@ -27,6 +27,8 @@
+     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
+     <uses-permission android:name="android.permission.WAKE_LOCK" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application>
+         <service android:name=".OfflineLocationTimeZoneProviderService"
+             android:exported="true"

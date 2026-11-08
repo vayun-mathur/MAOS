@@ -1,0 +1,26 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 15a2c8a64..d616297e1 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -102,6 +102,8 @@
+     <!-- We use Photo Picker app icon and label for this package. It is necessary for Photo Picker
+          GET_CONTENT take over. Some apps query packages that can handle GET_CONTENT and want to
+          display the icon and label of the package to the user. -->
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+             android:name="com.android.providers.media.MediaApplication"
+             android:label="@string/picker_app_label"
+diff --git a/photopicker/AndroidManifest.xml b/photopicker/AndroidManifest.xml
+index 211db2204..349d99019 100644
+--- a/photopicker/AndroidManifest.xml
++++ b/photopicker/AndroidManifest.xml
+@@ -42,6 +42,8 @@
+   -->
+   <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+ 
++  <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++  <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+   <application
+           android:name="com.android.photopicker.PhotopickerApplication"
+           android:icon="@mipmap/photopicker_app_icon"

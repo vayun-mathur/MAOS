@@ -1,0 +1,13 @@
+diff --git a/android/app/AndroidManifest.xml b/android/app/AndroidManifest.xml
+index d160f2c825..25f9de12dd 100644
+--- a/android/app/AndroidManifest.xml
++++ b/android/app/AndroidManifest.xml
+@@ -93,6 +93,8 @@
+ 
+     <!-- For PBAP Owner Vcard Info -->
+     <uses-permission android:name="android.permission.READ_PROFILE"/>
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name="com.android.bluetooth.btservice.AdapterApp"
+          android:icon="@mipmap/bt_share"
+          android:persistent="false"

@@ -1,0 +1,13 @@
+diff --git a/service/AndroidManifest.xml b/service/AndroidManifest.xml
+index 05f04068..98335e5c 100644
+--- a/service/AndroidManifest.xml
++++ b/service/AndroidManifest.xml
+@@ -30,6 +30,8 @@
+   <uses-permission android:name="android.permission.CAMERA" />
+   <uses-permission android:name="android.permission.WAKE_LOCK" />
+ 
++  <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++  <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+   <application
+     android:defaultToDeviceProtectedStorage="true"
+     android:name="com.android.telephony.imsmedia.ImsMediaApplication">

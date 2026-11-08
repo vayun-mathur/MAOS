@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index b889e16..c3986fb 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -34,6 +34,8 @@
+ 
+     <uses-sdk android:minSdkVersion="24"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/app_name"
+          android:icon="@mipmap/ic_storage_manager_48px"
+          android:theme="@style/StorageManager"

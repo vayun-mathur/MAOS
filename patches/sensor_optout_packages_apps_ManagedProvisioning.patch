@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 5819103b5..4df6275db 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -85,6 +85,8 @@
+     <!-- Used to read the device management role holder package name -->
+     <uses-permission android:name="android.permission.MANAGE_ROLE_HOLDERS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:name=".ManagedProvisioningApplication"
+         android:allowClearUserData="false"

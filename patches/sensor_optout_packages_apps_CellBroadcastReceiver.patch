@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 965db102f..66efff89b 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -63,6 +63,8 @@
+ 
+     <uses-sdk android:minSdkVersion="30" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name="com.android.cellbroadcastreceiver.CellBroadcastReceiverApp"
+             android:label="@string/app_label"
+             android:icon="@mipmap/ic_launcher_cell_broadcast"

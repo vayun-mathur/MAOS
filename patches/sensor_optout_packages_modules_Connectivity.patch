@@ -1,0 +1,26 @@
+diff --git a/Tethering/AndroidManifest.xml b/Tethering/AndroidManifest.xml
+index 32442f5314..c9ab47cba6 100644
+--- a/Tethering/AndroidManifest.xml
++++ b/Tethering/AndroidManifest.xml
+@@ -50,6 +50,8 @@
+     <!-- Sending non-protected broadcast from system uid is not allowed. -->
+     <protected-broadcast android:name="com.android.server.connectivity.tethering.DISABLE_TETHERING" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:process="com.android.networkstack.process"
+         android:extractNativeLibs="false"
+diff --git a/service/ServiceConnectivityResources/AndroidManifest.xml b/service/ServiceConnectivityResources/AndroidManifest.xml
+index 71901f5a1a..820515cee6 100644
+--- a/service/ServiceConnectivityResources/AndroidManifest.xml
++++ b/service/ServiceConnectivityResources/AndroidManifest.xml
+@@ -22,6 +22,8 @@
+           coreApp="true"
+           android:versionCode="1"
+           android:versionName="S-initial">
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/connectivityResourcesAppLabel"
+         android:defaultToDeviceProtectedStorage="true"

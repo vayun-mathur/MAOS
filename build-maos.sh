@@ -251,7 +251,21 @@ apply_maos_patches() {
     cd "$TREE"
     local patches="vendor/modern-apps/patches"
     [[ -d "$patches" ]] || die "Missing $patches — is vendor/modern-apps synced?"
-    local spec repo patch
+    local spec
+    apply_spec() { # apply_spec <repo> <patchfile> — idempotent: skips if already applied
+        local repo="$1" patch="$TREE/$patches/$2"
+        [[ -f "$patch" ]] || die "Missing patch file: $patch"
+        [[ -d "$repo" ]]  || die "Missing repo for patch: $repo"
+        if git -C "$repo" apply --reverse --check "$patch" 2>/dev/null; then
+            log "Patch already applied to $repo ($2)"
+        elif git -C "$repo" apply --check "$patch" 2>/dev/null; then
+            git -C "$repo" apply "$patch"
+            log "Applied $2 to $repo"
+        else
+            die "$2 does not apply to $repo. GrapheneOS tag $TAG likely moved these
+    files; rebase the patch (edit $repo, then: git -C $repo diff > $patch)."
+        fi
+    }
     for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
                 "frameworks/base:frameworks_base.patch" \
                 "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
@@ -264,19 +278,16 @@ apply_maos_patches() {
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
                 "external/roboto-fonts:roboto_fonts.patch" \
                 "packages/apps/GmsCompat:gmscompat.patch"; do
-        repo="${spec%%:*}"; patch="$TREE/$patches/${spec##*:}"
-        [[ -f "$patch" ]] || die "Missing patch file: $patch"
-        [[ -d "$repo" ]]  || die "Missing repo for patch: $repo"
-        if git -C "$repo" apply --reverse --check "$patch" 2>/dev/null; then
-            log "Patch already applied to $repo (${spec##*:})"
-        elif git -C "$repo" apply --check "$patch" 2>/dev/null; then
-            git -C "$repo" apply "$patch"
-            log "Applied ${spec##*:} to $repo"
-        else
-            die "${spec##*:} does not apply to $repo. GrapheneOS tag $TAG likely moved these
-    files; rebase the patch (edit $repo, then: git -C $repo diff > $patch)."
-        fi
+        apply_spec "${spec%%:*}" "${spec##*:}"
     done
+    # Per-app Sensors-OPTOUT markers for inherited system apps (one patch per project;
+    # the list keeps this function free of a 60-entry enumeration).
+    local optout_list="$TREE/$patches/sensor-optout.list" repo patch
+    [[ -f "$optout_list" ]] || die "Missing $optout_list"
+    while IFS=: read -r repo patch; do
+        [[ -z "$repo" || "$repo" == \#* ]] && continue
+        apply_spec "$repo" "$patch"
+    done < "$optout_list"
 }
 
 phase_sync() {

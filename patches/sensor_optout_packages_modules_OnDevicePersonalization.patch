@@ -1,0 +1,26 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 77027b6b..66af40fa 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -55,6 +55,8 @@
+ 
+     <uses-permission android:name="android.permission.ondevicepersonalization.ACCESS_SYSTEM_SERVER_SERVICE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name=".OnDevicePersonalizationApplication"
+                  android:forceQueryable="true">
+         <service android:name=".OnDevicePersonalizationManagingServiceImpl" android:exported="true" >
+diff --git a/federatedcompute/apk/AndroidManifest.xml b/federatedcompute/apk/AndroidManifest.xml
+index 595bb586..7e369ada 100644
+--- a/federatedcompute/apk/AndroidManifest.xml
++++ b/federatedcompute/apk/AndroidManifest.xml
+@@ -40,6 +40,8 @@
+     <uses-permission
+         android:name="android.permission.BIND_EXAMPLE_STORE_SERVICE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:forceQueryable="true">
+         <service android:name=".FederatedComputeManagingServiceImpl" android:exported="true">
+             <intent-filter>

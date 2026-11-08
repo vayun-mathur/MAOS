@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index cdc215c..a201e6f 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -18,6 +18,8 @@
+         package="com.android.providers.partnerbookmarks">
+ 
+     <!-- We add an application tag here just to indicate the authorities -->
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application>
+         <provider android:name="PartnerBookmarksProvider"
+             android:authorities="com.android.partnerbookmarks"

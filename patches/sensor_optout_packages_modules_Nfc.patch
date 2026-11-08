@@ -1,0 +1,26 @@
+diff --git a/NfcNci/AndroidManifest.xml b/NfcNci/AndroidManifest.xml
+index bd793e6e5..cad6f5b85 100755
+--- a/NfcNci/AndroidManifest.xml
++++ b/NfcNci/AndroidManifest.xml
+@@ -75,6 +75,8 @@
+     <uses-permission android:name="android.permission.UPDATE_DEVICE_STATS"/>
+ 
+     <protected-broadcast android:name="android.nfc.intent.action.WATCHDOG" />
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name=".NfcApplication"
+                  android:icon="@drawable/icon"
+                  android:label="@string/app_name"
+diff --git a/NfcNci/NfcMigration/AndroidManifest.xml b/NfcNci/NfcMigration/AndroidManifest.xml
+index 734efdf6d..b980a3f18 100755
+--- a/NfcNci/NfcMigration/AndroidManifest.xml
++++ b/NfcNci/NfcMigration/AndroidManifest.xml
+@@ -21,6 +21,8 @@
+     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="NFC Migration"
+                  android:directBootAware="true"
+                  android:defaultToDeviceProtectedStorage="true">

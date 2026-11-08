@@ -243,6 +243,48 @@ index b6fa05f754ac..182b9cbdced3 100644
          }
      }
  }
+diff --git a/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java b/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
+index 699072c44a87..3c82843e396a 100644
+--- a/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
++++ b/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
+@@ -1068,7 +1068,14 @@ public class ParsingPackageUtils {
+             }
+         }
+ 
+-        if (pkg.isDeclaredHavingCode() && !pkg.getUsesPermissionMapping().containsKey(android.Manifest.permission.OTHER_SENSORS)) {
++        // MAOS: apps declaring com.vayunmathur.permission.SENSORS_OPTOUT never
++        // receive the implicit GrapheneOS Sensors (OTHER_SENSORS) permission. The
++        // opt-out marker is already in the uses-permission mapping here (manifest
++        // tags parse earlier, hook-added ones merge just above), so its presence
++        // is a reliable signal at this point.
++        // (Unrelated to BODY_SENSORS, which this does not touch.)
++        if (pkg.isDeclaredHavingCode() && !pkg.getUsesPermissionMapping().containsKey(android.Manifest.permission.OTHER_SENSORS)
++                && !pkg.getUsesPermissionMapping().containsKey("com.vayunmathur.permission.SENSORS_OPTOUT")) {
+             pkg.addImplicitPermission(android.Manifest.permission.OTHER_SENSORS);
+         }
+ 
+diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
+index fa2c3f0534c0..7ea81f0bca58 100644
+--- a/core/res/AndroidManifest.xml
++++ b/core/res/AndroidManifest.xml
+@@ -9210,6 +9210,17 @@
+                 android:protectionLevel="internal|role|installer"
+                 android:permissionFlags="allowedInPrivateComputeCore" />
+ 
++    <!-- MAOS: marker permission telling the system to withhold the GrapheneOS
++         Sensors permission (android.permission.OTHER_SENSORS, i.e. gyroscope,
++         accelerometer, magnetometer, etc. - unrelated to BODY_SENSORS) from the
++         declaring app: ParsingPackageUtils skips the implicit OTHER_SENSORS add
++         and SpecialRuntimePermUtils skips the fresh-install auto-grant, so the
++         app installs with Sensors denied. The user can still grant it per-app
++         in Settings. Declared by MA system apps, the GmsCompat shim, Settings,
++         and MA apps (via the shared library manifest). -->
++    <permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT"
++                android:protectionLevel="normal" />
++
+     <!-- @SystemApi Permission that protects the {@link Intent#ACTION_REVIEW_ACCESSIBILITY_SERVICES}
+          intent.
+          @hide -->
 diff --git a/core/res/res/values/config_ext.xml b/core/res/res/values/config_ext.xml
 index 9f66d22bca1a..1775a9e65919 100644
 --- a/core/res/res/values/config_ext.xml
@@ -450,6 +492,279 @@ index 8cbc3000c250..a453346df82e 100644
      <family lang="und-Arab" variant="elegant">
          <font weight="400" style="normal" postScriptName="NotoNaskhArabic">
              NotoNaskhArabic-Regular.ttf
+diff --git a/packages/BackupRestoreConfirmation/AndroidManifest.xml b/packages/BackupRestoreConfirmation/AndroidManifest.xml
+index fee46576d588..9405700069c0 100644
+--- a/packages/BackupRestoreConfirmation/AndroidManifest.xml
++++ b/packages/BackupRestoreConfirmation/AndroidManifest.xml
+@@ -22,6 +22,8 @@
+     <uses-permission android:name="android.permission.BACKUP" />
+     <uses-permission android:name="android.permission.CRYPT_KEEPER" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowClearUserData="false"
+                  android:allowBackup="false"
+                  android:permission="android.permission.CONFIRM_FULL_BACKUP" >
+diff --git a/packages/CarrierDefaultApp/AndroidManifest.xml b/packages/CarrierDefaultApp/AndroidManifest.xml
+index f07e33e768c4..9590e91ac5fc 100644
+--- a/packages/CarrierDefaultApp/AndroidManifest.xml
++++ b/packages/CarrierDefaultApp/AndroidManifest.xml
+@@ -30,6 +30,8 @@
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/app_name"
+         android:directBootAware="true"
+diff --git a/packages/CompanionDeviceManager/AndroidManifest.xml b/packages/CompanionDeviceManager/AndroidManifest.xml
+index 8c933f87bbfc..c48acce74246 100644
+--- a/packages/CompanionDeviceManager/AndroidManifest.xml
++++ b/packages/CompanionDeviceManager/AndroidManifest.xml
+@@ -33,6 +33,8 @@
+     <uses-permission android:name="android.permission.HIDE_NON_SYSTEM_OVERLAY_WINDOWS"/>
+     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowClearUserData="true"
+         android:label="@string/app_label"
+diff --git a/packages/CredentialManager/AndroidManifest.xml b/packages/CredentialManager/AndroidManifest.xml
+index 1ac8e19c2bc6..77d87f5ef894 100644
+--- a/packages/CredentialManager/AndroidManifest.xml
++++ b/packages/CredentialManager/AndroidManifest.xml
+@@ -26,6 +26,8 @@
+     <uses-permission android:name="android.permission.ACCESS_INSTANT_APPS" />
+     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowBackup="true"
+         android:dataExtractionRules="@xml/data_extraction_rules"
+diff --git a/packages/DynamicSystemInstallationService/AndroidManifest.xml b/packages/DynamicSystemInstallationService/AndroidManifest.xml
+index 776bf2b761ce..a375da87ce26 100644
+--- a/packages/DynamicSystemInstallationService/AndroidManifest.xml
++++ b/packages/DynamicSystemInstallationService/AndroidManifest.xml
+@@ -11,6 +11,8 @@
+     <uses-permission android:name="android.permission.READ_OEM_UNLOCK_STATE" />
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowBackup="false"
+         android:label="@string/app_name">
+diff --git a/packages/EasterEgg/AndroidManifest.xml b/packages/EasterEgg/AndroidManifest.xml
+index 34789819e316..c433e5a4c2de 100644
+--- a/packages/EasterEgg/AndroidManifest.xml
++++ b/packages/EasterEgg/AndroidManifest.xml
+@@ -33,6 +33,8 @@
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:icon="@drawable/android16_patch_adaptive"
+         android:label="@string/app_name">
+diff --git a/packages/EncryptedLocalTransport/AndroidManifest.xml b/packages/EncryptedLocalTransport/AndroidManifest.xml
+index dc3617fa6d4e..3446e6782ca3 100644
+--- a/packages/EncryptedLocalTransport/AndroidManifest.xml
++++ b/packages/EncryptedLocalTransport/AndroidManifest.xml
+@@ -21,6 +21,8 @@
+       android:sharedUserId="android.uid.system" >
+ 
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowBackup="false" >
+         <!-- This service does not need to be exported because it shares uid with the system server
+         which is the only client. -->
+diff --git a/packages/ExternalStorageProvider/AndroidManifest.xml b/packages/ExternalStorageProvider/AndroidManifest.xml
+index 9b43d9f22390..8a87ea0c226e 100644
+--- a/packages/ExternalStorageProvider/AndroidManifest.xml
++++ b/packages/ExternalStorageProvider/AndroidManifest.xml
+@@ -7,6 +7,8 @@
+     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/app_label">
+         <provider
+             android:name=".ExternalStorageProvider"
+diff --git a/packages/FakeOemFeatures/AndroidManifest.xml b/packages/FakeOemFeatures/AndroidManifest.xml
+index a66521d98822..56ea2c4b93c8 100644
+--- a/packages/FakeOemFeatures/AndroidManifest.xml
++++ b/packages/FakeOemFeatures/AndroidManifest.xml
+@@ -5,6 +5,8 @@
+ 
+     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:persistent="true"
+         android:name=".FakeApp"
+diff --git a/packages/FusedLocation/AndroidManifest.xml b/packages/FusedLocation/AndroidManifest.xml
+index 56fe38905660..4058ac8ceaa0 100644
+--- a/packages/FusedLocation/AndroidManifest.xml
++++ b/packages/FusedLocation/AndroidManifest.xml
+@@ -33,6 +33,8 @@
+     <attribution android:tag="FusedOverlayService" android:label="@string/fused_overlay_service"/>
+     <attribution android:tag="GnssOverlayService" android:label="@string/gnss_overlay_service"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+             android:label="@string/app_label"
+             android:process="system"
+diff --git a/packages/InputDevices/AndroidManifest.xml b/packages/InputDevices/AndroidManifest.xml
+index 01b0bc7b3052..46d6a0e7aa56 100644
+--- a/packages/InputDevices/AndroidManifest.xml
++++ b/packages/InputDevices/AndroidManifest.xml
+@@ -3,6 +3,8 @@
+         coreApp="true"
+         android:sharedUserId="android.uid.system">
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+             android:allowClearUserData="false"
+             android:label="@string/app_label"
+diff --git a/packages/Keyguard/AndroidManifest.xml b/packages/Keyguard/AndroidManifest.xml
+index 165fe05628d6..b2678ac7d8e8 100644
+--- a/packages/Keyguard/AndroidManifest.xml
++++ b/packages/Keyguard/AndroidManifest.xml
+@@ -42,6 +42,8 @@
+     <uses-permission android:name="android.permission.TRUST_LISTENER" />
+     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/app_name"
+         android:process="com.android.systemui"
+         android:persistent="true"
+diff --git a/packages/LocalTransport/AndroidManifest.xml b/packages/LocalTransport/AndroidManifest.xml
+index 196be1e998f3..11295def79ab 100644
+--- a/packages/LocalTransport/AndroidManifest.xml
++++ b/packages/LocalTransport/AndroidManifest.xml
+@@ -21,6 +21,8 @@
+       android:sharedUserId="android.uid.system" >
+ 
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowBackup="false" >
+         <!-- This service does not need to be exported because it shares uid with the system server
+         which is the only client. -->
+diff --git a/packages/PackageInstaller/AndroidManifest.xml b/packages/PackageInstaller/AndroidManifest.xml
+index a189c4e7fff4..5f5e2995ebd2 100644
+--- a/packages/PackageInstaller/AndroidManifest.xml
++++ b/packages/PackageInstaller/AndroidManifest.xml
+@@ -29,6 +29,8 @@
+     <uses-permission android:name="com.google.android.permission.INSTALL_WEARABLE_PACKAGES" />
+     <uses-permission android:name="android.permission.SET_DEVELOPER_VERIFICATION_USER_RESPONSE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:name=".PackageInstallerApplication"
+             android:label="@string/app_name"
+             android:icon="@drawable/ic_app_icon"
+diff --git a/packages/PrintRecommendationService/AndroidManifest.xml b/packages/PrintRecommendationService/AndroidManifest.xml
+index b5920e26de71..120996ad18a4 100644
+--- a/packages/PrintRecommendationService/AndroidManifest.xml
++++ b/packages/PrintRecommendationService/AndroidManifest.xml
+@@ -25,6 +25,8 @@
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowClearUserData="false"
+         android:label="@string/app_label"
+diff --git a/packages/PrintSpooler/AndroidManifest.xml b/packages/PrintSpooler/AndroidManifest.xml
+index f97b75884a8a..99c8f53f43fe 100644
+--- a/packages/PrintSpooler/AndroidManifest.xml
++++ b/packages/PrintSpooler/AndroidManifest.xml
+@@ -42,6 +42,8 @@
+     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowClearUserData="true"
+         android:label="@string/app_label"
+diff --git a/packages/SettingsProvider/AndroidManifest.xml b/packages/SettingsProvider/AndroidManifest.xml
+index 79677eeac429..fa7fb1d621ae 100644
+--- a/packages/SettingsProvider/AndroidManifest.xml
++++ b/packages/SettingsProvider/AndroidManifest.xml
+@@ -6,6 +6,8 @@
+     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowClearUserData="false"
+                  android:label="@string/app_label"
+                  android:process="system"
+diff --git a/packages/SharedStorageBackup/AndroidManifest.xml b/packages/SharedStorageBackup/AndroidManifest.xml
+index c821766961f0..b12d0054596a 100644
+--- a/packages/SharedStorageBackup/AndroidManifest.xml
++++ b/packages/SharedStorageBackup/AndroidManifest.xml
+@@ -22,6 +22,8 @@
+     <uses-permission android:name="android.permission.WRITE_MEDIA_STORAGE" />
+     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowClearUserData="false"
+                  android:permission="android.permission.CONFIRM_FULL_BACKUP"
+                  android:backupAgent="SharedStorageAgent" >
+diff --git a/packages/SimAppDialog/AndroidManifest.xml b/packages/SimAppDialog/AndroidManifest.xml
+index 873f6c5bac54..6d0f7ccef8fe 100644
+--- a/packages/SimAppDialog/AndroidManifest.xml
++++ b/packages/SimAppDialog/AndroidManifest.xml
+@@ -18,6 +18,8 @@
+ -->
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+           package="com.android.simappdialog">
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="@string/app_name">
+         <activity
+             android:name=".InstallCarrierAppActivity"
+diff --git a/packages/SoundPicker/AndroidManifest.xml b/packages/SoundPicker/AndroidManifest.xml
+index 98fee5bc7c6d..d872eac11dea 100644
+--- a/packages/SoundPicker/AndroidManifest.xml
++++ b/packages/SoundPicker/AndroidManifest.xml
+@@ -11,6 +11,8 @@
+ 
+     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowBackup="false"
+         android:label="@string/app_label"
+diff --git a/packages/StatementService/AndroidManifest.xml b/packages/StatementService/AndroidManifest.xml
+index 42cd14314954..15118e89d08b 100644
+--- a/packages/StatementService/AndroidManifest.xml
++++ b/packages/StatementService/AndroidManifest.xml
+@@ -30,6 +30,8 @@
+     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+     <uses-permission android:name="android.permission.UPDATE_DOMAIN_VERIFICATION_USER_SELECTION"/>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/service_name"
+         android:allowBackup="false"
 diff --git a/packages/SystemUI/src/com/android/systemui/display/domain/interactor/ConnectedDisplayInteractor.kt b/packages/SystemUI/src/com/android/systemui/display/domain/interactor/ConnectedDisplayInteractor.kt
 index 72f92bd65473..42969f418d96 100644
 --- a/packages/SystemUI/src/com/android/systemui/display/domain/interactor/ConnectedDisplayInteractor.kt
@@ -471,6 +786,97 @@ index 72f92bd65473..42969f418d96 100644
      }
  
      private fun isSecureDisplay(display: Display): Boolean {
+diff --git a/packages/VirtualDeviceManager/AndroidManifest.xml b/packages/VirtualDeviceManager/AndroidManifest.xml
+index 89c082788401..05d9fe180d8f 100644
+--- a/packages/VirtualDeviceManager/AndroidManifest.xml
++++ b/packages/VirtualDeviceManager/AndroidManifest.xml
+@@ -7,6 +7,8 @@
+     <uses-permission android:name="android.permission.UPDATE_APP_OPS_STATS" />
+     <uses-permission android:name="android.permission.MANAGE_COMPUTER_CONTROL_CONSENT" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowBackup="false"
+         android:allowClearUserData="false"
+diff --git a/packages/VpnDialogs/AndroidManifest.xml b/packages/VpnDialogs/AndroidManifest.xml
+index 6ccfaf3e0b66..aaa1c6e98c86 100644
+--- a/packages/VpnDialogs/AndroidManifest.xml
++++ b/packages/VpnDialogs/AndroidManifest.xml
+@@ -26,6 +26,8 @@
+     <!-- Query all packages on device on R+ -->
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="VpnDialogs"
+                  android:allowBackup="false">
+ 
+diff --git a/packages/WAPPushManager/AndroidManifest.xml b/packages/WAPPushManager/AndroidManifest.xml
+index 15f01e678b43..c237d38904e7 100644
+--- a/packages/WAPPushManager/AndroidManifest.xml
++++ b/packages/WAPPushManager/AndroidManifest.xml
+@@ -26,6 +26,8 @@
+     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+ 
+     <original-package android:name="com.android.smspush" />
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowClearUserData="false"
+         android:directBootAware="true">
+diff --git a/packages/WallpaperBackup/AndroidManifest.xml b/packages/WallpaperBackup/AndroidManifest.xml
+index 437b65da6d5a..e0e460a9b45a 100644
+--- a/packages/WallpaperBackup/AndroidManifest.xml
++++ b/packages/WallpaperBackup/AndroidManifest.xml
+@@ -30,6 +30,8 @@
+         </intent>
+     </queries>
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:allowClearUserData="false"
+                  android:killAfterRestore="false"
+                  android:allowBackup="true"
+diff --git a/packages/WallpaperCropper/AndroidManifest.xml b/packages/WallpaperCropper/AndroidManifest.xml
+index 44592e75b601..d023fe3c7b00 100644
+--- a/packages/WallpaperCropper/AndroidManifest.xml
++++ b/packages/WallpaperCropper/AndroidManifest.xml
+@@ -21,6 +21,8 @@
+         <uses-permission android:name="android.permission.SET_WALLPAPER" />
+         <uses-permission android:name="android.permission.SET_WALLPAPER_HINTS" />
+ 
++        <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++        <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+         <application
+             android:requiredForAllUsers="true"
+             android:largeHeap="true">
+diff --git a/packages/services/PacProcessor/AndroidManifest.xml b/packages/services/PacProcessor/AndroidManifest.xml
+index 533098cbdc75..5d26b468b00a 100644
+--- a/packages/services/PacProcessor/AndroidManifest.xml
++++ b/packages/services/PacProcessor/AndroidManifest.xml
+@@ -5,6 +5,8 @@
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/app_name"
+         android:defaultToDeviceProtectedStorage="true"
+diff --git a/packages/services/Proxy/AndroidManifest.xml b/packages/services/Proxy/AndroidManifest.xml
+index 5cf79eb54455..e3ca07e32cf7 100644
+--- a/packages/services/Proxy/AndroidManifest.xml
++++ b/packages/services/Proxy/AndroidManifest.xml
+@@ -11,6 +11,8 @@
+     <uses-permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL" />
+     <uses-permission android:name="android.permission.FORCE_USE_LOOPBACK_INTERFACE" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/app_label"
+         android:process="com.android.proxyhandler"
 diff --git a/services/core/java/com/android/server/display/DisplayDeviceInfo.java b/services/core/java/com/android/server/display/DisplayDeviceInfo.java
 index a5eb85f87b80..e3f767d2594a 100644
 --- a/services/core/java/com/android/server/display/DisplayDeviceInfo.java
@@ -802,6 +1208,28 @@ index e6fba2fadd1e..94a93f0e83f5 100644
              boolean hasInternetPerm = mContext.checkCallingPermission(
                      android.Manifest.permission.INTERNET) == PERMISSION_GRANTED;
              if (hasInternetPerm) {
+diff --git a/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java b/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
+index 8ab2dbda2d02..02c72145bd70 100644
+--- a/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
++++ b/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
+@@ -41,6 +41,17 @@ public class SpecialRuntimePermUtils {
+         }
+ 
+         if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
++            // MAOS: SENSORS_OPTOUT withholds the GrapheneOS Sensors permission
++            // from the fresh-install auto-grant as a failsafe. Declaring apps
++            // never receive the implicit OTHER_SENSORS request at parse time,
++            // so there is nothing for the user to grant, not even via Settings.
++            // The marker is protectionLevel normal, hence granted by install time.
++            if (ctx.getPackageManager().checkPermission(
++                    "com.vayunmathur.permission.SENSORS_OPTOUT", packageName)
++                    == PackageManager.PERMISSION_GRANTED) {
++                return false;
++            }
++
+             if (ActivityManager.getService() == null) {
+                 // a failsafe: should never happen
+                 Slog.d(TAG, "AMS is null");
 diff --git a/services/core/java/com/android/server/wm/WindowManagerService.java b/services/core/java/com/android/server/wm/WindowManagerService.java
 index b50c541b8329..05cc079120a7 100644
 --- a/services/core/java/com/android/server/wm/WindowManagerService.java
@@ -846,62 +1274,3 @@ index b50c541b8329..05cc079120a7 100644
      }
  
      @EnforcePermission(android.Manifest.permission.MANAGE_DISPLAYS)
-diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
---- a/core/res/AndroidManifest.xml
-+++ b/core/res/AndroidManifest.xml
-@@ -9210,6 +9210,17 @@
-                 android:protectionLevel="internal|role|installer"
-                 android:permissionFlags="allowedInPrivateComputeCore" />
-
-+    <!-- MAOS: marker permission telling the system to withhold the GrapheneOS
-+         Sensors permission (android.permission.OTHER_SENSORS, i.e. gyroscope,
-+         accelerometer, magnetometer, etc. - unrelated to BODY_SENSORS) from the
-+         declaring app: ParsingPackageUtils skips the implicit OTHER_SENSORS add
-+         and SpecialRuntimePermUtils skips the fresh-install auto-grant, so the
-+         app installs with Sensors denied. The user can still grant it per-app
-+         in Settings. Declared by MA system apps, the GmsCompat shim, Settings,
-+         and MA apps (via the shared library manifest). -->
-+    <permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT"
-+                android:protectionLevel="normal" />
-+
-     <!-- @SystemApi Permission that protects the {@link Intent#ACTION_REVIEW_ACCESSIBILITY_SERVICES}
-          intent.
-          @hide -->
-diff --git a/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java b/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
---- a/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
-+++ b/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
-@@ -1068,7 +1068,14 @@
-         }
-
-+        // MAOS: apps declaring com.vayunmathur.permission.SENSORS_OPTOUT never
-+        // receive the implicit GrapheneOS Sensors (OTHER_SENSORS) permission. The
-+        // opt-out marker is already in the uses-permission mapping here (manifest
-+        // tags parse earlier, hook-added ones merge just above), so its presence
-+        // is a reliable signal at this point.
-+        // (Unrelated to BODY_SENSORS, which this does not touch.)
--        if (pkg.isDeclaredHavingCode() && !pkg.getUsesPermissionMapping().containsKey(android.Manifest.permission.OTHER_SENSORS)) {
-+        if (pkg.isDeclaredHavingCode() && !pkg.getUsesPermissionMapping().containsKey(android.Manifest.permission.OTHER_SENSORS)
-+                && !pkg.getUsesPermissionMapping().containsKey("com.vayunmathur.permission.SENSORS_OPTOUT")) {
-             pkg.addImplicitPermission(android.Manifest.permission.OTHER_SENSORS);
-         }
-
-         convertCompatPermissions(pkg);
-diff --git a/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java b/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
---- a/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
-+++ b/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
-@@ -41,4 +41,14 @@
-         }
-
-         if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
-+            // MAOS: SENSORS_OPTOUT withholds the GrapheneOS Sensors permission
-+            // from the fresh-install auto-grant as a failsafe. Declaring apps
-+            // never receive the implicit OTHER_SENSORS request at parse time,
-+            // so there is nothing for the user to grant, not even via Settings.
-+            // The marker is protectionLevel normal, hence granted by install time.
-+            if (ctx.getPackageManager().checkPermission(
-+                    "com.vayunmathur.permission.SENSORS_OPTOUT", packageName)
-+                    == PackageManager.PERMISSION_GRANTED) {
-+                return false;
-+            }
-+
-             if (ActivityManager.getService() == null) {

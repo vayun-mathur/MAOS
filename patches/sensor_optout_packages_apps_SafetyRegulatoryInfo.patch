@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 83437ae..f7048c1 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -16,6 +16,8 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.android.safetyregulatoryinfo">
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:allowBackup="false"
+         android:label="@string/app_name"

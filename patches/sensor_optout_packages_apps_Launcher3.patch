@@ -1,0 +1,26 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 2579786d50..d20ea6bf40 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -30,6 +30,8 @@
+     <permission android:name="${applicationId}.permission.START_WIDGET_PICKER_ACTIVITY"
+         android:protectionLevel="signature|privileged" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:backupAgent="com.android.launcher3.LauncherBackupAgent"
+         android:fullBackupOnly="true"
+diff --git a/quickstep/AndroidManifest.xml b/quickstep/AndroidManifest.xml
+index 789e0a5263..e1ffcf0a22 100644
+--- a/quickstep/AndroidManifest.xml
++++ b/quickstep/AndroidManifest.xml
+@@ -75,6 +75,8 @@
+         android:name="com.android.documentsui.LAUNCH_FILE_MANAGER"
+         android:featureFlag="com.android.launcher3.show_files_on_home_screen" />
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:backupAgent="com.android.launcher3.LauncherBackupAgent"
+          android:enableOnBackInvokedCallback="true"
+          android:fullBackupOnly="true"

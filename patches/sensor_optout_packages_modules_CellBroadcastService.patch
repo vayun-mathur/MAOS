@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index a208135..5186134 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -53,6 +53,8 @@ pixel-onboarding-eng@ and aob-platform-Op@. Please refer b/317302212 for details
+     <!-- Need to set usesCleartextTraffic="true" as every APK in the process
+     must set it to avoid races. The flag is necessary for the NetworkStack
+     module. See b/161860610. -->
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application android:label="Cell Broadcast Service"
+         android:defaultToDeviceProtectedStorage="true"
+         android:directBootAware="true"

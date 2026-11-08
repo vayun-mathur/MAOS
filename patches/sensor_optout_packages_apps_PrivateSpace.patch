@@ -1,0 +1,13 @@
+diff --git a/AndroidManifest.xml b/AndroidManifest.xml
+index 5783c9e..c72e28c 100644
+--- a/AndroidManifest.xml
++++ b/AndroidManifest.xml
+@@ -19,6 +19,8 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+     package="com.android.privatespace">
+ 
++    <!-- MAOS: opt out of the GrapheneOS Sensors permission (never requested nor granted). -->
++    <uses-permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT" />
+     <application
+         android:label="@string/private_space_app_label"
+         android:icon="@mipmap/ic_app_icon"
