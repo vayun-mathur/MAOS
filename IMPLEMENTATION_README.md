@@ -135,3 +135,28 @@ front-end lives in the `location_share_server` repo (`os_installer/`); the build
 (turning a factory image into the manifest + images it flashes, and uploading to R2) is in
 [`installer/`](installer/README.md). Requires a Chromium desktop browser and an R2 CORS
 policy allowing `https://ma.vayunmathur.com`.
+
+## Base rebases
+
+### 2026080500 → 2026110700 (`d4c1a74`)
+
+- Only `patches/frameworks_base.patch` needed regenerating: the `config_ext.xml`
+  hunk re-anchored (`@@ -51,4` → `@@ -58,4`) after upstream appended new
+  `setting_default_display_color_mode` + `setting_default_allow_clipboard_read`
+  entries at the end of the file. MAOS content is identical — the first-party
+  store stays `com.vayunmathur.appstore`.
+- App list unchanged: 23 repos removed upstream, all unused Car/TV leftovers none
+  of which MAOS marks, so `sensor-optout.list` is untouched (the rebase touches
+  only `build-maos.sh` and `frameworks_base.patch`).
+- Upstream behavior deltas to know at the next rebase (hashes are upstream
+  `~/maos` commits, not re-verified in this repo):
+  1. `LocationRequest`/`LastLocationRequest.setCoarse()` coarsened-location API
+     (upstream `138e17945`; GmsCompat `10f829b` adopted it).
+  2. Hibernation exemption set `HIBERNATION_EXEMPT_SYSTEM_PACKAGES` (upstream
+     `1539b4b9d7`); our store is NOT in it — separate patch in flight.
+  3. Secure-paste clipboard policy + per-app toggle (upstream `96d35a691c41`,
+     default-allow).
+  4. Contact Scopes calling-app identity (upstream `4196e9c2`).
+  5. Sensors permission now implicitly added via `addImplicitPermission` with a
+     `hasCode=false` skip (upstream `b1fc9e346db3`); our `SENSORS_OPTOUT`
+     exemption lives in our own patch.
