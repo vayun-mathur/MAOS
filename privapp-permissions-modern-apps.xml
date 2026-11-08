@@ -170,6 +170,14 @@
         <permission name="android.permission.ALLOCATE_AGGRESSIVE"/>
     </privapp-permissions>
 
+    <!-- Store (com.vayunmathur.appstore) is the first-party package source. INSTALL_PACKAGES
+         lets it apply updates silently when held; without it the app falls back to a
+         user-confirmed install session. Updater (com.vayunmathur.updater) applies OTAs via
+         update_engine and needs no install permission, so it is intentionally absent here. -->
+    <privapp-permissions package="com.vayunmathur.appstore">
+        <permission name="android.permission.INSTALL_PACKAGES"/>
+    </privapp-permissions>
+
     <!-- Emergency (com.vayunmathur.emergency) is the EMERGENCY role holder and replaces AOSP's
          EmergencyInfo. It needs these signature|privileged perms: CALL_PRIVILEGED places the
          emergency call, WRITE_SECURE_SETTINGS lets the gesture provider persist the

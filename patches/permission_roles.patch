@@ -23,6 +23,20 @@ index dadfd1bf3a..bcc93965c4 100644
          exclusive="false"
          exclusivity="none"
          minSdkVersion="33"
+diff --git a/PermissionController/src/com/android/permissioncontroller/hibernation/HibernationPolicy.kt b/PermissionController/src/com/android/permissioncontroller/hibernation/HibernationPolicy.kt
+index 5777343127..67c647749b 100644
+--- a/PermissionController/src/com/android/permissioncontroller/hibernation/HibernationPolicy.kt
++++ b/PermissionController/src/com/android/permissioncontroller/hibernation/HibernationPolicy.kt
+@@ -126,6 +126,9 @@ private val HIBERNATION_EXEMPT_SYSTEM_PACKAGES =
+         "app.attestation.auditor",
+         "app.grapheneos.apps",
+         "app.seamlessupdate.client",
++        // MAOS: first-party store and updater must never hibernate.
++        "com.vayunmathur.appstore",
++        "com.vayunmathur.updater",
+     )
+ 
+ private var SKIP_NEXT_RUN = false
 diff --git a/SafetyCenter/Resources/AndroidManifest.xml b/SafetyCenter/Resources/AndroidManifest.xml
 index 8129ddb01c..452246f827 100644
 --- a/SafetyCenter/Resources/AndroidManifest.xml
