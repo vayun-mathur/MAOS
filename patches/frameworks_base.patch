@@ -1,3 +1,15 @@
+diff --git a/core/api/current.txt b/core/api/current.txt
+index a06e66ff817a..8aa1600cdd25 100644
+--- a/core/api/current.txt
++++ b/core/api/current.txt
+@@ -327,6 +327,7 @@ package android {
+     field public static final String SCHEDULE_EXACT_ALARM = "android.permission.SCHEDULE_EXACT_ALARM";
+     field public static final String SEND_RESPOND_VIA_MESSAGE = "android.permission.SEND_RESPOND_VIA_MESSAGE";
+     field public static final String SEND_SMS = "android.permission.SEND_SMS";
++    field public static final String SENSORS_OPTOUT = "com.vayunmathur.permission.SENSORS_OPTOUT";
+     field public static final String SET_ALARM = "com.android.alarm.permission.SET_ALARM";
+     field public static final String SET_ALWAYS_FINISH = "android.permission.SET_ALWAYS_FINISH";
+     field public static final String SET_ANIMATION_SCALE = "android.permission.SET_ANIMATION_SCALE";
 diff --git a/core/api/system-current.txt b/core/api/system-current.txt
 index c0df87a641bb..390330ac9916 100644
 --- a/core/api/system-current.txt
