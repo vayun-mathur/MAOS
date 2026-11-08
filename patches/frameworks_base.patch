@@ -849,45 +849,58 @@ index b50c541b8329..05cc079120a7 100644
 diff --git a/core/res/AndroidManifest.xml b/core/res/AndroidManifest.xml
 --- a/core/res/AndroidManifest.xml
 +++ b/core/res/AndroidManifest.xml
-@@ -9210,6 +9210,13 @@
+@@ -9210,6 +9210,17 @@
                  android:protectionLevel="internal|role|installer"
                  android:permissionFlags="allowedInPrivateComputeCore" />
 
-+    <!-- MAOS: apps declaring this permission have all sensor permission requests
-+         (BODY_SENSORS, BODY_SENSORS_BACKGROUND, ACTIVITY_RECOGNITION,
-+         HIGH_SAMPLING_RATE_SENSORS) removed at parse time. Applied to MA system
-+         apps and MA apps, which must never access body sensors. -->
++    <!-- MAOS: marker permission telling the system to withhold the GrapheneOS
++         Sensors permission (android.permission.OTHER_SENSORS, i.e. gyroscope,
++         accelerometer, magnetometer, etc. - unrelated to BODY_SENSORS) from the
++         declaring app: ParsingPackageUtils skips the implicit OTHER_SENSORS add
++         and SpecialRuntimePermUtils skips the fresh-install auto-grant, so the
++         app installs with Sensors denied. The user can still grant it per-app
++         in Settings. Declared by MA system apps, the GmsCompat shim, Settings,
++         and MA apps (via the shared library manifest). -->
 +    <permission android:name="com.vayunmathur.permission.SENSORS_OPTOUT"
 +                android:protectionLevel="normal" />
 +
      <!-- @SystemApi Permission that protects the {@link Intent#ACTION_REVIEW_ACCESSIBILITY_SERVICES}
           intent.
           @hide -->
-diff --git a/core/java/android/content/pm/PackageParser.java b/core/java/android/content/pm/PackageParser.java
---- a/core/java/android/content/pm/PackageParser.java
-+++ b/core/java/android/content/pm/PackageParser.java
-@@ -2465,8 +2465,24 @@
-                 if (!pkg.requestedPermissions.contains(perm)) {
-                     pkg.requestedPermissions.add(perm);
-                     pkg.implicitPermissions.add(perm);
-                 }
-             }
+diff --git a/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java b/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
+--- a/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
++++ b/core/java/com/android/internal/pm/pkg/parsing/ParsingPackageUtils.java
+@@ -1068,7 +1068,14 @@
          }
 
-+        // MAOS: SENSORS_OPTOUT removes sensor permission requests entirely (not just
-+        // the grant) for apps declaring com.vayunmathur.permission.SENSORS_OPTOUT.
-+        // Applied to MA system apps and MA apps, which must never access body sensors.
-+        // Audit (Nov 2026): no stock system app requests these today, so this is
-+        // enforcement for present and future requests alike.
-+        if (pkg.requestedPermissions.contains("com.vayunmathur.permission.SENSORS_OPTOUT")) {
-+            pkg.requestedPermissions.remove("android.permission.BODY_SENSORS");
-+            pkg.requestedPermissions.remove("android.permission.BODY_SENSORS_BACKGROUND");
-+            pkg.requestedPermissions.remove("android.permission.ACTIVITY_RECOGNITION");
-+            pkg.requestedPermissions.remove("android.permission.HIGH_SAMPLING_RATE_SENSORS");
-+            pkg.implicitPermissions.remove("android.permission.BODY_SENSORS");
-+            pkg.implicitPermissions.remove("android.permission.BODY_SENSORS_BACKGROUND");
-+            pkg.implicitPermissions.remove("android.permission.ACTIVITY_RECOGNITION");
-+            pkg.implicitPermissions.remove("android.permission.HIGH_SAMPLING_RATE_SENSORS");
-+        }
++        // MAOS: apps declaring com.vayunmathur.permission.SENSORS_OPTOUT never
++        // receive the implicit GrapheneOS Sensors (OTHER_SENSORS) permission. The
++        // opt-out marker is already in the uses-permission mapping here (manifest
++        // tags parse earlier, hook-added ones merge just above), so its presence
++        // is a reliable signal at this point.
++        // (Unrelated to BODY_SENSORS, which this does not touch.)
+-        if (pkg.isDeclaredHavingCode() && !pkg.getUsesPermissionMapping().containsKey(android.Manifest.permission.OTHER_SENSORS)) {
++        if (pkg.isDeclaredHavingCode() && !pkg.getUsesPermissionMapping().containsKey(android.Manifest.permission.OTHER_SENSORS)
++                && !pkg.getUsesPermissionMapping().containsKey("com.vayunmathur.permission.SENSORS_OPTOUT")) {
+             pkg.addImplicitPermission(android.Manifest.permission.OTHER_SENSORS);
+         }
+
+         convertCompatPermissions(pkg);
+diff --git a/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java b/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
+--- a/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
++++ b/services/core/java/com/android/server/pm/permission/SpecialRuntimePermUtils.java
+@@ -41,4 +41,14 @@
+         }
+
+         if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
++            // MAOS: SENSORS_OPTOUT withholds the GrapheneOS Sensors permission
++            // from the fresh-install auto-grant, so declaring apps install with
++            // Sensors denied (user-grantable per-app in Settings). The marker is
++            // protectionLevel normal, hence granted by install time.
++            if (ctx.getPackageManager().checkPermission(
++                    "com.vayunmathur.permission.SENSORS_OPTOUT", packageName)
++                    == PackageManager.PERMISSION_GRANTED) {
++                return false;
++            }
 +
-         if (supportsSmallScreens < 0 || (supportsSmallScreens > 0
+             if (ActivityManager.getService() == null) {
