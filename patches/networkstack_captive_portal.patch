@@ -1,0 +1,37 @@
+diff --git a/res/values/config.xml b/res/values/config.xml
+index 65767cc..473e6f3 100644
+--- a/res/values/config.xml
++++ b/res/values/config.xml
+@@ -13,7 +13,10 @@
+          config_captive_portal_http_url and *NOT* by changing or overlaying
+          this resource. It will break if the enforcement of overlayable starts.
+          -->
+-    <string name="default_captive_portal_http_url_grapheneos" translatable="false">http://connectivitycheck.grapheneos.network/generate_204</string>
++    <!-- MAOS: self-hosted endpoint. The overlayable config_captive_portal_http_url hook
++         is not consulted by NetworkMonitor in this tree (it switches on ConnChecksSetting
++         between the default_* values below), so the GrapheneOS default is repointed here. -->
++    <string name="default_captive_portal_http_url_grapheneos" translatable="false">https://maproj.org/generate_204</string>
+     <string name="default_captive_portal_http_url" translatable="false">http://connectivitycheck.gstatic.com/generate_204</string>
+     <!-- HTTPS URL for network validation, to use for confirming internet connectivity. -->
+     <!-- default_captive_portal_https_url is not configured as overlayable so
+@@ -22,7 +25,8 @@
+          config_captive_portal_https_url and *NOT* by changing or overlaying
+          this resource. It will break if the enforcement of overlayable starts.
+          -->
+-    <string name="default_captive_portal_https_url_grapheneos" translatable="false">https://connectivitycheck.grapheneos.network/generate_204</string>
++    <!-- MAOS: self-hosted endpoint (same note as above). -->
++    <string name="default_captive_portal_https_url_grapheneos" translatable="false">https://maproj.org/generate_204</string>
+     <string name="default_captive_portal_https_url" translatable="false">https://www.google.com/generate_204</string>
+ 
+     <!-- List of fallback URLs to use for detecting captive portals. -->
+@@ -33,8 +37,8 @@
+          this resource. It will break if the enforcement of overlayable starts.
+          -->
+     <string-array name="default_captive_portal_fallback_urls_grapheneos" translatable="false">
+-        <item>http://grapheneos.online/gen_204</item>
+-        <item>http://grapheneos.online/generate_204</item>
++        <!-- MAOS: self-hosted endpoint (same note as above). -->
++        <item>https://maproj.org/generate_204</item>
+     </string-array>
+     <string-array name="default_captive_portal_fallback_urls" translatable="false">
+         <item>http://www.google.com/gen_204</item>

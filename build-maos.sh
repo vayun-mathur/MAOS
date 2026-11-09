@@ -277,7 +277,8 @@ apply_maos_patches() {
                 "packages/apps/Settings:settings.patch" \
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
                 "external/roboto-fonts:roboto_fonts.patch" \
-                "packages/apps/GmsCompat:gmscompat.patch"; do
+                "packages/apps/GmsCompat:gmscompat.patch" \
+                "packages/modules/NetworkStack:networkstack_captive_portal.patch"; do
         apply_spec "${spec%%:*}" "${spec##*:}"
     done
     # Per-app Sensors-OPTOUT markers for inherited system apps (one patch per project;
