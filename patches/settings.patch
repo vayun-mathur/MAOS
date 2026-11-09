@@ -821,3 +821,34 @@ index 73279f2d23a0b2c416fc42ba5c0a3cbbd923a137..f1d9e09384b175937492c2349d8533b6
          entries.add(R.string.psds_disabled, R.string.psds_disabled_summary, GnssSettings.PSDS_DISABLED);
      }
  }
+diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
+index 0b19916d085541257007bec7ad0c8de84066a50f..a20289c2822d5d908d36e84db2710ec070e2b5ab 100644
+--- a/res/values/strings_ext.xml
++++ b/res/values/strings_ext.xml
+@@ -49,7 +49,7 @@
+     <string name="pref_gnss_supl_title">Secure User Plane Location (SUPL)</string>
+     <string name="pref_gnss_supl_footer">A-GNSS (assisted satellite geolocation) based on nearby cell towers.</string>
+ 
+-    <string name="supl_enabled_grapheneos_proxy">GrapheneOS proxy</string>
++    <string name="supl_enabled_grapheneos_proxy">MAOS servers</string>
+     <string name="supl_enabled_standard_server">Standard server</string>
+     <string name="supl_disabled">Off</string>
+     <string name="supl_disabled_summary">Will make acquiring location lock significantly slower, especially if PSDS is turned off too</string>
+@@ -79,7 +79,7 @@
+ "If PSDS is turned on, static PSDS information files will be downloaded periodically to improve location resolution speed and accuracy.
+ No query or data is sent to the server. These files contain orbits and statuses of satellites, Earth environmental data and time adjustment information."
+ </string>
+-    <string name="psds_enabled_grapheneos_server">GrapheneOS server</string>
++    <string name="psds_enabled_grapheneos_server">MAOS servers</string>
+     <string name="psds_enabled_standard_server">Standard server</string>
+     <string name="psds_disabled">Off</string>
+     <string name="psds_disabled_summary">Will make acquiring location lock significantly slower, especially if SUPL is turned off too</string>
+@@ -88,7 +88,7 @@
+ 
+     <string name="storage_scopes">Storage Scopes</string>
+ 
+-    <string name="conn_checks_grapheneos_server">GrapheneOS server</string>
++    <string name="conn_checks_grapheneos_server">MAOS servers</string>
+     <string name="conn_checks_google_server">Standard (Google) server</string>
+     <string name="conn_checks_disabled">Off</string>
+ 
