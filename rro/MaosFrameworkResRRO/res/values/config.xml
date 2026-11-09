@@ -52,6 +52,21 @@
     <bool name="config_enableNetworkLocationOverlay">false</bool>
     <bool name="config_enableGeocoderOverlay">false</bool>
 
+    <!-- Time zone detection: NITZ (telephony) OFF, offline location provider ON.
+         The GeoTZ module's OfflineLocationTimeZoneProviderService (package
+         com.android.timezone.location.provider, bound via the
+         PrimaryLocationTimeZoneProviderService action) works from an offline DB with no
+         network, so it is the correct primary provider for MAOS. Telephony detection and
+         the geolocation->telephony fallback are both disabled so a stale/missing NITZ
+         signal can never override the location result. Secondary provider stays off. -->
+    <bool name="config_enableTelephonyTimeZoneDetection">false</bool>
+    <bool name="config_supportTelephonyTimeZoneFallback">false</bool>
+    <bool name="config_enableGeolocationTimeZoneDetection" translatable="false">true</bool>
+    <bool name="config_enablePrimaryLocationTimeZoneProvider" translatable="false">true</bool>
+    <string name="config_primaryLocationTimeZoneProviderPackageName" translatable="false">com.android.timezone.location.provider</string>
+    <bool name="config_enableSecondaryLocationTimeZoneProvider" translatable="false">false</bool>
+    <string name="config_secondaryLocationTimeZoneProviderPackageName" translatable="false"></string>
+
     <!-- Default app-data backup transport -> Modern Apps Backup. Replaces GrapheneOS's
          Seedvault (com.stevesoltys.seedvault) and the GrapheneOS contacts backup transport
          (app.grapheneos.backup.contacts), both removed in modern_apps.mk. This is the AOSP
