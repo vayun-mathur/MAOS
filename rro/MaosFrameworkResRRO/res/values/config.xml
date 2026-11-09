@@ -74,6 +74,15 @@
          ship a dead reference to a Google time server. -->
     <string-array translatable="false" name="config_ntpServers"></string-array>
 
+    <!-- HTTPS time detection: self-hosted endpoint. Replaces GrapheneOS's
+         https://time.grapheneos.org/generate_204 (the framework default in
+         config_httpsTimeUrls). The same URL doubles as the connectivity-check
+         endpoint — Android does not require time and connectivity checks to
+         use separate URLs. -->
+    <string-array translatable="false" name="config_httpsTimeUrls">
+        <item>https://maproj.org/generate_204</item>
+    </string-array>
+
     <!-- Default app-data backup transport -> Modern Apps Backup. Replaces GrapheneOS's
          Seedvault (com.stevesoltys.seedvault) and the GrapheneOS contacts backup transport
          (app.grapheneos.backup.contacts), both removed in modern_apps.mk. This is the AOSP
