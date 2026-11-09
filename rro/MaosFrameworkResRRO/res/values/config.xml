@@ -67,6 +67,13 @@
     <bool name="config_enableSecondaryLocationTimeZoneProvider" translatable="false">false</bool>
     <string name="config_secondaryLocationTimeZoneProviderPackageName" translatable="false"></string>
 
+    <!-- NTP server list: emptied. The framework's NtpTrustedTime hardcodes HTTPS mode at
+         runtime and never consults this array for time sync; only its dump() path reads it
+         (via getNtpConfigInternal, which iterates the array and tolerates empty). The stock
+         entry (ntp://time.android.com) is therefore inert, so drop the string rather than
+         ship a dead reference to a Google time server. -->
+    <string-array translatable="false" name="config_ntpServers"></string-array>
+
     <!-- Default app-data backup transport -> Modern Apps Backup. Replaces GrapheneOS's
          Seedvault (com.stevesoltys.seedvault) and the GrapheneOS contacts backup transport
          (app.grapheneos.backup.contacts), both removed in modern_apps.mk. This is the AOSP
