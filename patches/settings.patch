@@ -797,3 +797,27 @@ index 00000000000..8103a8b868e
 +    xmlns:android="http://schemas.android.com/apk/res/android"
 +    android:drawable="@drawable/ic_timelapse_shape"
 +    android:tint="@color/homepage_supervision_foreground" />
+diff --git a/src/com/android/settings/location/GnssSuplPrefController.java b/src/com/android/settings/location/GnssSuplPrefController.java
+index 95be474c9de03f45e0ed05ab5e054e913bd0b633..6f2b3198ddeb9d018d75e7742965d98cf74591cf 100644
+--- a/src/com/android/settings/location/GnssSuplPrefController.java
++++ b/src/com/android/settings/location/GnssSuplPrefController.java
+@@ -34,7 +34,6 @@
+     @Override
+     protected void getEntries(Entries entries) {
+         entries.add(R.string.supl_enabled_grapheneos_proxy, GnssSettings.SUPL_SERVER_GRAPHENEOS_PROXY);
+-        entries.add(R.string.supl_enabled_standard_server, GnssSettings.SUPL_SERVER_STANDARD);
+         entries.add(R.string.supl_disabled, R.string.supl_disabled_summary, GnssSettings.SUPL_DISABLED);
+     }
+ }
+diff --git a/src/com/android/settings/location/GnssPsdsPrefController.java b/src/com/android/settings/location/GnssPsdsPrefController.java
+index 73279f2d23a0b2c416fc42ba5c0a3cbbd923a137..f1d9e09384b175937492c2349d8533b644f14e18 100644
+--- a/src/com/android/settings/location/GnssPsdsPrefController.java
++++ b/src/com/android/settings/location/GnssPsdsPrefController.java
+@@ -43,7 +43,6 @@
+     @Override
+     protected void getEntries(Entries entries) {
+         entries.add(R.string.psds_enabled_grapheneos_server, GnssSettings.PSDS_SERVER_GRAPHENEOS);
+-        entries.add(R.string.psds_enabled_standard_server, GnssSettings.PSDS_SERVER_STANDARD);
+         entries.add(R.string.psds_disabled, R.string.psds_disabled_summary, GnssSettings.PSDS_DISABLED);
+     }
+ }
