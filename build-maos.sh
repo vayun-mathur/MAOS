@@ -53,9 +53,12 @@
 #   MAOS_RELEASE_JOBS=<n>          how many devices to sign/package (release) in parallel (default 4).
 #   MAOS_PUBLISH_JOBS=<n>          how many devices to upload (publish) in parallel (default 4).
 #   MAOS_BUILD_NUMBER=<n>          pin the build number (default: today's UTC date + "00").
+#   MAOS_TREE=<path>               AOSP checkout to use (default: $HOME/maos). Lets a rented
+#                                  build box or the release signer point at its own tree, e.g.
+#                                  a minimal one holding only releases/<build>/ + script/.
 #
 # ── Hardcoded ─────────────────────────────────────────────────────────────────────────────
-#   TREE=$HOME/maos (ext4 checkout)   R2_BUCKET=maos   BUILD=<tag> (matches the GrapheneOS tag)
+#   R2_BUCKET=maos   BUILD=<tag> (matches the GrapheneOS tag)
 #
 set -euo pipefail
 
@@ -89,7 +92,7 @@ else
 fi
 
 # ---- Hardcoded config ----
-TREE="$HOME/maos"                              # AOSP checkout (ext4; never /mnt/c)
+TREE="${MAOS_TREE:-$HOME/maos}"                # AOSP checkout (ext4; never /mnt/c)
 R2_BUCKET="maos"                               # R2 bucket / ota.maproj.org
 # BUILD starts as the tag, but the build number for a run is pinned by pin_build_number
 # (today's UTC date + "00", or $MAOS_BUILD_NUMBER) and exported as BUILD_NUMBER so every
