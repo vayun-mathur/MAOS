@@ -1,0 +1,40 @@
+diff --git a/services/core/java/com/android/server/location/gnss/GnssConfiguration.java b/services/core/java/com/android/server/location/gnss/GnssConfiguration.java
+index b8cd56bf0466..416d2f2e15dc 100644
+--- a/services/core/java/com/android/server/location/gnss/GnssConfiguration.java
++++ b/services/core/java/com/android/server/location/gnss/GnssConfiguration.java
+@@ -535,8 +535,10 @@ public class GnssConfiguration {
+                 props.remove(CONFIG_SUPL_PORT);
+                 break;
+             case GnssSettings.SUPL_SERVER_GRAPHENEOS_PROXY:
+-                Slog.d(TAG, "SUPL: using the GrapheneOS proxy");
+-                props.setProperty(CONFIG_SUPL_HOST, "supl.grapheneos.org");
++                // MAOS: self-hosted SUPL proxy. A TLS-terminating proxy will run on
++                // supl.maproj.org:7275 (same port as the GrapheneOS proxy it replaces).
++                Slog.d(TAG, "SUPL: using the MAOS proxy");
++                props.setProperty(CONFIG_SUPL_HOST, "supl.maproj.org");
+                 props.setProperty(CONFIG_SUPL_PORT, "7275");
+                 break;
+         }
+@@ -558,8 +560,11 @@ public class GnssConfiguration {
+ 
+         switch (psdsMode) {
+             case GnssSettings.PSDS_SERVER_GRAPHENEOS:
+-                final String hostname = psdsType + ".psds.grapheneos.org";
+-                Slog.d(TAG, "PSDS: using GrapheneOS server " + hostname);
++                // MAOS: self-hosted PSDS mirror on the static R2 bucket, laid out as
++                // psds/<type><original path> (e.g. psds/broadcom/...), replacing the
++                // <type>.psds.grapheneos.org host. STANDARD/DISABLED modes are untouched.
++                final String baseUrl = "https://static.maproj.org/psds/" + psdsType;
++                Slog.d(TAG, "PSDS: using MAOS server " + baseUrl);
+ 
+                 for (String propName : getPsdsPropNames()) {
+                     String origValue = props.getProperty(propName);
+@@ -578,7 +583,7 @@ public class GnssConfiguration {
+ 
+                     final URL url;
+                     try {
+-                        url = new URL("https", hostname, origUrl.getFile());
++                        url = new URL(baseUrl + origUrl.getFile());
+                     } catch (MalformedURLException e) {
+                         throw new IllegalStateException(e);
+                     }

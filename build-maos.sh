@@ -271,6 +271,7 @@ apply_maos_patches() {
     }
     for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
                 "frameworks/base:frameworks_base.patch" \
+                "frameworks/base:frameworks_base_gnss_servers.patch" \
                 "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
                 "packages/modules/Permission:permission_roles.patch" \
                 "frameworks/libs/systemui:frameworks_libs_systemui.patch" \
