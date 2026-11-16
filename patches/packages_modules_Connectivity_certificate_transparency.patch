@@ -1,0 +1,16 @@
+diff --git a/networksecurity/service/src/com/android/server/net/ct/Config.java b/networksecurity/service/src/com/android/server/net/ct/Config.java
+index c252d0bd2d..3aed2da5a0 100644
+--- a/networksecurity/service/src/com/android/server/net/ct/Config.java
++++ b/networksecurity/service/src/com/android/server/net/ct/Config.java
+@@ -37,7 +37,10 @@ final class Config {
+             return "https://www.gstatic.com/android/certificate_transparency/";
+         }
+         // VAL_OFF is handled separately
+-        return "https://gstatic.grapheneos.org/android/certificate_transparency/";
++        // MAOS: self-hosted mirror on the static R2 bucket (static.maproj.org),
++        // same /android/certificate_transparency/ path layout as the GrapheneOS
++        // mirror it replaces. The VAL_STANDARD (Google) branch above is untouched.
++        return "https://static.maproj.org/android/certificate_transparency/";
+     }
+ 
+     static String getCommonBaseUrlPart() {

@@ -272,6 +272,8 @@ apply_maos_patches() {
     for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
                 "frameworks/base:frameworks_base.patch" \
                 "frameworks/base:frameworks_base_gnss_servers.patch" \
+                "frameworks/base:frameworks_base_remote_key_provisioning.patch" \
+                "packages/modules/Connectivity:packages_modules_Connectivity_certificate_transparency.patch" \
                 "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
                 "packages/modules/Permission:permission_roles.patch" \
                 "frameworks/libs/systemui:frameworks_libs_systemui.patch" \
@@ -279,6 +281,7 @@ apply_maos_patches() {
                 "system/sepolicy:system_sepolicy.patch" \
                 "script:script.patch" \
                 "packages/apps/Settings:settings.patch" \
+                "packages/apps/Settings:packages_apps_Settings_ct_rkp_servers.patch" \
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
                 "external/roboto-fonts:roboto_fonts.patch" \
                 "packages/apps/GmsCompat:gmscompat.patch" \

@@ -1,0 +1,22 @@
+diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
+index a20289c..d8326f3 100644
+--- a/res/values/strings_ext.xml
++++ b/res/values/strings_ext.xml
+@@ -55,7 +55,7 @@
+     <string name="supl_disabled_summary">Will make acquiring location lock significantly slower, especially if PSDS is turned off too</string>
+ 
+     <string name="remote_provisioning_title">Attestation key provisioning</string>
+-    <string name="remote_provisioning_enabled_grapheneos_proxy">GrapheneOS proxy</string>
++    <string name="remote_provisioning_enabled_grapheneos_proxy">MAOS servers</string>
+     <string name="remote_provisioning_enabled_google_server">Google server</string>
+     <string name="remote_provisioning_disabled">Off</string>
+ 
+@@ -323,7 +323,7 @@ May cause unreliable service. Use at your own risk.
+     <string name="exploit_protection_summary">Device and app security improvements</string>
+ 
+     <string name="cert_transparency_dl_title">Certificate Transparency downloads</string>
+-    <string name="cert_transparency_dl_grapheneos_server">GrapheneOS server</string>
++    <string name="cert_transparency_dl_grapheneos_server">MAOS servers</string>
+     <string name="cert_transparency_dl_standard_server">Standard (Google) server</string>
+     <string name="cert_transparency_dl_off">Off</string>
+     <string name="cert_transparency_dl_footer">"Certificate Transparency (CT) is an Internet standard designed to enhance the security of digital certificates. It requires Certificate Authorities (CAs) to submit all issued certificates to a public log that records them, increasing transparency and accountability in the certificate issuance process.

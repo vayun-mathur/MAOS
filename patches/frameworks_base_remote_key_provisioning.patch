@@ -1,0 +1,27 @@
+diff --git a/core/java/android/ext/settings/RemoteKeyProvisioningSettings.java b/core/java/android/ext/settings/RemoteKeyProvisioningSettings.java
+index 69959118c414..091ea6e82e70 100644
+--- a/core/java/android/ext/settings/RemoteKeyProvisioningSettings.java
++++ b/core/java/android/ext/settings/RemoteKeyProvisioningSettings.java
+@@ -15,7 +15,12 @@ public class RemoteKeyProvisioningSettings {
+     public static final int GRAPHENEOS_PROXY = 0;
+     public static final int STANDARD_SERVER = 1;
+ 
+-    private static final String GRAPHENEOS_PROXY_URL = "https://remoteprovisioning.grapheneos.org/v1";
++    // MAOS: self-hosted HTTPS reverse proxy to the Google RKP server
++    // (rkp.maproj.org, DNS/proxy handled server-side). The public
++    // GRAPHENEOS_PROXY mode constant is kept: its int value is persisted in
++    // Settings.Global and referenced by Settings, so renaming it would be a
++    // needless cross-repo change. Only this private URL constant is renamed.
++    private static final String MAOS_PROXY_URL = "https://rkp.maproj.org/v1";
+ 
+     /** @hide */
+     public static final IntSetting SERVER_SETTING = new IntSetting(
+@@ -27,7 +32,7 @@ public class RemoteKeyProvisioningSettings {
+     @Nullable
+     public static String getServerUrlOverride(@NonNull Context ctx) {
+         if (SERVER_SETTING.get(ctx) == GRAPHENEOS_PROXY) {
+-            return GRAPHENEOS_PROXY_URL;
++            return MAOS_PROXY_URL;
+         }
+ 
+         return null;
