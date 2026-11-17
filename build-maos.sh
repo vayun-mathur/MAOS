@@ -285,6 +285,7 @@ apply_maos_patches() {
                 "packages/apps/Settings:settings.patch" \
                 "packages/apps/Settings:packages_apps_Settings_ct_rkp_servers.patch" \
                 "packages/apps/Settings:packages_apps_Settings_widevine_servers.patch" \
+                "packages/apps/Settings:packages_apps_Settings_private_dns_prefill.patch" \
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
                 "external/roboto-fonts:roboto_fonts.patch" \
                 "packages/apps/GmsCompat:gmscompat.patch" \
