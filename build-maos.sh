@@ -270,6 +270,7 @@ apply_maos_patches() {
         fi
     }
     for spec in "build/make:platform_build.patch" "vendor/adevtool:adevtool.patch" \
+                "vendor/adevtool:adevtool_gnss_servers.patch" \
                 "frameworks/base:frameworks_base.patch" \
                 "frameworks/base:frameworks_base_gnss_servers.patch" \
                 "frameworks/base:frameworks_base_remote_key_provisioning.patch" \

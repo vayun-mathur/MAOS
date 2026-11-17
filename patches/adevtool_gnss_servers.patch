@@ -1,0 +1,117 @@
+diff --git a/vendor-skels/google_devices/bluejay/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/bluejay/proprietary/vendor/etc/gnss/gps.xml
+index 7fec9aada..46e69573d 100644
+--- a/vendor-skels/google_devices/bluejay/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/bluejay/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/cheetah/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/cheetah/proprietary/vendor/etc/gnss/gps.xml
+index ca2cbd935..63b0cbd70 100644
+--- a/vendor-skels/google_devices/cheetah/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/cheetah/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/felix/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/felix/proprietary/vendor/etc/gnss/gps.xml
+index d7edb6b7f..b5ebfc476 100644
+--- a/vendor-skels/google_devices/felix/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/felix/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/husky/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/husky/proprietary/vendor/etc/gnss/gps.xml
+index c70df6220..19e0b5a63 100644
+--- a/vendor-skels/google_devices/husky/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/husky/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/lynx/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/lynx/proprietary/vendor/etc/gnss/gps.xml
+index a7789b8a3..150459e3e 100644
+--- a/vendor-skels/google_devices/lynx/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/lynx/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/oriole/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/oriole/proprietary/vendor/etc/gnss/gps.xml
+index dbc28f665..1e0e3974a 100644
+--- a/vendor-skels/google_devices/oriole/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/oriole/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/panther/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/panther/proprietary/vendor/etc/gnss/gps.xml
+index 16c3a77c4..71babe055 100644
+--- a/vendor-skels/google_devices/panther/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/panther/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/raven/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/raven/proprietary/vendor/etc/gnss/gps.xml
+index 64b4a4649..9546e5354 100644
+--- a/vendor-skels/google_devices/raven/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/raven/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
+diff --git a/vendor-skels/google_devices/shiba/proprietary/vendor/etc/gnss/gps.xml b/vendor-skels/google_devices/shiba/proprietary/vendor/etc/gnss/gps.xml
+index 1b2078095..2ca976f06 100644
+--- a/vendor-skels/google_devices/shiba/proprietary/vendor/etc/gnss/gps.xml
++++ b/vendor-skels/google_devices/shiba/proprietary/vendor/etc/gnss/gps.xml
+@@ -11,7 +11,7 @@
+        CtrlPipe="/data/vendor/gps/glgpsctrl"
+        NmeaOutName="/data/vendor/gps/nmea_out"
+ 
+-       acSuplServer="supl.google.com"
++       acSuplServer="supl.maproj.org"
+        SuplPort="7275"
+        SuplLogEnable="false"
+        SuplLogFullName="/data/vendor/gps/suplflow.txt"
