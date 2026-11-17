@@ -130,8 +130,9 @@ Server-verified hardware attestation lives in two places:
   RootOfTrust (Verified boot state, locked bootloader, verified-boot key
   hash, patch levels) against an owner-configured allowlist.
 - **Device** (`patches/packages_apps_Settings_maos_attestation.patch`,
-  applied by `build-maos.sh`): Settings > Security > Advanced > Device
-  attestation. One-off and user-triggered only — a "Verify now" action;
+  applied by `build-maos.sh`): Settings > Security & privacy > Device
+  attestation (on the SecuritySettings dashboard, above More security
+  settings). One-off and user-triggered only — a "Verify now" action;
   there is no periodic, scheduled, or on-boot verification. The first
   verify also enrolls: a hardware key (StrongBox where available, TEE
   otherwise, labelled from the server's chain reading) is generated in
