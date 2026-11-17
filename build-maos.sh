@@ -273,6 +273,7 @@ apply_maos_patches() {
                 "frameworks/base:frameworks_base.patch" \
                 "frameworks/base:frameworks_base_gnss_servers.patch" \
                 "frameworks/base:frameworks_base_remote_key_provisioning.patch" \
+                "frameworks/base:frameworks_base_widevine_provisioning.patch" \
                 "packages/modules/Connectivity:packages_modules_Connectivity_certificate_transparency.patch" \
                 "frameworks/opt/telephony:frameworks_opt_telephony.patch" \
                 "packages/modules/Permission:permission_roles.patch" \
@@ -282,6 +283,7 @@ apply_maos_patches() {
                 "script:script.patch" \
                 "packages/apps/Settings:settings.patch" \
                 "packages/apps/Settings:packages_apps_Settings_ct_rkp_servers.patch" \
+                "packages/apps/Settings:packages_apps_Settings_widevine_servers.patch" \
                 "packages/apps/SetupWizard2:setupwizard2.patch" \
                 "external/roboto-fonts:roboto_fonts.patch" \
                 "packages/apps/GmsCompat:gmscompat.patch" \

@@ -1,0 +1,13 @@
+diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
+index d8326f35aef6..c725a098a2b4 100644
+--- a/res/values/strings_ext.xml
++++ b/res/values/strings_ext.xml
+@@ -107,7 +107,7 @@
+     </string>
+ 
+     <string name="widevine_provisioning_title">Widevine provisioning</string>
+-    <string name="widevine_provisioning_enabled_grapheneos_proxy">GrapheneOS proxy</string>
++    <string name="widevine_provisioning_enabled_grapheneos_proxy">MAOS servers</string>
+     <string name="widevine_provisioning_enabled_google_server">Google server</string>
+     <string name="widevine_provisioning_footer">The provisioned certificate will be used for accessing DRM protected content.</string>
+ 
