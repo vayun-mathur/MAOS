@@ -1,36 +1,38 @@
 diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
-index 0ac5bf5..2de2e18 100644
+index 0ac5bf5656d..448c0ef4ce5 100644
 --- a/res/values/strings_ext.xml
 +++ b/res/values/strings_ext.xml
-@@ -371,4 +371,18 @@ For compatibility, this app can still see clipboard metadata, such as whether an
+@@ -371,4 +371,20 @@ For compatibility, this app can still see clipboard metadata, such as whether an
      <string name="app_clipboard_read_shared_uid_warning">"The clipboard access setting, blocked access message setting, and temporary Paste access are shared among these apps:
  %1$s"</string>
  
 +    <string name="maos_attestation_title">Device attestation</string>
 +    <string name="maos_attestation_status_title">Last server verdict</string>
-+    <string name="maos_attestation_never">Not verified yet. Tap Verify now.</string>
++    <string name="maos_attestation_never">Not verified yet. Tap Verify.</string>
 +    <string name="maos_attestation_last">%1$s (%2$s) at %3$s</string>
-+    <string name="maos_attestation_verify_title">Verify now</string>
-+    <string name="maos_attestation_verify_summary">Ask the MAOS server for a fresh challenge and answer it with a hardware attestation. The verdict shown here is the server's, not this device's.</string>
++    <string name="maos_attestation_verify_title">Verify</string>
++    <string name="maos_attestation_verify_summary">Ask the MAOS server for a fresh challenge and answer it with a one-time hardware attestation. The verdict shown here is the server's, not this device's.</string>
 +    <string name="maos_attestation_verifying">Verifying...</string>
 +    <string name="maos_attestation_passed">Server verdict: verified</string>
 +    <string name="maos_attestation_failed">Server verdict: failed (%1$s)</string>
++    <string name="maos_attestation_result_title">Your verification</string>
++    <string name="maos_attestation_result_summary">See your verification: maproj.org/attest — code %1$s\n%2$s</string>
 +    <string name="maos_attestation_about_title">How this works</string>
-+    <string name="maos_attestation_about_summary">A hardware-backed key (StrongBox where available, otherwise the trusted execution environment) is generated with a one-time server challenge. Its certificate chain is sent to api.maproj.org, which verifies it up to Google's hardware attestation root and checks the verified-boot state against the MAOS allowlist. This page never grades itself.</string>
++    <string name="maos_attestation_about_summary">A hardware-backed key (StrongBox where available, otherwise the trusted execution environment) is generated with a one-time server challenge. Its certificate chain is sent to api.maproj.org, which verifies it up to Google's hardware attestation root and checks that verified boot is Verified and the device is locked. No approval is needed: any device with valid hardware evidence gets a verdict. After verifying, enter the code shown here at maproj.org/attest to see the result. This page never grades itself.</string>
 +    <string name="maos_attestation_entry_title">Device attestation</string>
 +    <string name="maos_attestation_entry_summary">Server-verified hardware attestation</string>
 +
  </resources>
 diff --git a/res/xml/maos_attestation_settings.xml b/res/xml/maos_attestation_settings.xml
 new file mode 100644
-index 0000000..c61a5eb
+index 00000000000..5c4c0dc9f8d
 --- /dev/null
 +++ b/res/xml/maos_attestation_settings.xml
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,32 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<!--
 +  MAOS device attestation (Auditor, shape 3): server-verified status and a
-+  single user-triggered "Verify now" action. No periodic verification.
++  single user-triggered "Verify" action. No periodic verification.
 +  -->
 +<PreferenceScreen
 +    xmlns:android="http://schemas.android.com/apk/res/android"
@@ -49,6 +51,10 @@ index 0000000..c61a5eb
 +        android:summary="@string/maos_attestation_verify_summary" />
 +
 +    <Preference
++        android:key="maos_attestation_result"
++        android:title="@string/maos_attestation_result_title" />
++
++    <Preference
 +        android:key="maos_attestation_about"
 +        android:title="@string/maos_attestation_about_title"
 +        android:summary="@string/maos_attestation_about_summary"
@@ -56,7 +62,7 @@ index 0000000..c61a5eb
 +
 +</PreferenceScreen>
 diff --git a/res/xml/security_dashboard_settings.xml b/res/xml/security_dashboard_settings.xml
-index 3bb7d69..7f29614 100644
+index 3bb7d69bf0d..7f29614bcfc 100644
 --- a/res/xml/security_dashboard_settings.xml
 +++ b/res/xml/security_dashboard_settings.xml
 @@ -62,6 +62,18 @@
@@ -80,23 +86,29 @@ index 3bb7d69..7f29614 100644
          android:key="security_advanced_settings"
 diff --git a/src/com/android/settings/security/MaosAttestationClient.java b/src/com/android/settings/security/MaosAttestationClient.java
 new file mode 100644
-index 0000000..4510591
+index 00000000000..2b83d1bc9e1
 --- /dev/null
 +++ b/src/com/android/settings/security/MaosAttestationClient.java
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,199 @@
 +/*
-+ * MAOS device attestation client ("Auditor, shape 3").
++ * MAOS device attestation client (one-time, the Auditor model).
 + *
 + * One-off, user-triggered only: nothing here runs on a schedule, at boot,
-+ * or in the background. When the user taps "Verify now" this client asks
-+ * the server for a fresh single-use challenge, generates a hardware-backed
++ * or in the background. When the user taps "Verify" this client asks the
++ * server for a fresh single-use challenge, generates a hardware-backed
 + * key with that challenge (StrongBox where available, TEE otherwise), and
-+ * sends the resulting certificate chain to the server. The server verifies
-+ * the chain up to Google's hardware attestation root and checks the
-+ * RootOfTrust against its allowlist; the verdict shown in Settings is the
-+ * server's response, never a local self-assessment. All attestation claims
-+ * come from the certificate chain, not from Build properties or any other
-+ * OS-reported value (a compromised OS could lie about those).
++ * sends the resulting certificate chain to the server in a single submit.
++ * There is no enrollment and no device identity: every Verify is a fresh
++ * one-shot attestation. The server verifies the chain up to Google's
++ * hardware attestation root, checks the challenge is fresh, and checks
++ * the RootOfTrust says Verified with the device locked. Any device with
++ * valid hardware evidence gets a verdict — no approval is needed or
++ * involved.
++ *
++ * The verdict, code and URL shown in Settings are the server's response,
++ * never a local self-assessment. All attestation claims come from the
++ * certificate chain, not from Build properties or any other OS-reported
++ * value (a compromised OS could lie about those).
 + */
 +package com.android.settings.security;
 +
@@ -118,21 +130,19 @@ index 0000000..4510591
 +import java.nio.charset.StandardCharsets;
 +import java.security.KeyPairGenerator;
 +import java.security.KeyStore;
-+import java.security.PrivateKey;
-+import java.security.Signature;
 +import java.security.cert.Certificate;
 +import java.security.spec.ECGenParameterSpec;
 +
 +final class MaosAttestationClient {
 +
 +    static final String PREFS = "maos_attestation";
-+    static final String KEY_DEVICE_ID = "device_id";
 +    static final String KEY_LAST_RESULT = "last_result";
 +    static final String KEY_LAST_AT = "last_at";
 +    static final String KEY_LAST_LEVEL = "last_level";
++    static final String KEY_LAST_CODE = "last_code";
++    static final String KEY_LAST_URL = "last_url";
 +
 +    private static final String BASE = "https://api.maproj.org/attest/v1";
-+    private static final String ENROLLED_ALIAS = "maos_attestation_enrolled";
 +    private static final String FRESH_ALIAS = "maos_attestation_fresh";
 +
 +    private final SharedPreferences mPrefs;
@@ -145,49 +155,26 @@ index 0000000..4510591
 +        final boolean pass;
 +        final String reason;
 +        final String securityLevel;
-+        final String deviceId;
++        final String userCode;
++        final String verifyUrl;
 +
-+        Result(boolean pass, String reason, String securityLevel, String deviceId) {
++        Result(boolean pass, String reason, String securityLevel, String userCode,
++                String verifyUrl) {
 +            this.pass = pass;
 +            this.reason = reason;
 +            this.securityLevel = securityLevel;
-+            this.deviceId = deviceId;
++            this.userCode = userCode;
++            this.verifyUrl = verifyUrl;
 +        }
 +    }
 +
-+    /** Run one verification round-trip. Blocking; call off the main thread. */
++    /** Run one one-shot verification round-trip. Blocking; call off the main thread. */
 +    Result verifyNow() throws Exception {
-+        String deviceId = mPrefs.getString(KEY_DEVICE_ID, null);
-+        if (deviceId == null || !hasKey(ENROLLED_ALIAS)) {
-+            return enroll();
-+        }
-+        return submit(deviceId);
-+    }
-+
-+    private Result enroll() throws Exception {
-+        JSONObject challenge = post("/challenge", new JSONObject().put("purpose", "enroll"));
-+        byte[] nonce = hexToBytes(challenge.getString("nonce"));
-+        boolean strongBox = generateKey(ENROLLED_ALIAS, nonce, true);
-+        JSONObject resp = post("/enroll",
-+                new JSONObject().put("chain", chainJson(ENROLLED_ALIAS)));
-+        return record(resp, strongBox);
-+    }
-+
-+    private Result submit(String deviceId) throws Exception {
-+        JSONObject challenge = post("/challenge",
-+                new JSONObject().put("purpose", "verify").put("device_id", deviceId));
++        JSONObject challenge = post("/challenge", new JSONObject());
 +        byte[] nonce = hexToBytes(challenge.getString("nonce"));
 +        boolean strongBox = generateKey(FRESH_ALIAS, nonce, true);
-+        // Prove possession of the enrolled hardware key by signing the raw
-+        // nonce. The fresh chain proves the current boot state; together
-+        // they bind this verification to the enrolled device.
-+        byte[] sig = signWithEnrolled(nonce);
-+        JSONObject body = new JSONObject()
-+                .put("device_id", deviceId)
-+                .put("chain", chainJson(FRESH_ALIAS))
-+                .put("enrolled_signature",
-+                        Base64.encodeToString(sig, Base64.NO_WRAP));
-+        JSONObject resp = post("/submit", body);
++        JSONObject resp = post("/submit",
++                new JSONObject().put("chain", chainJson(FRESH_ALIAS)));
 +        return record(resp, strongBox);
 +    }
 +
@@ -199,25 +186,16 @@ index 0000000..4510591
 +        // the (pre-verdict) case where the server did not answer.
 +        String level = resp.optString("security_level",
 +                strongBoxRequested ? "StrongBox" : "TrustedEnvironment");
-+        String deviceId = resp.optString("device_id",
-+                mPrefs.getString(KEY_DEVICE_ID, ""));
++        String userCode = resp.optString("userCode", "");
++        String verifyUrl = resp.optString("verifyUrl", "");
 +        mPrefs.edit()
-+                .putString(KEY_DEVICE_ID, deviceId)
 +                .putString(KEY_LAST_RESULT, pass ? "pass" : "fail: " + reason)
 +                .putLong(KEY_LAST_AT, System.currentTimeMillis())
 +                .putString(KEY_LAST_LEVEL, level)
++                .putString(KEY_LAST_CODE, userCode)
++                .putString(KEY_LAST_URL, verifyUrl)
 +                .apply();
-+        return new Result(pass, reason, level, deviceId);
-+    }
-+
-+    private boolean hasKey(String alias) {
-+        try {
-+            KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
-+            ks.load(null);
-+            return ks.containsAlias(alias);
-+        } catch (Exception e) {
-+            return false;
-+        }
++        return new Result(pass, reason, level, userCode, verifyUrl);
 +    }
 +
 +    /**
@@ -271,19 +249,6 @@ index 0000000..4510591
 +        return out;
 +    }
 +
-+    private byte[] signWithEnrolled(byte[] nonce) throws Exception {
-+        KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
-+        ks.load(null);
-+        PrivateKey key = (PrivateKey) ks.getKey(ENROLLED_ALIAS, null);
-+        if (key == null) {
-+            throw new IllegalStateException("enrolled key missing");
-+        }
-+        Signature sig = Signature.getInstance("SHA256withECDSA");
-+        sig.initSign(key);
-+        sig.update(nonce);
-+        return sig.sign();
-+    }
-+
 +    private JSONObject post(String path, JSONObject body) throws Exception {
 +        HttpURLConnection conn = (HttpURLConnection) new URL(BASE + path).openConnection();
 +        conn.setRequestMethod("POST");
@@ -326,25 +291,26 @@ index 0000000..4510591
 +}
 diff --git a/src/com/android/settings/security/MaosAttestationFragment.java b/src/com/android/settings/security/MaosAttestationFragment.java
 new file mode 100644
-index 0000000..fcfe8ea
+index 00000000000..3499350ea03
 --- /dev/null
 +++ b/src/com/android/settings/security/MaosAttestationFragment.java
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,160 @@
 +/*
-+ * MAOS "Device attestation" settings page (Auditor, shape 3).
++ * MAOS "Device attestation" settings page (one-time, the Auditor model).
 + *
 + * Deliberately minimal: a status line (the last server verdict, stored
-+ * from the server's response) and a "Verify now" action. There is no
-+ * periodic or on-boot verification and no background work of any kind.
-+ * On the first verify the device also enrolls (see
-+ * MaosAttestationClient); later verifies submit a fresh attestation bound
-+ * to the enrolled hardware key.
++ * from the server's response), a single "Verify" action, and — once a
++ * verification has completed — the code and URL for viewing that one
++ * result at maproj.org/attest. There is no periodic or on-boot
++ * verification, no enrollment, and no background work of any kind.
 + */
 +package com.android.settings.security;
 +
 +import android.app.settings.SettingsEnums;
 +import android.content.Context;
++import android.content.Intent;
 +import android.content.SharedPreferences;
++import android.net.Uri;
 +import android.os.Bundle;
 +
 +import androidx.preference.Preference;
@@ -364,6 +330,7 @@ index 0000000..fcfe8ea
 +    private static final String TAG = "MaosAttestation";
 +    private static final String KEY_STATUS = "maos_attestation_status";
 +    private static final String KEY_VERIFY = "maos_attestation_verify";
++    private static final String KEY_RESULT = "maos_attestation_result";
 +
 +    @Override
 +    public int getMetricsCategory() {
@@ -392,7 +359,31 @@ index 0000000..fcfe8ea
 +            runVerify(preference);
 +            return true;
 +        }
++        if (KEY_RESULT.equals(preference.getKey())) {
++            openVerification();
++            return true;
++        }
 +        return super.onPreferenceTreeClick(preference);
++    }
++
++    private void openVerification() {
++        Context context = getContext();
++        if (context == null) {
++            return;
++        }
++        SharedPreferences prefs = context.getSharedPreferences(
++                MaosAttestationClient.PREFS, Context.MODE_PRIVATE);
++        String url = prefs.getString(MaosAttestationClient.KEY_LAST_URL, null);
++        if (url == null || url.isEmpty()) {
++            return;
++        }
++        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
++        try {
++            startActivity(intent);
++        } catch (Exception e) {
++            // No browser to open it with: the code and URL stay readable
++            // on this screen, which is the point of showing them.
++        }
 +    }
 +
 +    private void runVerify(Preference verifyPref) {
@@ -436,12 +427,24 @@ index 0000000..fcfe8ea
 +        String result = prefs.getString(MaosAttestationClient.KEY_LAST_RESULT, null);
 +        if (result == null) {
 +            status.setSummary(R.string.maos_attestation_never);
-+            return;
++        } else {
++            long at = prefs.getLong(MaosAttestationClient.KEY_LAST_AT, 0);
++            String level = prefs.getString(MaosAttestationClient.KEY_LAST_LEVEL, "");
++            String when = at == 0 ? "" : DateFormat.getDateTimeInstance().format(new Date(at));
++            status.setSummary(getString(R.string.maos_attestation_last, result, level, when));
 +        }
-+        long at = prefs.getLong(MaosAttestationClient.KEY_LAST_AT, 0);
-+        String level = prefs.getString(MaosAttestationClient.KEY_LAST_LEVEL, "");
-+        String when = at == 0 ? "" : DateFormat.getDateTimeInstance().format(new Date(at));
-+        status.setSummary(getString(R.string.maos_attestation_last, result, level, when));
++        Preference verification = findPreference(KEY_RESULT);
++        if (verification != null) {
++            String code = prefs.getString(MaosAttestationClient.KEY_LAST_CODE, null);
++            String url = prefs.getString(MaosAttestationClient.KEY_LAST_URL, null);
++            if (code == null || code.isEmpty() || url == null || url.isEmpty()) {
++                verification.setVisible(false);
++            } else {
++                verification.setVisible(true);
++                verification.setSummary(
++                        getString(R.string.maos_attestation_result_summary, code, url));
++            }
++        }
 +    }
 +
 +    @Override
