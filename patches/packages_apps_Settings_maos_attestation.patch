@@ -1,8 +1,8 @@
 diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
-index 0ac5bf5656d..448c0ef4ce5 100644
+index 0ac5bf5656d..52caca80bf5 100644
 --- a/res/values/strings_ext.xml
 +++ b/res/values/strings_ext.xml
-@@ -371,4 +371,20 @@ For compatibility, this app can still see clipboard metadata, such as whether an
+@@ -371,4 +371,26 @@ For compatibility, this app can still see clipboard metadata, such as whether an
      <string name="app_clipboard_read_shared_uid_warning">"The clipboard access setting, blocked access message setting, and temporary Paste access are shared among these apps:
  %1$s"</string>
  
@@ -11,24 +11,30 @@ index 0ac5bf5656d..448c0ef4ce5 100644
 +    <string name="maos_attestation_never">Not verified yet. Tap Verify.</string>
 +    <string name="maos_attestation_last">%1$s (%2$s) at %3$s</string>
 +    <string name="maos_attestation_verify_title">Verify</string>
-+    <string name="maos_attestation_verify_summary">Ask the MAOS server for a fresh challenge and answer it with a one-time hardware attestation. The verdict shown here is the server's, not this device's.</string>
++    <string name="maos_attestation_verify_summary">Ask the MAOS server for a fresh challenge for your session and answer it with a one-time hardware attestation. The verdict shown here is the server's, not this device's.</string>
++    <string name="maos_attestation_session_title">Session code</string>
++    <string name="maos_attestation_session_summary">Start at maproj.org/attest, then enter the session code it shows here. Long-press the field to paste.</string>
++    <string name="maos_attestation_scan_title">Scan QR code</string>
++    <string name="maos_attestation_scan_summary">Scan the code shown at maproj.org/attest, or enter the session code below instead.</string>
++    <string name="maos_attestation_scan_invalid">That is not an attestation code. Try again.</string>
++    <string name="maos_attestation_session_required">Enter the session code from maproj.org/attest first.</string>
 +    <string name="maos_attestation_verifying">Verifying...</string>
 +    <string name="maos_attestation_passed">Server verdict: verified</string>
 +    <string name="maos_attestation_failed">Server verdict: failed (%1$s)</string>
 +    <string name="maos_attestation_result_title">Your verification</string>
 +    <string name="maos_attestation_result_summary">See your verification: maproj.org/attest — code %1$s\n%2$s</string>
 +    <string name="maos_attestation_about_title">How this works</string>
-+    <string name="maos_attestation_about_summary">A hardware-backed key (StrongBox where available, otherwise the trusted execution environment) is generated with a one-time server challenge. Its certificate chain is sent to api.maproj.org, which verifies it up to Google's hardware attestation root and checks that verified boot is Verified and the device is locked. No approval is needed: any device with valid hardware evidence gets a verdict. After verifying, enter the code shown here at maproj.org/attest to see the result. This page never grades itself.</string>
++    <string name="maos_attestation_about_summary">A hardware-backed key (StrongBox where available, otherwise the trusted execution environment) is generated with a one-time server challenge. Its certificate chain is sent to api.maproj.org, which verifies it up to Google's hardware attestation root and checks that verified boot is Verified and the device is locked. No approval is needed: any device with valid hardware evidence gets a verdict. After verifying, see the result on the page that gave you the session code; this screen also shows a receipt code for reopening it. This page never grades itself.</string>
 +    <string name="maos_attestation_entry_title">Device attestation</string>
 +    <string name="maos_attestation_entry_summary">Server-verified hardware attestation</string>
 +
  </resources>
 diff --git a/res/xml/maos_attestation_settings.xml b/res/xml/maos_attestation_settings.xml
 new file mode 100644
-index 00000000000..5c4c0dc9f8d
+index 00000000000..622c3177b5f
 --- /dev/null
 +++ b/res/xml/maos_attestation_settings.xml
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,45 @@
 +<?xml version="1.0" encoding="utf-8"?>
 +<!--
 +  MAOS device attestation (Auditor, shape 3): server-verified status and a
@@ -44,6 +50,19 @@ index 00000000000..5c4c0dc9f8d
 +        android:title="@string/maos_attestation_status_title"
 +        android:summary="@string/maos_attestation_never"
 +        android:selectable="false" />
++
++    <Preference
++        android:key="maos_attestation_scan"
++        android:title="@string/maos_attestation_scan_title"
++        android:summary="@string/maos_attestation_scan_summary"
++        android:fragment="com.android.settings.security.MaosAttestationScannerFragment" />
++
++    <EditTextPreference
++        android:key="maos_attestation_session_code"
++        android:title="@string/maos_attestation_session_title"
++        android:summary="@string/maos_attestation_session_summary"
++        android:persistent="true"
++        android:dialogTitle="@string/maos_attestation_session_title" />
 +
 +    <Preference
 +        android:key="maos_attestation_verify"
@@ -86,10 +105,10 @@ index 3bb7d69bf0d..7f29614bcfc 100644
          android:key="security_advanced_settings"
 diff --git a/src/com/android/settings/security/MaosAttestationClient.java b/src/com/android/settings/security/MaosAttestationClient.java
 new file mode 100644
-index 00000000000..2b83d1bc9e1
+index 00000000000..41c3e961edf
 --- /dev/null
 +++ b/src/com/android/settings/security/MaosAttestationClient.java
-@@ -0,0 +1,199 @@
+@@ -0,0 +1,205 @@
 +/*
 + * MAOS device attestation client (one-time, the Auditor model).
 + *
@@ -169,12 +188,18 @@ index 00000000000..2b83d1bc9e1
 +    }
 +
 +    /** Run one one-shot verification round-trip. Blocking; call off the main thread. */
-+    Result verifyNow() throws Exception {
-+        JSONObject challenge = post("/challenge", new JSONObject());
++    Result verifyNow(String sessionCode) throws Exception {
++        String code = sessionCode == null ? "" : sessionCode.trim();
++        if (code.isEmpty()) {
++            throw new IllegalStateException("missing session code");
++        }
++        JSONObject challenge = post("/challenge",
++                new JSONObject().put("sessionCode", code));
 +        byte[] nonce = hexToBytes(challenge.getString("nonce"));
 +        boolean strongBox = generateKey(FRESH_ALIAS, nonce, true);
-+        JSONObject resp = post("/submit",
-+                new JSONObject().put("chain", chainJson(FRESH_ALIAS)));
++        JSONObject resp = post("/submit", new JSONObject()
++                .put("chain", chainJson(FRESH_ALIAS))
++                .put("sessionCode", code));
 +        return record(resp, strongBox);
 +    }
 +
@@ -291,10 +316,10 @@ index 00000000000..2b83d1bc9e1
 +}
 diff --git a/src/com/android/settings/security/MaosAttestationFragment.java b/src/com/android/settings/security/MaosAttestationFragment.java
 new file mode 100644
-index 00000000000..3499350ea03
+index 00000000000..0eefb3e8939
 --- /dev/null
 +++ b/src/com/android/settings/security/MaosAttestationFragment.java
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,202 @@
 +/*
 + * MAOS "Device attestation" settings page (one-time, the Auditor model).
 + *
@@ -313,6 +338,7 @@ index 00000000000..3499350ea03
 +import android.net.Uri;
 +import android.os.Bundle;
 +
++import androidx.preference.EditTextPreference;
 +import androidx.preference.Preference;
 +
 +import com.android.settings.R;
@@ -329,6 +355,7 @@ index 00000000000..3499350ea03
 +
 +    private static final String TAG = "MaosAttestation";
 +    private static final String KEY_STATUS = "maos_attestation_status";
++    private static final String KEY_SESSION = "maos_attestation_session_code";
 +    private static final String KEY_VERIFY = "maos_attestation_verify";
 +    private static final String KEY_RESULT = "maos_attestation_result";
 +
@@ -391,13 +418,18 @@ index 00000000000..3499350ea03
 +        if (context == null) {
 +            return;
 +        }
++        String sessionCode = sessionCode();
++        if (sessionCode.isEmpty()) {
++            verifyPref.setSummary(R.string.maos_attestation_session_required);
++            return;
++        }
 +        verifyPref.setEnabled(false);
 +        verifyPref.setSummary(R.string.maos_attestation_verifying);
 +        Executors.newSingleThreadExecutor().execute(() -> {
 +            String message;
 +            try {
 +                MaosAttestationClient.Result result =
-+                        new MaosAttestationClient(context).verifyNow();
++                        new MaosAttestationClient(context).verifyNow(sessionCode);
 +                message = result.pass
 +                        ? getString(R.string.maos_attestation_passed)
 +                        : getString(R.string.maos_attestation_failed, result.reason);
@@ -447,11 +479,225 @@ index 00000000000..3499350ea03
 +        }
 +    }
 +
++    private String sessionCode() {
++        Preference pref = findPreference(KEY_SESSION);
++        if (pref instanceof EditTextPreference) {
++            String text = ((EditTextPreference) pref).getText();
++            return text == null ? "" : text.trim();
++        }
++        return "";
++    }
++
 +    @Override
 +    public void onCreate(Bundle icicle) {
 +        super.onCreate(icicle);
++        // Scanned session code: fill the field and verify right away.
++        getParentFragmentManager().setFragmentResultListener(
++                MaosAttestationScannerFragment.RESULT_KEY, this, (requestKey, result) -> {
++                    String code = result.getString(MaosAttestationScannerFragment.RESULT_CODE, "");
++                    Preference session = findPreference(KEY_SESSION);
++                    if (session instanceof EditTextPreference) {
++                        ((EditTextPreference) session).setText(code);
++                    }
++                    Preference verify = findPreference(KEY_VERIFY);
++                    if (verify != null) {
++                        runVerify(verify);
++                    }
++                });
++    }
++
++    @Override
++    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
++        super.onCreatePreferences(savedInstanceState, rootKey);
++        Preference pref = findPreference(KEY_SESSION);
++        if (pref instanceof EditTextPreference) {
++            ((EditTextPreference) pref).setOnBindEditTextListener(editText -> {
++                editText.setSingleLine(true);
++                editText.setHint("XXXX-XXXX");
++                editText.setSelection(editText.getText().length());
++            });
++        }
 +    }
 +
 +    public static final BaseSearchIndexProvider SEARCH_INDEX_DATA_PROVIDER =
 +            new BaseSearchIndexProvider(R.xml.maos_attestation_settings);
++}
+diff --git a/src/com/android/settings/security/MaosAttestationScannerFragment.java b/src/com/android/settings/security/MaosAttestationScannerFragment.java
+new file mode 100644
+index 00000000000..7f1ceb0c385
+--- /dev/null
++++ b/src/com/android/settings/security/MaosAttestationScannerFragment.java
+@@ -0,0 +1,173 @@
++/*
++ * MAOS attestation QR scanner: scans the session code shown at
++ * maproj.org/attest using SettingsLib's QrCamera (the same scanner path
++ * as Wi-Fi DPP and ADB pairing), then hands the code back to
++ * MaosAttestationFragment, which runs Verify against that session.
++ * Manual code entry on the attestation screen is the fallback.
++ */
++package com.android.settings.security;
++
++import android.app.settings.SettingsEnums;
++import android.graphics.Matrix;
++import android.graphics.Rect;
++import android.graphics.SurfaceTexture;
++import android.os.Bundle;
++import android.util.Size;
++import android.view.LayoutInflater;
++import android.view.TextureView;
++import android.view.View;
++import android.view.ViewGroup;
++import android.widget.TextView;
++
++import com.android.settings.R;
++import com.android.settings.wifi.dpp.WifiDppQrCodeBaseFragment;
++import com.android.settingslib.qrcode.QrCamera;
++
++public class MaosAttestationScannerFragment extends WifiDppQrCodeBaseFragment
++        implements TextureView.SurfaceTextureListener, QrCamera.ScannerCallback {
++
++    static final String RESULT_KEY = "maos_attestation_scan";
++    static final String RESULT_CODE = "session_code";
++
++    private QrCamera mCamera;
++    private TextureView mTextureView;
++    private TextView mErrorMessage;
++
++    @Override
++    public int getMetricsCategory() {
++        return SettingsEnums.SECURITY;
++    }
++
++    @Override
++    public View onCreateView(LayoutInflater inflater, ViewGroup container,
++            Bundle savedInstanceState) {
++        return inflater.inflate(R.layout.adb_qrcode_scanner_fragment, container, false);
++    }
++
++    @Override
++    public void onViewCreated(View view, Bundle savedInstanceState) {
++        super.onViewCreated(view, savedInstanceState);
++        mTextureView = view.findViewById(R.id.preview_view);
++        mTextureView.setSurfaceTextureListener(this);
++        mErrorMessage = view.findViewById(R.id.error_message);
++        setHeaderTitle(R.string.maos_attestation_scan_title);
++        mSummary.setText(R.string.maos_attestation_scan_summary);
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        if (mCamera != null && mTextureView.getSurfaceTexture() != null) {
++            mCamera.start(mTextureView.getSurfaceTexture());
++        }
++    }
++
++    @Override
++    public void onPause() {
++        if (mCamera != null) {
++            mCamera.stop();
++        }
++        super.onPause();
++    }
++
++    @Override
++    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
++        if (mCamera == null) {
++            mCamera = new QrCamera(getContext(), this);
++            mCamera.start(surface);
++        }
++    }
++
++    @Override
++    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {}
++
++    @Override
++    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
++        if (mCamera != null) {
++            mCamera.stop();
++            mCamera = null;
++        }
++        return true;
++    }
++
++    @Override
++    public void onSurfaceTextureUpdated(SurfaceTexture surface) {}
++
++    @Override
++    public Size getViewSize() {
++        return new Size(mTextureView.getWidth(), mTextureView.getHeight());
++    }
++
++    @Override
++    public void setTransform(Matrix transform) {
++        if (getActivity() != null) {
++            getActivity().runOnUiThread(() -> mTextureView.setTransform(transform));
++        }
++    }
++
++    @Override
++    public Rect getFramePosition(Size previewSize, int cameraOrientation) {
++        return new Rect(0, 0, previewSize.getHeight(), previewSize.getHeight());
++    }
++
++    /** Session code from `maos-attest://verify?code=XXXX-XXXX`, a bare
++     * code, or any URL carrying `code=` / `sessionCode=`. */
++    static String parseSessionCode(String qr) {
++        if (qr == null) {
++            return null;
++        }
++        String s = qr.trim();
++        for (String key : new String[]{"code=", "sessionCode="}) {
++            int at = s.indexOf(key);
++            if (at >= 0) {
++                String rest = s.substring(at + key.length());
++                StringBuilder out = new StringBuilder();
++                for (int i = 0; i < rest.length(); i++) {
++                    char c = rest.charAt(i);
++                    if (c == '&' || Character.isWhitespace(c) || c == '"' || c == '\'') {
++                        break;
++                    }
++                    out.append(c);
++                }
++                return out.toString();
++            }
++        }
++        return s;
++    }
++
++    @Override
++    public boolean isValid(String qrCode) {
++        String code = parseSessionCode(qrCode);
++        if (code == null || code.replace("-", "").length() != 8) {
++            mErrorMessage.setText(R.string.maos_attestation_scan_invalid);
++            mErrorMessage.setVisibility(View.VISIBLE);
++            return false;
++        }
++        return true;
++    }
++
++    @Override
++    public void handleSuccessfulResult(String qrCode) {
++        if (mCamera != null) {
++            mCamera.stop();
++            mCamera = null;
++        }
++        Bundle result = new Bundle();
++        result.putString(RESULT_CODE, parseSessionCode(qrCode));
++        getParentFragmentManager().setFragmentResult(RESULT_KEY, result);
++        getParentFragmentManager().popBackStack();
++    }
++
++    @Override
++    public void handleCameraFailure() {
++        if (mCamera != null) {
++            mCamera.stop();
++            mCamera = null;
++        }
++    }
++
++    @Override
++    protected boolean isFooterAvailable() {
++        return false;
++    }
 +}

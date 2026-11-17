@@ -127,25 +127,33 @@ Server-verified hardware attestation lives in two places:
   certificate chain up to Google's hardware attestation root (embedded;
   that Google-root dependency is unavoidable for Pixel hardware
   attestation), parses the KeyDescription extension, checks the single-use
-  server nonce (300 s expiry, consumed on first use), and checks the
-  RootOfTrust says Verified with the device locked. That is the whole
+  server nonce (300 s expiry, consumed on first use) — issued only for a
+  live session started at `maproj.org/attest` and bound to that session,
+  so a precomputed chain from another session cannot pass — and checks
+  the RootOfTrust says Verified with the device locked. That is the whole
   verdict: there is no enrollment, no allowlist, no approval, and no
   persistent device identity or history — any device presenting valid
   hardware evidence gets a verdict. A submit returns one ephemeral result
-  plus a `verificationId` / `userCode` / `verifyUrl`; the user views that
-  single verification at `maproj.org/attest` (short code expires in
-  15 minutes, the stored result within hours). Rate limiting is abuse
+  plus a `verificationId` / `userCode` / `verifyUrl`; the result attaches
+  to the initiating session's page and the `userCode` stays a read-only
+  receipt (short code expires in 15 minutes, the stored result within
+  hours). Rate limiting is abuse
   control only, not permission. `ATTEST_STATUS_TOKEN` still gates the
   diagnostics status endpoint, and the `/c_password123/attest` console is
   a read-only recent-results view.
 - **Device** (`patches/packages_apps_Settings_maos_attestation.patch`,
   applied by `build-maos.sh`): Settings > Security & privacy > Device
   attestation (on the SecuritySettings dashboard, above More security
-  settings). One-off and user-triggered only — a single "Verify" action;
-  there is no periodic, scheduled, or on-boot verification. Each Verify
-  generates a fresh hardware key (StrongBox where available, TEE
-  otherwise, labelled from the server's chain reading) in AndroidKeyStore
-  with the server challenge and submits its chain once. When it completes,
+  settings). One-off and user-triggered only — a "Verify" action;
+  there is no periodic, scheduled, or on-boot verification. The screen
+  takes the session shown at `maproj.org/attest` — Scan QR (SettingsLib
+  QrCamera, the Wi-Fi DPP scanner path) or, as a fallback, type/paste
+  the session code into the Session code field; each Verify sends that
+  code with its
+  challenge request and submit, generates a fresh hardware key (StrongBox
+  where available, TEE otherwise, labelled from the server's chain
+  reading) in AndroidKeyStore with the session-bound server challenge,
+  and submits its chain once. When it completes,
   the screen keeps the last server verdict and shows "See your
   verification: maproj.org/attest — code XXXX" with the full URL (tapping
   it opens the page). The status shown is always the server's verdict
