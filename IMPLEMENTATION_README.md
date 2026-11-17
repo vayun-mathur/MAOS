@@ -116,6 +116,54 @@ local_manifest.xml                    # adds this repo to the GrapheneOS tree
 - Alternative to `filter-out`: AOSP's `overrides:` field on `android_app_import` also
   removes a named module. We use `filter-out` for a single, explicit removal list.
 
+
+## Remote device attestation (Auditor, shape 3)
+
+Server-verified hardware attestation lives in two places:
+
+- **Server** (`location_share_server`, `src/handlers/attest.rs`, served on
+  `api.maproj.org` under `/attest/v1/*`): verifies the Android hardware
+  attestation certificate chain up to Google's hardware attestation root
+  (embedded; that Google-root dependency is unavoidable for Pixel hardware
+  attestation), parses the KeyDescription extension, checks the single-use
+  server nonce (300 s expiry, consumed on first use), and compares the
+  RootOfTrust (Verified boot state, locked bootloader, verified-boot key
+  hash, patch levels) against an owner-configured allowlist.
+- **Device** (`patches/packages_apps_Settings_maos_attestation.patch`,
+  applied by `build-maos.sh`): Settings > Security > Advanced > Device
+  attestation. One-off and user-triggered only — a "Verify now" action;
+  there is no periodic, scheduled, or on-boot verification. The first
+  verify also enrolls: a hardware key (StrongBox where available, TEE
+  otherwise, labelled from the server's chain reading) is generated in
+  AndroidKeyStore with the server challenge. Later verifies generate a
+  fresh attested key and sign the nonce with the enrolled key. The status
+  shown is always the server's verdict from its last response, never a
+  local self-check (which a compromised OS could lie about). A compromised
+  OS cannot fake a Verified/locked RootOfTrust, the verified-boot key
+  hash, or possession of the enrolled hardware key; it can only refuse,
+  delay, or attest a good state and compromise itself afterwards —
+  attestation is a point-in-time verdict.
+
+Owner steps before this can pass a real device:
+
+1. Deploy the server with `ATTEST_STATUS_TOKEN` set (status endpoint) and
+   run one enrollment from a MAOS device (it will record the device and
+   fail with `allowlist_not_configured` until step 2).
+2. Read the observed `verified_boot_key_hex` (and optionally
+   `verified_boot_hash_hex` / patch levels) for that build from
+   `GET https://api.maproj.org/attest/v1/status` (Bearer
+   `ATTEST_STATUS_TOKEN`) and write `ATTEST_ALLOWLIST_FILE` JSON, e.g.
+   `{"verified_boot_keys":["<hex>"], "min_os_patch_level":20260101}`,
+   one entry per MAOS build/device family as needed. Do not hardcode a
+   fingerprint in source; the allowlist is per-build configuration.
+3. Re-verify from the device; the verdict should now pass, and history is
+   visible on the status endpoint.
+
+No on-device verification was performed for the initial implementation
+(no device available); the Settings patch was verified with
+`git apply --check` / apply / reverse on the pristine Settings files, and
+the server with `cargo test` using a generated fixture chain.
+
 ## OTA
 
 MAOS uses the standard A/B OTA flow (`update_engine`) with updates served from

@@ -1,0 +1,444 @@
+diff --git a/res/values/strings_ext.xml b/res/values/strings_ext.xml
+--- a/res/values/strings_ext.xml
++++ b/res/values/strings_ext.xml
+@@ -358,4 +358,18 @@
+     <string name="app_clipboard_read_shared_uid_warning">"The clipboard access setting, blocked access message setting, and temporary Paste access are shared among these apps:
+ %1$s"</string>
+ 
++    <string name="maos_attestation_title">Device attestation</string>
++    <string name="maos_attestation_status_title">Last server verdict</string>
++    <string name="maos_attestation_never">Not verified yet. Tap Verify now.</string>
++    <string name="maos_attestation_last">%1$s (%2$s) at %3$s</string>
++    <string name="maos_attestation_verify_title">Verify now</string>
++    <string name="maos_attestation_verify_summary">Ask the MAOS server for a fresh challenge and answer it with a hardware attestation. The verdict shown here is the server's, not this device's.</string>
++    <string name="maos_attestation_verifying">Verifying...</string>
++    <string name="maos_attestation_passed">Server verdict: verified</string>
++    <string name="maos_attestation_failed">Server verdict: failed (%1$s)</string>
++    <string name="maos_attestation_about_title">How this works</string>
++    <string name="maos_attestation_about_summary">A hardware-backed key (StrongBox where available, otherwise the trusted execution environment) is generated with a one-time server challenge. Its certificate chain is sent to api.maproj.org, which verifies it up to Google's hardware attestation root and checks the verified-boot state against the MAOS allowlist. This page never grades itself.</string>
++    <string name="maos_attestation_entry_title">Device attestation</string>
++    <string name="maos_attestation_entry_summary">Server-verified hardware attestation</string>
++
+ </resources>
+diff --git a/res/xml/security_advanced_settings.xml b/res/xml/security_advanced_settings.xml
+--- a/res/xml/security_advanced_settings.xml
++++ b/res/xml/security_advanced_settings.xml
+@@ -28,6 +28,13 @@
+     <com.android.settingslib.widget.UntitledPreferenceCategory
+         android:order="210"
+         android:key="security_category" />
++
++    <Preference
++        android:order="220"
++        android:key="maos_attestation"
++        android:title="@string/maos_attestation_entry_title"
++        android:summary="@string/maos_attestation_entry_summary"
++        android:fragment="com.android.settings.security.MaosAttestationFragment" />
+ 
+     <Preference
+         android:order="230"
+diff --git a/res/xml/maos_attestation_settings.xml b/res/xml/maos_attestation_settings.xml
+new file mode 100644
+--- /dev/null
++++ b/res/xml/maos_attestation_settings.xml
+@@ -0,0 +1,28 @@
++<?xml version="1.0" encoding="utf-8"?>
++<!--
++  MAOS device attestation (Auditor, shape 3): server-verified status and a
++  single user-triggered "Verify now" action. No periodic verification.
++  -->
++<PreferenceScreen
++    xmlns:android="http://schemas.android.com/apk/res/android"
++    android:key="maos_attestation_settings"
++    android:title="@string/maos_attestation_title">
++
++    <Preference
++        android:key="maos_attestation_status"
++        android:title="@string/maos_attestation_status_title"
++        android:summary="@string/maos_attestation_never"
++        android:selectable="false" />
++
++    <Preference
++        android:key="maos_attestation_verify"
++        android:title="@string/maos_attestation_verify_title"
++        android:summary="@string/maos_attestation_verify_summary" />
++
++    <Preference
++        android:key="maos_attestation_about"
++        android:title="@string/maos_attestation_about_title"
++        android:summary="@string/maos_attestation_about_summary"
++        android:selectable="false" />
++
++</PreferenceScreen>
+diff --git a/src/com/android/settings/security/MaosAttestationClient.java b/src/com/android/settings/security/MaosAttestationClient.java
+new file mode 100644
+--- /dev/null
++++ b/src/com/android/settings/security/MaosAttestationClient.java
+@@ -0,0 +1,240 @@
++/*
++ * MAOS device attestation client ("Auditor, shape 3").
++ *
++ * One-off, user-triggered only: nothing here runs on a schedule, at boot,
++ * or in the background. When the user taps "Verify now" this client asks
++ * the server for a fresh single-use challenge, generates a hardware-backed
++ * key with that challenge (StrongBox where available, TEE otherwise), and
++ * sends the resulting certificate chain to the server. The server verifies
++ * the chain up to Google's hardware attestation root and checks the
++ * RootOfTrust against its allowlist; the verdict shown in Settings is the
++ * server's response, never a local self-assessment. All attestation claims
++ * come from the certificate chain, not from Build properties or any other
++ * OS-reported value (a compromised OS could lie about those).
++ */
++package com.android.settings.security;
++
++import android.content.Context;
++import android.content.SharedPreferences;
++import android.security.keystore.KeyGenParameterSpec;
++import android.security.keystore.KeyProperties;
++import android.util.Base64;
++
++import org.json.JSONArray;
++import org.json.JSONObject;
++
++import java.io.BufferedReader;
++import java.io.InputStream;
++import java.io.InputStreamReader;
++import java.io.OutputStream;
++import java.net.HttpURLConnection;
++import java.net.URL;
++import java.nio.charset.StandardCharsets;
++import java.security.KeyPairGenerator;
++import java.security.KeyStore;
++import java.security.PrivateKey;
++import java.security.Signature;
++import java.security.cert.Certificate;
++import java.security.spec.ECGenParameterSpec;
++
++final class MaosAttestationClient {
++
++    static final String PREFS = "maos_attestation";
++    static final String KEY_DEVICE_ID = "device_id";
++    static final String KEY_LAST_RESULT = "last_result";
++    static final String KEY_LAST_AT = "last_at";
++    static final String KEY_LAST_LEVEL = "last_level";
++
++    private static final String BASE = "https://api.maproj.org/attest/v1";
++    private static final String ENROLLED_ALIAS = "maos_attestation_enrolled";
++    private static final String FRESH_ALIAS = "maos_attestation_fresh";
++
++    private final SharedPreferences mPrefs;
++
++    MaosAttestationClient(Context context) {
++        mPrefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
++    }
++
++    static final class Result {
++        final boolean pass;
++        final String reason;
++        final String securityLevel;
++        final String deviceId;
++
++        Result(boolean pass, String reason, String securityLevel, String deviceId) {
++            this.pass = pass;
++            this.reason = reason;
++            this.securityLevel = securityLevel;
++            this.deviceId = deviceId;
++        }
++    }
++
++    /** Run one verification round-trip. Blocking; call off the main thread. */
++    Result verifyNow() throws Exception {
++        String deviceId = mPrefs.getString(KEY_DEVICE_ID, null);
++        if (deviceId == null || !hasKey(ENROLLED_ALIAS)) {
++            return enroll();
++        }
++        return submit(deviceId);
++    }
++
++    private Result enroll() throws Exception {
++        JSONObject challenge = post("/challenge", new JSONObject().put("purpose", "enroll"));
++        byte[] nonce = hexToBytes(challenge.getString("nonce"));
++        boolean strongBox = generateKey(ENROLLED_ALIAS, nonce, true);
++        JSONObject resp = post("/enroll",
++                new JSONObject().put("chain", chainJson(ENROLLED_ALIAS)));
++        return record(resp, strongBox);
++    }
++
++    private Result submit(String deviceId) throws Exception {
++        JSONObject challenge = post("/challenge",
++                new JSONObject().put("purpose", "verify").put("device_id", deviceId));
++        byte[] nonce = hexToBytes(challenge.getString("nonce"));
++        boolean strongBox = generateKey(FRESH_ALIAS, nonce, true);
++        // Prove possession of the enrolled hardware key by signing the raw
++        // nonce. The fresh chain proves the current boot state; together
++        // they bind this verification to the enrolled device.
++        byte[] sig = signWithEnrolled(nonce);
++        JSONObject body = new JSONObject()
++                .put("device_id", deviceId)
++                .put("chain", chainJson(FRESH_ALIAS))
++                .put("enrolled_signature",
++                        Base64.encodeToString(sig, Base64.NO_WRAP));
++        JSONObject resp = post("/submit", body);
++        return record(resp, strongBox);
++    }
++
++    private Result record(JSONObject resp, boolean strongBoxRequested) throws Exception {
++        boolean pass = resp.optBoolean("pass", false);
++        String reason = resp.optString("reason", pass ? "ok" : "unknown");
++        // The security level that counts is the one the server read from
++        // the verified chain; the local StrongBox label is only a hint for
++        // the (pre-verdict) case where the server did not answer.
++        String level = resp.optString("security_level",
++                strongBoxRequested ? "StrongBox" : "TrustedEnvironment");
++        String deviceId = resp.optString("device_id",
++                mPrefs.getString(KEY_DEVICE_ID, ""));
++        mPrefs.edit()
++                .putString(KEY_DEVICE_ID, deviceId)
++                .putString(KEY_LAST_RESULT, pass ? "pass" : "fail: " + reason)
++                .putLong(KEY_LAST_AT, System.currentTimeMillis())
++                .putString(KEY_LAST_LEVEL, level)
++                .apply();
++        return new Result(pass, reason, level, deviceId);
++    }
++
++    private boolean hasKey(String alias) {
++        try {
++            KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
++            ks.load(null);
++            return ks.containsAlias(alias);
++        } catch (Exception e) {
++            return false;
++        }
++    }
++
++    /**
++     * Generate (or replace) a hardware EC P-256 signing key attested with
++     * {@code challenge}. Tries StrongBox first; on failure retries with the
++     * TEE and returns false so the UI can label the level honestly (the
++     * server's verdict still carries the authoritative level from the
++     * chain).
++     */
++    private boolean generateKey(String alias, byte[] challenge, boolean tryStrongBox)
++            throws Exception {
++        try {
++            buildKey(alias, challenge, tryStrongBox);
++            return tryStrongBox;
++        } catch (Exception e) {
++            if (!tryStrongBox) {
++                throw e;
++            }
++            buildKey(alias, challenge, false);
++            return false;
++        }
++    }
++
++    private void buildKey(String alias, byte[] challenge, boolean strongBox)
++            throws Exception {
++        KeyPairGenerator gen = KeyPairGenerator.getInstance(
++                KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore");
++        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
++                alias, KeyProperties.PURPOSE_SIGN)
++                .setAlgorithmParameterSpec(new ECGenParameterSpec("secp256r1"))
++                .setDigests(KeyProperties.DIGEST_SHA256)
++                .setAttestationChallenge(challenge);
++        if (strongBox) {
++            builder.setIsStrongBoxBacked(true);
++        }
++        gen.initialize(builder.build());
++        gen.generateKeyPair();
++    }
++
++    private JSONArray chainJson(String alias) throws Exception {
++        KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
++        ks.load(null);
++        Certificate[] chain = ks.getCertificateChain(alias);
++        if (chain == null || chain.length == 0) {
++            throw new IllegalStateException("no certificate chain for " + alias);
++        }
++        JSONArray out = new JSONArray();
++        for (Certificate cert : chain) {
++            out.put(Base64.encodeToString(cert.getEncoded(), Base64.NO_WRAP));
++        }
++        return out;
++    }
++
++    private byte[] signWithEnrolled(byte[] nonce) throws Exception {
++        KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
++        ks.load(null);
++        PrivateKey key = (PrivateKey) ks.getKey(ENROLLED_ALIAS, null);
++        if (key == null) {
++            throw new IllegalStateException("enrolled key missing");
++        }
++        Signature sig = Signature.getInstance("SHA256withECDSA");
++        sig.initSign(key);
++        sig.update(nonce);
++        return sig.sign();
++    }
++
++    private JSONObject post(String path, JSONObject body) throws Exception {
++        HttpURLConnection conn = (HttpURLConnection) new URL(BASE + path).openConnection();
++        conn.setRequestMethod("POST");
++        conn.setRequestProperty("Content-Type", "application/json");
++        conn.setConnectTimeout(15_000);
++        conn.setReadTimeout(15_000);
++        conn.setDoOutput(true);
++        try (OutputStream os = conn.getOutputStream()) {
++            os.write(body.toString().getBytes(StandardCharsets.UTF_8));
++        }
++        int code = conn.getResponseCode();
++        InputStream in = code >= 400 ? conn.getErrorStream() : conn.getInputStream();
++        String text = readAll(in);
++        if (code >= 400) {
++            String reason = new JSONObject(text).optString("reason", "http_" + code);
++            throw new IllegalStateException(reason);
++        }
++        return new JSONObject(text);
++    }
++
++    private static String readAll(InputStream in) throws Exception {
++        StringBuilder sb = new StringBuilder();
++        try (BufferedReader reader = new BufferedReader(
++                new InputStreamReader(in, StandardCharsets.UTF_8))) {
++            String line;
++            while ((line = reader.readLine()) != null) {
++                sb.append(line);
++            }
++        }
++        return sb.toString();
++    }
++
++    private static byte[] hexToBytes(String hex) {
++        byte[] out = new byte[hex.length() / 2];
++        for (int i = 0; i < out.length; i++) {
++            out[i] = (byte) Integer.parseInt(hex.substring(2 * i, 2 * i + 2), 16);
++        }
++        return out;
++    }
++}
+diff --git a/src/com/android/settings/security/MaosAttestationFragment.java b/src/com/android/settings/security/MaosAttestationFragment.java
+new file mode 100644
+--- /dev/null
++++ b/src/com/android/settings/security/MaosAttestationFragment.java
+@@ -0,0 +1,122 @@
++/*
++ * MAOS "Device attestation" settings page (Auditor, shape 3).
++ *
++ * Deliberately minimal: a status line (the last server verdict, stored
++ * from the server's response) and a "Verify now" action. There is no
++ * periodic or on-boot verification and no background work of any kind.
++ * On the first verify the device also enrolls (see
++ * MaosAttestationClient); later verifies submit a fresh attestation bound
++ * to the enrolled hardware key.
++ */
++package com.android.settings.security;
++
++import android.app.settings.SettingsEnums;
++import android.content.Context;
++import android.content.SharedPreferences;
++import android.os.Bundle;
++
++import androidx.preference.Preference;
++
++import com.android.settings.R;
++import com.android.settings.dashboard.DashboardFragment;
++import com.android.settings.search.BaseSearchIndexProvider;
++import com.android.settingslib.search.SearchIndexable;
++
++import java.text.DateFormat;
++import java.util.Date;
++import java.util.concurrent.Executors;
++
++@SearchIndexable
++public class MaosAttestationFragment extends DashboardFragment {
++
++    private static final String TAG = "MaosAttestation";
++    private static final String KEY_STATUS = "maos_attestation_status";
++    private static final String KEY_VERIFY = "maos_attestation_verify";
++
++    @Override
++    public int getMetricsCategory() {
++        return SettingsEnums.SECURITY;
++    }
++
++    @Override
++    protected String getLogTag() {
++        return TAG;
++    }
++
++    @Override
++    protected int getPreferenceScreenResId() {
++        return R.xml.maos_attestation_settings;
++    }
++
++    @Override
++    public void onResume() {
++        super.onResume();
++        updateStatus();
++    }
++
++    @Override
++    public boolean onPreferenceTreeClick(Preference preference) {
++        if (KEY_VERIFY.equals(preference.getKey())) {
++            runVerify(preference);
++            return true;
++        }
++        return super.onPreferenceTreeClick(preference);
++    }
++
++    private void runVerify(Preference verifyPref) {
++        Context context = getContext();
++        if (context == null) {
++            return;
++        }
++        verifyPref.setEnabled(false);
++        verifyPref.setSummary(R.string.maos_attestation_verifying);
++        Executors.newSingleThreadExecutor().execute(() -> {
++            String message;
++            try {
++                MaosAttestationClient.Result result =
++                        new MaosAttestationClient(context).verifyNow();
++                message = result.pass
++                        ? getString(R.string.maos_attestation_passed)
++                        : getString(R.string.maos_attestation_failed, result.reason);
++            } catch (Exception e) {
++                message = getString(R.string.maos_attestation_failed,
++                        String.valueOf(e.getMessage()));
++            }
++            String done = message;
++            if (getActivity() != null) {
++                getActivity().runOnUiThread(() -> {
++                    verifyPref.setEnabled(true);
++                    verifyPref.setSummary(done);
++                    updateStatus();
++                });
++            }
++        });
++    }
++
++    private void updateStatus() {
++        Preference status = findPreference(KEY_STATUS);
++        Context context = getContext();
++        if (status == null || context == null) {
++            return;
++        }
++        SharedPreferences prefs = context.getSharedPreferences(
++                MaosAttestationClient.PREFS, Context.MODE_PRIVATE);
++        String result = prefs.getString(MaosAttestationClient.KEY_LAST_RESULT, null);
++        if (result == null) {
++            status.setSummary(R.string.maos_attestation_never);
++            return;
++        }
++        long at = prefs.getLong(MaosAttestationClient.KEY_LAST_AT, 0);
++        String level = prefs.getString(MaosAttestationClient.KEY_LAST_LEVEL, "");
++        String when = at == 0 ? "" : DateFormat.getDateTimeInstance().format(new Date(at));
++        status.setSummary(getString(R.string.maos_attestation_last, result, level, when));
++    }
++
++    @Override
++    public void onCreate(Bundle icicle) {
++        super.onCreate(icicle);
++    }
++
++    public static final BaseSearchIndexProvider SEARCH_INDEX_DATA_PROVIDER =
++            new BaseSearchIndexProvider(R.xml.maos_attestation_settings);
++}
