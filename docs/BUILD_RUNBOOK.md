@@ -1,7 +1,7 @@
 # MAOS build runbook — Pixel 7 Pro (cheetah)
 
 Build and publish MAOS for the **Pixel 7 Pro (`cheetah`)** on GrapheneOS base tag
-**`2026080500`** from a Windows machine. The whole pipeline (install deps, sync source,
+**`2026110700`** from a Windows machine. The whole pipeline (install deps, sync source,
 extract vendor files, apply the MAOS overlay, generate/use signing keys, build, sign, and
 publish OTA + web-installer artifacts) is automated by **`build-maos.sh`**. This runbook is
 just the three things you do by hand: **set up WSL2**, **create the encrypted keystore**,
@@ -98,14 +98,17 @@ export R2_SECRET_ACCESS_KEY='<r2 token secret>'
 Optional:
 
 ```bash
-# export MODERN_APPS_SRC=/path/to/Modern-Apps   # else the 9 APKs are downloaded from GitHub
+# export MODERN_APPS_SRC=/path/to/Modern-Apps   # else the 28 APKs are downloaded from GitHub
+# export MAOS_BUILD_VARIANT=userdebug          # debuggable build (default: user)
 ```
 
 Device, tag, and OTA channel are **command-line flags** on the script (not env vars),
-defaulting to `cheetah` / `2026080500` / `stable`. The AOSP checkout (`~/maos`), the R2
-bucket (`maos`), and the release build number (always the GrapheneOS tag) are fixed.
+defaulting to `cheetah` / `2026110700` / `stable`. The AOSP checkout (`~/maos`) and the R2
+bucket (`maos`) are fixed; the release build number defaults to today's UTC date + `00`
+(override with `MAOS_BUILD_NUMBER`). The build variant defaults to `user`; set
+`MAOS_BUILD_VARIANT=userdebug` only for debugging.
 
-The keystore is written to `~/maos-keys/<device>.keys.tar.gz.scrypt` (scrypt + AES-256,
+The keystore is written to `~/maos-keys/maos.keys.tar.gz.scrypt` (scrypt + AES-256,
 encrypted with your passphrase). **Back that file up and keep the passphrase safe** — losing
 either permanently breaks OTA/verified boot for every installed device.
 
@@ -117,9 +120,9 @@ Run the pipeline. The first run generates the signing keys and encrypts them int
 keystore automatically (the `keys` phase), then builds, signs, and publishes:
 
 ```bash
-~/MAOS/build-maos.sh all                       # Pixel 7 Pro (cheetah), tag 2026080500
+~/MAOS/build-maos.sh all                       # Pixel 7 Pro (cheetah), tag 2026110700
 # other devices/tags/channels via flags:
-# ~/MAOS/build-maos.sh -d panther -t 2026080500 -c beta all
+# ~/MAOS/build-maos.sh -d panther -t 2026110700 -c beta all
 ```
 
 Phases run in order: `deps → sync → vendor → overlay → keys → build → release → publish`.
@@ -142,6 +145,11 @@ from `https://ma.vayunmathur.com/os/install`.
 ---
 
 ## 6. Test the release
+
+Before publishing, run the endpoint liveness probes in
+[`endpoints.md`](endpoints.md) (SUPL/PSDS/Private-DNS have no standard-mode
+fallback in Settings, so a missing maproj service is ship-blocking) and
+record the results there.
 
 - **Web installer:** open `https://ma.vayunmathur.com/os/install` in Chrome/Edge with the
   Pixel 7 Pro in bootloader mode; it auto-detects "Pixel 7 Pro (cheetah)", then

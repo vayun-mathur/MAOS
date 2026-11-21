@@ -1,55 +1,26 @@
-# Updater configuration (MAOS)
+# Updater (MAOS)
 
-MAOS reuses the GrapheneOS Updater app but points it at our own OTA server,
-`https://ota.maproj.org` — a **Cloudflare R2 bucket** exposed via a custom domain,
-which serves the signed OTA zips + channel metadata directly (uploaded by
-`ota/publish-ota.sh`; see `../ota/README.md`).
+MAOS ships the first-party **MA Updater** app (`com.vayunmathur.updater`,
+module `ModernAppsUpdater` in `../Android.bp`). It **replaces** the GrapheneOS
+Updater outright via `overrides: ["Updater"]` — the GrapheneOS app is displaced,
+not configured. There is no overlay, fork, or URL patch for the stock Updater;
+do not re-add one.
 
-## What the Updater fetches
+## How the MA Updater finds the server
 
-For device `$DEVICE` on channel `$CHANNEL` (e.g. `stable`), it requests:
+The app reads the `ro.maos.ota.server` system property, set to
+`https://ota.maproj.org` in `../maos_branding.mk`, and falls back to that same
+URL when the property is empty (Modern-Apps `updater/.../SystemBuild.kt`).
+
+For device `$DEVICE` on channel `$CHANNEL` (e.g. `stable`), it polls:
 
 - **Metadata:** `GET https://ota.maproj.org/$DEVICE-$CHANNEL`
-- **Full OTA:** `GET https://ota.maproj.org/$DEVICE-ota_update-$BUILD.zip`
-- **Incremental:** `GET https://ota.maproj.org/$DEVICE-incremental-$OLD-$NEW.zip`
+- **Payload:** the OTA zip referenced by that metadata, applied to the
+  inactive A/B slot via `update_engine` after local signature verification.
 
-Those filenames are produced by `ota/build-ota.sh` and uploaded to the release by
-`ota/publish-ota.sh`. The metadata line format is defined there and must match whatever
-your Updater version parses (GrapheneOS uses a short space-separated line —
-`BUILD TIMESTAMP CHANNEL` in our `build-ota.sh`).
+## Publishing
 
-## Two things to change in the Updater
-
-1. **Server URL.** GrapheneOS hardcodes `https://releases.grapheneos.org`. Find it and
-   replace it with `https://ota.maproj.org`:
-
-   ```bash
-   grep -rn "releases.grapheneos.org" packages/apps/Updater/
-   ```
-
-   If it resolves to a **string resource**, prefer overlaying it (no fork) — see
-   `overlay/` below. If it's a `const`/`BuildConfig` value in code, you need a small
-   fork of `packages/apps/Updater` (pull it in via the local manifest; see the main
-   fork plan's "fallback: when a real fork is unavoidable").
-
-2. **Certificate pinning.** GrapheneOS pins its server's certificate. `ota.maproj.org`
-   uses a Cloudflare-managed certificate (and Cloudflare may rotate it), so either remove the
-   pin or pin to the Cloudflare/issuer cert. Check the Updater's `network_security_config` /
-   any `CertificatePinner`:
-
-   ```bash
-   grep -rn "pin-set\|CertificatePinner\|network_security_config" packages/apps/Updater/
-   ```
-
-## Overlay (preferred, if the URL is a resource)
-
-`overlay/packages/apps/Updater/res/values/config.xml` in this repo overlays the server
-URL. **Verify the string name** against your pinned Updater source before relying on it
-— an overlay with the wrong resource name silently does nothing (it won't fail the
-build). Update the name to match, then confirm the built Updater points at
-`ota.maproj.org`.
-
-## Channels
-
-`build-ota.sh` publishes per-channel metadata (`$DEVICE-stable`, `$DEVICE-beta`, ...).
-Keep the channel names the Updater offers in sync with the ones you publish.
+`build-maos.sh`'s `publish` phase uploads the release OTA zip first
+(immutable cache) and the `$DEVICE-$CHANNEL` metadata last (`no-store`) to
+the R2 bucket `maos`, which `ota.maproj.org` serves. See `../ota/README.md`.
+Keep the channel names the app offers in sync with the ones published.

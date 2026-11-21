@@ -497,8 +497,9 @@ android_app_import {
 //
 // PRIVILEGED: it declares signature|privileged perms - CALL_PRIVILEGED (place the emergency
 // call), WRITE_SECURE_SETTINGS (the gesture provider EMERGENCY_GESTURE_* writes),
-// READ_PRIVILEGED_PHONE_STATE (emergency-number lookup) and MANAGE_USERS (owner card) -
-// allowlisted in privapp-permissions-modern-apps.xml. Its Health Connect medical reads and
+// READ_PRIVILEGED_PHONE_STATE (emergency-number lookup), MANAGE_USERS (owner card),
+// START_ACTIVITIES_FROM_BACKGROUND (SOS background alarm) and SCHEDULE_EXACT_ALARM
+// (SOS countdown) - allowlisted in privapp-permissions-modern-apps.xml. Its Health Connect medical reads and
 // contacts access are default-granted (fixed) in default-permissions-modern-apps.xml so an
 // emergency needs no manual permission setup.
 android_app_import {

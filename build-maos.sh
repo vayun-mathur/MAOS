@@ -48,8 +48,10 @@
 #
 # ── Optional environment ────────────────────────────────────────────────────────────────
 #   MAOS_KEYS_FILE=$HOME/maos-keys/maos.keys.tar.gz.scrypt   encrypted key blob (shared, outside the tree)
-#   MODERN_APPS_SRC=<path>         Modern-Apps checkout/dir with release APKs; if unset, the 9
+#   MODERN_APPS_SRC=<path>         Modern-Apps checkout/dir with release APKs; if unset, the 28
 #                                  APKs are downloaded from the Modern-Apps GitHub release
+#   MAOS_BUILD_VARIANT=<variant>   lunch build variant (default: user; set to userdebug
+#                                  explicitly for debuggable builds)
 #   MAOS_RELEASE_JOBS=<n>          how many devices to sign/package (release) in parallel (default 4).
 #   MAOS_PUBLISH_JOBS=<n>          how many devices to upload (publish) in parallel (default 4).
 #   MAOS_BUILD_NUMBER=<n>          pin the build number (default: today's UTC date + "00").
@@ -420,10 +422,9 @@ phase_overlay() {
         log "MAOS inherit already present in $mk"
     fi
 
-    log "Pointing the Updater at ota.maproj.org"
-    local cfg="packages/apps/Updater/res/values/config.xml"
-    [[ -f "$cfg" ]] && sed -i 's#https://releases.grapheneos.org#https://ota.maproj.org#g' "$cfg" \
-        || warn "Updater config.xml not found; set the URL manually if OFFICIAL_BUILD is used."
+    # No Updater URL wiring here: the MA Updater app (ModernAppsUpdater, which
+    # overrides the GrapheneOS Updater in Android.bp) reads ro.maos.ota.server
+    # from maos_branding.mk. The GrapheneOS Updater is displaced, not configured.
 }
 
 phase_keys() {
@@ -463,10 +464,10 @@ phase_build() {
     log "Building MAOS for $DEVICE (tag $TAG, build $BUILD)"
     cd "$TREE"; source build/envsetup.sh
     export OFFICIAL_BUILD=true
-    # Build variant for lunch <device>-cur-<variant>. Default userdebug while
-    # bootloop-bisecting (adbd as root from init,Disabled-verity-tolerant logging);
-    # set MAOS_BUILD_VARIANT=user for production/shippable release builds.
-    VARIANT="${MAOS_BUILD_VARIANT:-userdebug}"
+    # Build variant for lunch <device>-cur-<variant>. Defaults to the shippable
+    # `user` variant; set MAOS_BUILD_VARIANT=userdebug explicitly for debugging
+    # (adbd as root from init, disabled-verity-tolerant logging).
+    VARIANT="${MAOS_BUILD_VARIANT:-user}"
     # Build in the DEFAULT out/. soong's siso/product config is anchored to it (a custom
     # OUT_DIR breaks '@config//main.star' loading during bootstrap), so builds run one at a
     # time. No rm -rf here: builds are incremental and reuse out/; wipe it manually

@@ -1,9 +1,9 @@
 # MAOS branding — inherited from modern_apps.mk.
 #
 # You cannot ship as "GrapheneOS"; this rebrands the build as MAOS (Modern Apps OS).
-# Full de-branding also requires overlaying the Settings "About phone" strings and
-# swapping boot logos/wallpapers — those live under overlay/ and are called out in
-# docs/BUILD_RUNBOOK.md. This file covers the build.prop-level identity.
+# Full de-branding also requires the Settings "About phone" strings and boot
+# artwork (bootanimation/ here; see docs/BUILD_RUNBOOK.md). This file covers the
+# build.prop-level identity.
 #
 # NOTE: changing brand/fingerprint means the build no longer matches GrapheneOS's
 # attestation/OTA identity — expected for a fork. Because MAOS is self-signed, Play
@@ -13,7 +13,9 @@ PRODUCT_BRAND := MAOS
 PRODUCT_MANUFACTURER := MAOS
 
 # Marketing/version identity surfaced to our own apps (e.g. the Updater) and About.
-# Keep MAOS_VERSION in sync with the OTA build number used by ota/build-ota.sh.
+# MAOS_VERSION is an independent marketing version — it is NOT the OTA build number
+# (build-maos.sh pins that separately as BUILD_NUMBER, a date-based value), so there
+# is nothing to keep in sync here; bump this only for a deliberate version change.
 MAOS_VERSION ?= 1
 MAOS_CHANNEL ?= stable
 

@@ -27,7 +27,7 @@
 #   installer/prepare-factory.sh -d cheetah -b 2026081000 -f <device>-install-<build>.zip \
 #       [-P plan.json] [-m 104857600] [-O out/maos-factory] [-B maos] [--no-upload]
 #
-# R2 upload reuses the same env as ota/publish-ota.sh:
+# R2 upload reuses the same env as build-maos.sh's publish phase:
 #   R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_ACCOUNT_ID (or R2_ENDPOINT).
 #
 set -euo pipefail
@@ -188,7 +188,7 @@ if [[ "$UPLOAD" -eq 0 ]]; then
     exit 0
 fi
 
-# ---- Upload to R2 (mirrors ota/publish-ota.sh) ----
+# ---- Upload to R2 (mirrors build-maos.sh phase_publish) ----
 command -v aws >/dev/null || { echo "aws CLI (v2) required to upload" >&2; exit 1; }
 : "${R2_ACCESS_KEY_ID:?set R2_ACCESS_KEY_ID}"
 : "${R2_SECRET_ACCESS_KEY:?set R2_SECRET_ACCESS_KEY}"

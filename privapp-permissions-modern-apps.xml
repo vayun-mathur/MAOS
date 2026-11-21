@@ -182,13 +182,19 @@
          EmergencyInfo. It needs these signature|privileged perms: CALL_PRIVILEGED places the
          emergency call, WRITE_SECURE_SETTINGS lets the gesture provider persist the
          EMERGENCY_GESTURE_* Settings.Secure keys, READ_PRIVILEGED_PHONE_STATE is the privileged
-         half of the emergency-number lookup, and MANAGE_USERS reads the owner name/photo for the
-         card. All degrade gracefully if absent, but the app is privileged so they are granted. -->
+         half of the emergency-number lookup, MANAGE_USERS reads the owner name/photo for the
+         card, START_ACTIVITIES_FROM_BACKGROUND lets the SOS receiver fire the call broadcast
+         from the background alarm, and SCHEDULE_EXACT_ALARM drives the SOS countdown alarm.
+         Verified against the staged prebuilt (aapt2 dump permissions on
+         prebuilts/emergency-release.apk), which requests exactly these plus the four above.
+         All degrade gracefully if absent, but the app is privileged so they are granted. -->
     <privapp-permissions package="com.vayunmathur.emergency">
         <permission name="android.permission.CALL_PRIVILEGED" />
         <permission name="android.permission.WRITE_SECURE_SETTINGS" />
         <permission name="android.permission.READ_PRIVILEGED_PHONE_STATE" />
         <permission name="android.permission.MANAGE_USERS" />
+        <permission name="android.permission.START_ACTIVITIES_FROM_BACKGROUND" />
+        <permission name="android.permission.SCHEDULE_EXACT_ALARM" />
     </privapp-permissions>
 
 </permissions>

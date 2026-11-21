@@ -115,9 +115,8 @@ PRODUCT_SOONG_NAMESPACES += vendor/modern-apps
 #    always-on at boot. See vendor/modern-apps/rro/MaosFrameworkResRRO/.
 PRODUCT_PACKAGES += MaosFrameworkResRRO
 
-#    The overlay/ dir now only carries the GrapheneOS Updater OTA-URL overlay (no framework-res
-#    overlay here, so no auto-generated framework-res RRO is produced).
-PRODUCT_PACKAGE_OVERLAYS += vendor/modern-apps/overlay
+#    There is no PRODUCT_PACKAGE_OVERLAYS entry here: framework-res config ships via the
+#    explicit RRO above, so no auto-generated framework-res RRO is produced.
 
 # 3b. Default-permission grant so the Speech recognizer/TTS gets RECORD_AUDIO headlessly.
 PRODUCT_COPY_FILES += \

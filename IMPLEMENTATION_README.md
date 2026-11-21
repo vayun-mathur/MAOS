@@ -35,23 +35,30 @@ repo.)
 | Emergency | `com.vayunmathur.emergency` | AOSP EmergencyInfo (medical info + contacts + SOS countdown; wireless alerts stay stock CellBroadcast) |
 | Parental Controls | `com.vayunmathur.parentalcontrols` | n/a (new; AOSP has no supervision app) — system supervision app: bedtime + app limits via the SYSTEM_SUPERVISION role (pinned by `config_systemSupervision`) |
 | Screen Time | `com.vayunmathur.screentime` | n/a (new; AOSP has no wellbeing app) — self-managed screen time: dashboard, timers, focus, wind-down via the SYSTEM_WELLBEING role (pinned by `config_systemWellbeing`) |
+| Auto | `com.vayunmathur.auto` | n/a (new) — SYSTEM_AUTOMOTIVE_PROJECTION role holder (Android Auto projection) |
+| Network Location | `com.vayunmathur.networklocation` | GrapheneOS NetworkLocation — network location provider + offline geocoder |
+| Find Family | `com.vayunmathur.findfamily` | n/a (new) — family location sharing (ordinary user app, preinstalled) |
+| Share | `com.vayunmathur.share` | n/a (new) — AirDrop-compatible sharing (privileged for the Mosey/AWDL HAL) |
+| Cast | `com.vayunmathur.cast` | n/a (new) — Cast / remote-display provider |
+| Setup Wizard | `com.vayunmathur.setupwizard` | GrapheneOS SetupWizard2 (first-run setup; see Android.bp warning) |
+| Log Viewer | `com.vayunmathur.logviewer` | GrapheneOS LogViewer (error-report viewer, no launcher entry) |
+| Updater | `com.vayunmathur.updater` | GrapheneOS Updater (`overrides`) — polls `ro.maos.ota.server`; see `updater/` |
+| Health | `com.vayunmathur.health` | n/a (new) — health metrics/medications (ordinary user app, preinstalled) |
 
 ## Layout
 
 ```
 Android.bp                            # android_app_import per app (Files: privileged)
-modern_apps.mk                        # PRODUCT_PACKAGES += ours; filter-out stock; overlays; privapp; branding
+modern_apps.mk                        # product config: app membership notes, RRO, privapp; branding
 maos_branding.mk                      # PRODUCT_* + ro.maos.* identity (inherited by modern_apps.mk)
-privapp-permissions-modern-apps.xml   # MANAGE_DOCUMENTS for Files
-overlay/                              # static overlays
-  frameworks/base/.../config.xml       #   config_defaultBrowser, config_documentsUiPackage
-  packages/apps/Updater/.../config.xml #   OTA server URL (verify resource name)
+privapp-permissions-modern-apps.xml   # signature|privileged allowlists for the 12 priv-apps
+rro/MaosFrameworkResRRO/              # static platform-signed framework-res RRO (config_* pins)
 prebuilts/                            # release APKs (git-ignored; populated by script)
 scripts/collect-apks.sh              # copies Modern-Apps release APKs into prebuilts/
 keys/generate-keys.sh                # generates the OS key set (offline; never committed)
-ota/                                 # build-ota.sh + publish-ota.sh (+ README)
+ota/                                 # OTA flow notes (pipeline lives in build-maos.sh)
 installer/                           # prepare-factory.sh + sparse_split.py for the web installer
-updater/                             # how to point the Updater at ota.maproj.org
+updater/                             # MA Updater: server URL via ro.maos.ota.server
 docs/BUILD_RUNBOOK.md                # end-to-end Linux build/sign/OTA/publish
 local_manifest.xml                    # adds this repo to the GrapheneOS tree
 ```
@@ -174,9 +181,9 @@ files, and the server with `cargo test` using a generated fixture chain.
 MAOS uses the standard A/B OTA flow (`update_engine`) with updates served from
 **`https://ota.maproj.org`**, a **Cloudflare R2 bucket** exposed via a custom
 domain. The build host uploads signed OTA zips + channel metadata straight to R2
-(`ota/publish-ota.sh`), and devices download directly from R2 — no GitHub Release and no
-server proxy, since the payloads are multi-GB. Build/publish scripts are in
-[`ota/`](ota/README.md); pointing the Updater at the server is covered in
+(the `publish` phase of `build-maos.sh`), and devices download directly from R2 — no GitHub
+Release and no server proxy, since the payloads are multi-GB. The OTA flow is documented in
+[`ota/`](ota/README.md); how the MA Updater finds the server is covered in
 [`updater/`](updater/README.md). Full design rationale is in `GRAPHENEOS_FORK_PLAN.md`
 (Modern-Apps repo).
 
